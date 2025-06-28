@@ -157,7 +157,7 @@ input[type="text"] {
   position: fixed;
   right: 20px;
   bottom: 10px;
-  color: #cccccc;
+  color: #f8f8ff;
   font-size: 0.95em;
   opacity: 0.7;
   z-index: 100;
@@ -448,41 +448,7 @@ input[type="text"] {
 
 /* Área de reserva de pedras à esquerda */
 #reserva-pedras {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 10;
-}
-.pedra-reserva {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid #2d8cff;
-  box-shadow: 0 2px 8px #0003;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 4px;
-  cursor: grab;
-  transition: box-shadow 0.2s, border 0.2s;
-  position: relative;
-}
-.pedra-reserva img {
-  width: 90%;
-  height: 90%;
-  object-fit: contain;
-  border-radius: 50%;
-  display: block;
-}
-.pedra-reserva.dragging {
-  opacity: 0.6;
-  box-shadow: 0 4px 24px #2d8cff55;
-  border: 2.5px solid #ffd700;
+  display: none !important;
 }
 
 /* Toast interno */
@@ -738,18 +704,17 @@ input[type="text"] {
   background: #ffe066;
 }
 #circle-pedras {
-  position: fixed;
+  position: absolute;
   left: 24px;
   top: 50%;
   transform: translateY(-50%);
   width: 260px;
   height: 260px;
-  z-index: 20;
-  pointer-events: none;
+  z-index: 30;
+  pointer-events: auto;
 }
-.pedra-circulo,
-.pedra-central,
-.pedra-oficial {
+.pedra-circulo, .pedra-reserva {
+  position: absolute;
   width: 80px;
   height: 80px;
   border-radius: 50%;
@@ -759,62 +724,39 @@ input[type="text"] {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
-  position: absolute;
-  box-sizing: border-box;
-  border: 2px solid blue !important; /* Borda azul temporária para depuração */
+  cursor: grab;
+  transition: box-shadow 0.2s, border 0.2s;
+  z-index: 31;
 }
-.pedra-circulo img,
-.pedra-circulo svg,
-.pedra-central img,
-.pedra-central svg,
-.pedra-oficial img,
-.pedra-oficial svg {
+.pedra-reserva img {
   width: 90%;
   height: 90%;
-  max-width: 90%;
-  max-height: 90%;
   object-fit: contain;
+  border-radius: 50%;
   display: block;
-  margin: auto;
-  box-sizing: border-box;
-  pointer-events: none;
-  position: relative;
-  z-index: 1;
 }
-.pedra-central {
-  z-index: 2;
+.pedra-reserva.dragging {
+  opacity: 0.6;
+  box-shadow: 0 4px 24px #2d8cff55;
   border: 2.5px solid #ffd700;
 }
-#pedra-central-animada {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid #2d8cff;
-  box-shadow: 0 2px 8px #0003;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+
+#reserva-pedras {
   position: absolute;
-  z-index: 1000;
-  transition: left 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55),
-    top 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 30;
+  align-items: center;
+  pointer-events: auto;
+  width: 80px;
+  height: 260px; /* igual ao círculo */
+  justify-content: center;
 }
-#pedra-central-animada img,
-#pedra-central-animada svg {
-  width: 90%;
-  height: 90%;
-  max-width: 90%;
-  max-height: 90%;
-  object-fit: contain;
-  display: block;
-  margin: auto;
-  box-sizing: border-box;
-}
+
 @media (max-width: 700px) {
   #tabuleiro {
     width: 98vw;
@@ -907,6 +849,8 @@ input[type="text"] {
   top: 50%;
   transform: translateY(-56%);
   /* left é definido via JS */
+  border: 2px solid #2d8cff !important;
+  z-index: 5000 !important;
 }
 
 #pontos-centrais {
@@ -1232,4 +1176,37 @@ input[type="text"] {
 }
 #pedra-central-animada {
   border: none !important;
+}
+
+/* Borda vermelha para depuração nas pedras da reserva e da mesa */
+.pedra-reserva, .pedra-mesa, .pedra-oficial {
+  border: 2px solid #2d8cff !important;
+  z-index: 5000 !important;
+}
+
+/* Animação de rodar em círculo */
+.pedra-circulo.animar-circulo {
+  animation: girarCirculo 0.8s cubic-bezier(0.77,0,0.175,1) forwards;
+}
+@keyframes girarCirculo {
+  0% { transform: scale(1) rotate(0deg); }
+  100% { transform: scale(1.1) rotate(360deg); }
+}
+
+/* Animação para alinhar em diagonal */
+.pedra-circulo.alinhar-diagonal {
+  transition: left 0.8s cubic-bezier(0.77,0,0.175,1), top 0.8s cubic-bezier(0.77,0,0.175,1);
+}
+
+#linha-vertical-pedras {
+  position: absolute;
+  left: 153px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 260px;
+  width: 4px;
+  background: red;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.85;
 }

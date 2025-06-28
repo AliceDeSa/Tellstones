@@ -94,12 +94,12 @@ let estadoJogo = {
   jogadores: [], // [{nome, pontos, id}]
   mesa: [], // [{nome, url, virada: false}]
   reserva: [], // pedras restantes do jogador atual
+  pedraCentral: null, // pedra central do jogo
   vez: 0 // índice do jogador da vez
 };
 
 // Função para inicializar o estado do jogo
 function inicializarJogo(jogadores) {
-  // Copia as pedras oficiais
   const pedrasOficiais = [
     { nome: 'Coroa', url: 'https://github.com/AliceDeSa/Tellstones/raw/main/Coroa.svg' },
     { nome: 'Espada', url: 'https://github.com/AliceDeSa/Tellstones/raw/main/espada.svg' },
@@ -109,15 +109,13 @@ function inicializarJogo(jogadores) {
     { nome: 'Bandeira', url: 'https://github.com/AliceDeSa/Tellstones/raw/main/bandeira.svg' },
     { nome: 'Martelo', url: 'https://github.com/AliceDeSa/Tellstones/raw/main/martelo.svg' }
   ];
-  // Embaralhar pedras
   const pedrasEmbaralhadas = pedrasOficiais.sort(() => Math.random() - 0.5);
-  // Uma pedra aleatória vai para a mesa
-  const primeira = pedrasEmbaralhadas[0];
-  // O resto vai para a reserva do jogador atual
+  const pedraCentral = pedrasEmbaralhadas.shift();
   estadoJogo = {
     jogadores: jogadores.map(j => ({nome: j.nome, pontos: 0, id: j.id || j.nome})),
-    mesa: [{...primeira, virada: false}],
-    reserva: pedrasEmbaralhadas.slice(1),
+    mesa: [],
+    reserva: pedrasEmbaralhadas,
+    pedraCentral: pedraCentral,
     vez: 0
   };
 }
@@ -132,6 +130,7 @@ function atualizarPlacarETurno() {
 
 // Renderiza a mesa
 function renderizarMesa() {
+  console.log('renderizarMesa chamada');
   const mesaDiv = document.getElementById('tabuleiro');
   mesaDiv.innerHTML = `
     <img src="https://github.com/AliceDeSa/Tellstones/blob/main/2deea767-8022-4e5e-8118-ba10d8df14bd.jpg?raw=true" alt="Tabuleiro Tellstones" style="max-width:100%;height:auto;border-radius:18px;box-shadow:0 4px 24px #0005;"/>
@@ -198,10 +197,9 @@ function mostrarJogo(codigo, jogadores, espectadores) {
   // Atualizar info sala e espectadores
   atualizarInfoSala(codigo, espectadores);
   // Embaralhar pedras e renderizar
-  renderizarPedrasCirculo(embaralhar(pedrasOficiais));
+  renderizarPedrasCirculo(estadoJogo.reserva, estadoJogo.pedraCentral);
   // Outras lógicas do jogo...
   mostrarEscolhaCaraCoroa();
-  renderizarPedrasReserva();
   const somMoeda = document.getElementById('som-moeda');
   if (somMoeda) somMoeda.load();
 }
@@ -347,7 +345,8 @@ function setupDragDropReserva() {
   console.log('setupDragDropReserva chamado');
   const pedrasReserva = document.querySelectorAll('.pedra-reserva');
   pedrasReserva.forEach(pedra => {
-    pedra.onmousedown = function(e) {
+    pedra.onmousedown = null; // Remove qualquer evento anterior
+    pedra.addEventListener('mousedown', function(e) {
       console.log('mousedown na pedra da reserva', pedra, e);
       e.preventDefault();
       // Cria pedra fantasma
@@ -364,19 +363,19 @@ function setupDragDropReserva() {
       ghost.classList.add('dragging');
       document.body.appendChild(ghost);
       // Esconde a original
-      pedra.style.visibility = 'hidden';
+      pedra.style.opacity = '0';
+      pedra.style.pointerEvents = 'none';
       // Mouse move
       function onMove(ev) {
         ghost.style.left = (ev.clientX - rect.width/2) + 'px';
         ghost.style.top = (ev.clientY - rect.height/2) + 'px';
       }
-      document.addEventListener('mousemove', onMove);
-      // Mouse up
       function onUp(ev) {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onUp);
-        // Mostra a original
-        pedra.style.visibility = '';
+        // Restaura a pedra original
+        pedra.style.opacity = '';
+        pedra.style.pointerEvents = '';
         // Detecta se soltou sobre a mesa
         const mesa = document.getElementById('tabuleiro-wrapper');
         const mesaRect = mesa.getBoundingClientRect();
@@ -428,8 +427,9 @@ function setupDragDropReserva() {
           ghost.remove();
         }
       }
+      document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
-    };
+    });
   });
 }
 
@@ -497,30 +497,194 @@ function atualizarInfoSala(codigo, espectadores) {
 }
 
 // --- Renderizar pedras em círculo ---
-function renderizarPedrasCirculo(pedras) {
+function renderizarPedrasCirculo(pedras, pedraCentral) {
   const circle = document.getElementById('circle-pedras');
+  // Se a pedra central já foi colocada, renderize verticalmente
+  if (!pedraCentral) {
+    circle.style.display = 'none';
+    renderizarPedrasVerticais(pedras);
+    return;
+  } else {
+    circle.style.display = '';
+    // Remova o vertical se existir
+    const vertical = document.getElementById('vertical-pedras');
+    if (vertical) vertical.remove();
+  }
   circle.innerHTML = '';
-  const angStep = 360 / 6;
+  // Cálculo circular
+  const angStep = 360 / pedras.length;
   const raio = 100;
-  // 6 pedras ao redor (remover a primeira do array)
-  pedras.slice(1).forEach((p, i) => {
+  pedras.forEach((p, i) => {
     const ang = (angStep * i - 90) * Math.PI / 180;
     const x = Math.cos(ang) * raio + 90;
     const y = Math.sin(ang) * raio + 90;
     const div = document.createElement('div');
-    div.className = 'pedra-circulo pedra-circulo-arredor pedra-oficial';
+    div.className = 'pedra-circulo pedra-reserva';
     div.style.left = x + 'px';
     div.style.top = y + 'px';
-    div.innerHTML = `<img src='${p.url}' alt='${p.nome}'/>`;
+    div.innerHTML = `<img src="${p.url}" alt="${p.nome}" draggable="false">`;
+    // Evento de drag igual ao anterior
+    div.onmousedown = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = div.getBoundingClientRect();
+      const ghost = div.cloneNode(true);
+      ghost.style.position = 'fixed';
+      ghost.style.left = rect.left + 'px';
+      ghost.style.top = rect.top + 'px';
+      ghost.style.width = rect.width + 'px';
+      ghost.style.height = rect.height + 'px';
+      ghost.style.pointerEvents = 'none';
+      ghost.style.opacity = '0.85';
+      ghost.style.zIndex = 9999;
+      ghost.classList.add('dragging');
+      document.body.appendChild(ghost);
+      div.style.opacity = '0';
+      div.style.pointerEvents = 'none';
+      function onMove(ev) {
+        ghost.style.left = (ev.clientX - rect.width/2) + 'px';
+        ghost.style.top = (ev.clientY - rect.height/2) + 'px';
+      }
+      function onUp(ev) {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        div.style.opacity = '';
+        div.style.pointerEvents = '';
+        // Detecta se soltou sobre a mesa
+        const mesa = document.getElementById('tabuleiro-wrapper');
+        const mesaRect = mesa.getBoundingClientRect();
+        if (
+          ev.clientX >= mesaRect.left && ev.clientX <= mesaRect.right &&
+          ev.clientY >= mesaRect.top && ev.clientY <= mesaRect.bottom
+        ) {
+          const pedraObj = estadoJogo.reserva[i];
+          estadoJogo.reserva.splice(i,1);
+          estadoJogo.mesa = [ ...estadoJogo.mesa, {...pedraObj, virada: false} ];
+          renderizarMesa();
+          setupDragDropVertical();
+          setupMesaInteractions();
+          showToastInterno('Pedra colocada!');
+        }
+        ghost.remove();
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    };
     circle.appendChild(div);
   });
-  // Pedra central (usa a mesma estrutura e classe)
-  const central = document.createElement('div');
-  central.className = 'pedra-circulo pedra-central pedra-oficial';
-  central.style.left = '90px';
-  central.style.top = '90px';
-  central.innerHTML = `<img src='${pedras[0].url}' alt='${pedras[0].nome}'/>`;
-  circle.appendChild(central);
+  // Pedra central (agora interativa também)
+  if (pedraCentral) {
+    const central = document.createElement('div');
+    central.className = 'pedra-circulo pedra-reserva pedra-central';
+    central.style.left = '90px';
+    central.style.top = '90px';
+    central.innerHTML = `<img src="${pedraCentral.url}" alt="${pedraCentral.nome}" draggable="false">`;
+    central.onmousedown = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = central.getBoundingClientRect();
+      const ghost = central.cloneNode(true);
+      ghost.style.position = 'fixed';
+      ghost.style.left = rect.left + 'px';
+      ghost.style.top = rect.top + 'px';
+      ghost.style.width = rect.width + 'px';
+      ghost.style.height = rect.height + 'px';
+      ghost.style.pointerEvents = 'none';
+      ghost.style.opacity = '0.85';
+      ghost.style.zIndex = 9999;
+      ghost.classList.add('dragging');
+      document.body.appendChild(ghost);
+      central.style.opacity = '0';
+      central.style.pointerEvents = 'none';
+      function onMove(ev) {
+        ghost.style.left = (ev.clientX - rect.width/2) + 'px';
+        ghost.style.top = (ev.clientY - rect.height/2) + 'px';
+      }
+      function onUp(ev) {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        central.style.opacity = '';
+        central.style.pointerEvents = '';
+        const mesa = document.getElementById('tabuleiro-wrapper');
+        const mesaRect = mesa.getBoundingClientRect();
+        if (
+          ev.clientX >= mesaRect.left && ev.clientX <= mesaRect.right &&
+          ev.clientY >= mesaRect.top && ev.clientY <= mesaRect.bottom
+        ) {
+          estadoJogo.mesa = [ ...estadoJogo.mesa, {...estadoJogo.pedraCentral, virada: false} ];
+          estadoJogo.pedraCentral = null;
+          renderizarMesa();
+          setupMesaInteractions();
+          showToastInterno('Pedra central colocada!');
+          console.log('Chamando renderizarPedrasCirculo para alinhar vertical');
+          renderizarPedrasCirculo(estadoJogo.reserva, null);
+        }
+        ghost.remove();
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    };
+    circle.appendChild(central);
+  }
+}
+
+// --- Drag & drop das pedras alinhadas na vertical ---
+function setupDragDropVertical() {
+  const pedrasVerticais = document.querySelectorAll('#circle-pedras .pedra-circulo:not(.pedra-central)');
+  pedrasVerticais.forEach((div, idx) => {
+    div.onmousedown = function(e) {
+      window.dragAtivo = true;
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = div.getBoundingClientRect();
+      const ghost = div.cloneNode(true);
+      ghost.style.position = 'fixed';
+      ghost.style.left = rect.left + 'px';
+      ghost.style.top = rect.top + 'px';
+      ghost.style.width = rect.width + 'px';
+      ghost.style.height = rect.height + 'px';
+      ghost.style.pointerEvents = 'none';
+      ghost.style.opacity = '0.85';
+      ghost.style.zIndex = 9999;
+      ghost.classList.add('dragging');
+      document.body.appendChild(ghost);
+
+      div.style.opacity = '0';
+      div.style.pointerEvents = 'none';
+
+      function onMove(ev) {
+        ghost.style.left = (ev.clientX - rect.width/2) + 'px';
+        ghost.style.top = (ev.clientY - rect.height/2) + 'px';
+      }
+      function onUp(ev) {
+        window.dragAtivo = false;
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        div.style.opacity = '';
+        div.style.pointerEvents = '';
+        // Detecta se soltou sobre a mesa
+        const mesa = document.getElementById('tabuleiro-wrapper');
+        const mesaRect = mesa.getBoundingClientRect();
+        if (
+          ev.clientX >= mesaRect.left && ev.clientX <= mesaRect.right &&
+          ev.clientY >= mesaRect.top && ev.clientY <= mesaRect.bottom
+        ) {
+          const pedrasRestantes = document.querySelectorAll('#circle-pedras .pedra-circulo:not(.pedra-central)');
+          const idxAtual = Array.from(pedrasRestantes).indexOf(div);
+          const pedraObj = estadoJogo.reserva[idxAtual];
+          estadoJogo.reserva.splice(idxAtual,1);
+          estadoJogo.mesa = [ ...estadoJogo.mesa, {...pedraObj, virada: false} ];
+          renderizarMesa();
+          renderizarPedrasCirculo(estadoJogo.reserva, null); // <-- re-renderiza e realinha
+          setupMesaInteractions();
+          showToastInterno('Pedra colocada!');
+        }
+        ghost.remove();
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    };
+  });
 }
 
 // --- Moeda e animação da pedra central ---
@@ -600,7 +764,7 @@ function animarPedraParaMesa(pedra, slotIndex) {
   animada.className = 'pedra-mesa pedra-oficial pedra-animada-mesa';
   animada.style.left = '0px';
   animada.style.top = '50%';
-  animada.innerHTML = `<img src='${pedra.url}' alt='${pedra.nome}'/>`;
+  animada.innerHTML = `<img src="${pedra.url}" alt="${pedra.nome}" draggable="false">`;
   wrapper.appendChild(animada);
   // Força reflow para garantir início da animação
   void animada.offsetWidth;
@@ -610,12 +774,6 @@ function animarPedraParaMesa(pedra, slotIndex) {
   // Após a animação, remove a pedra animada e fixa no tabuleiro
   setTimeout(() => {
     animada.remove();
-    // Remove a pedra da lateral esquerda (exemplo: pedrasLaterais)
-    if (typeof pedrasLaterais !== 'undefined') {
-      const idx = pedrasLaterais.findIndex(p => p.nome === pedra.nome);
-      if (idx !== -1) pedrasLaterais.splice(idx, 1);
-      renderizarPedrasCirculo(pedrasLaterais);
-    }
     moverPedraParaSlot(pedra, slotIndex);
   }, 1200);
 }
@@ -638,11 +796,10 @@ document.addEventListener('DOMContentLoaded', function() {
   // Embaralha as pedras e separa a central
   const pedrasEmbaralhadas = embaralhar(pedrasOficiais);
   const pedraCentral = pedrasEmbaralhadas.shift(); // Remove a primeira pedra
-  renderizarPedrasCirculo([pedraCentral, ...pedrasEmbaralhadas]);
+  estadoJogo.reserva = pedrasEmbaralhadas; // 6 pedras
+  estadoJogo.pedraCentral = pedraCentral;  // 1 pedra
+  renderizarPedrasCirculo(estadoJogo.reserva, estadoJogo.pedraCentral);
   atualizarInfoSala('ABC123', [{nome:'Ana'},{nome:'João'}]);
-  // Renderiza a reserva inicial
-  estadoJogo.reserva = pedrasEmbaralhadas;
-  renderizarPedrasReserva();
 });
 
 const wrapper = document.getElementById('tabuleiro-wrapper');
@@ -689,7 +846,7 @@ function renderizarPedrasMesa(pedras) {
       div.className = 'pedra-mesa pedra-oficial';
       const left = (slotLargura * i) + (slotLargura / 2) - (larguraPedra / 2);
       div.style.left = left + 'px';
-      div.innerHTML = `<img src='${p.url}' alt='${p.nome}'/>`;
+      div.innerHTML = `<img src="${p.url}" alt="${p.nome}" draggable="false">`;
       pedrasMesa.appendChild(div);
     }
   });
@@ -746,8 +903,8 @@ function mostrarMoedaParaSorteio() {
       setTimeout(() => {
         // Suaviza a moeda sumindo
         moedaBtn.style.opacity = '0';
-        setTimeout(() => {
-          moedaBtn.style.display = 'none';
+      setTimeout(() => {
+        moedaBtn.style.display = 'none';
           // Espera 1s antes de animar a peça central
           setTimeout(() => {
             const circle = document.getElementById('circle-pedras');
@@ -777,7 +934,7 @@ function mostrarMoedaParaSorteio() {
                 pedraAnimada.style.width = larguraPedra + 'px';
                 pedraAnimada.style.height = larguraPedra + 'px';
                 pedraAnimada.style.transform = 'translate(-50%, -50%)';
-                pedraAnimada.innerHTML = `<img src='${img.src}' alt='${img.alt}'/>`;
+                pedraAnimada.innerHTML = `<img src="${img.src}" alt="${img.alt}" draggable="false">`;
                 tabuleiroCenter.appendChild(pedraAnimada);
                 // Remove a peça central do círculo visualmente
                 centralDiv.style.visibility = 'hidden';
@@ -799,23 +956,92 @@ function mostrarMoedaParaSorteio() {
                 }, 2000);
               }
             }
-          }, 1000);
+      }, 1000);
         }, 500); // tempo da transição de opacidade
       }, 2000);
     }, 1300);
   };
 }
 
-function renderizarPedrasReserva() {
-  const reservaDiv = document.getElementById('reserva-pedras');
-  if (!reservaDiv) return;
-  reservaDiv.innerHTML = '';
-  estadoJogo.reserva.forEach((p, i) => {
+// Função para renderizar pedras verticalmente usando Flexbox
+function renderizarPedrasVerticais(pedras) {
+  let container = document.getElementById('vertical-pedras');
+  if (!container) {
+    // Cria o container se não existir
+    container = document.createElement('div');
+    container.id = 'vertical-pedras';
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.alignItems = 'center';
+    container.style.height = '260px';
+    container.style.justifyContent = 'center';
+    // Adiciona o container ao DOM (exemplo: ao lado do círculo)
+    const parent = document.getElementById('circle-pedras').parentNode;
+    parent.appendChild(container);
+  }
+  container.innerHTML = '';
+  pedras.forEach((p, i) => {
     const div = document.createElement('div');
-    div.className = 'pedra-reserva';
-    div.innerHTML = `<img src='${p.url}' alt='${p.nome}'/>`;
-    reservaDiv.appendChild(div);
+    div.className = 'pedra-circulo pedra-reserva';
+    div.style.margin = '8px 0';
+    div.innerHTML = `<img src="${p.url}" alt="${p.nome}" draggable="false">`;
+    // Drag robusto igual ao padrão do círculo
+    div.onmousedown = function(e) {
+      window.dragAtivo = true;
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = div.getBoundingClientRect();
+      const ghost = div.cloneNode(true);
+      ghost.style.position = 'fixed';
+      ghost.style.left = rect.left + 'px';
+      ghost.style.top = rect.top + 'px';
+      ghost.style.width = rect.width + 'px';
+      ghost.style.height = rect.height + 'px';
+      ghost.style.pointerEvents = 'none';
+      ghost.style.opacity = '0.85';
+      ghost.style.zIndex = 9999;
+      ghost.classList.add('dragging');
+      document.body.appendChild(ghost);
+      div.style.opacity = '0';
+      div.style.pointerEvents = 'none';
+      function onMove(ev) {
+        ghost.style.left = (ev.clientX - rect.width/2) + 'px';
+        ghost.style.top = (ev.clientY - rect.height/2) + 'px';
+      }
+      function onUp(ev) {
+        window.dragAtivo = false;
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        div.style.opacity = '';
+        div.style.pointerEvents = '';
+        // Detecta se soltou sobre a mesa
+        const mesa = document.getElementById('tabuleiro-wrapper');
+        const mesaRect = mesa.getBoundingClientRect();
+        if (
+          ev.clientX >= mesaRect.left && ev.clientX <= mesaRect.right &&
+          ev.clientY >= mesaRect.top && ev.clientY <= mesaRect.bottom
+        ) {
+          const idxAtual = Array.from(container.children).indexOf(div);
+          const pedraObj = pedras[idxAtual];
+          pedras.splice(idxAtual,1);
+          estadoJogo.mesa = [ ...estadoJogo.mesa, {...pedraObj, virada: false} ];
+          renderizarMesa();
+          renderizarPedrasVerticais(pedras); // Atualiza o vertical
+          setupMesaInteractions();
+          showToastInterno('Pedra colocada!');
+        }
+        ghost.remove();
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    };
+    container.appendChild(div);
   });
-  setupDragDropReserva();
-  console.log('Pedras da reserva renderizadas:', document.querySelectorAll('.pedra-reserva'));
-} 
+}
+
+// Exemplo de uso:
+// Para alinhar as pedras restantes verticalmente, chame:
+// renderizarPedrasVerticais(estadoJogo.reserva);
+//
+// Para voltar ao círculo, use renderizarPedrasCirculo(estadoJogo.reserva, estadoJogo.pedraCentral);
+// ... restante do código ... 
