@@ -713,8 +713,7 @@ input[type="text"] {
   z-index: 30;
   pointer-events: auto;
 }
-.pedra-circulo,
-.pedra-reserva {
+.pedra-circulo, .pedra-reserva {
   position: absolute;
   width: 80px;
   height: 80px;
@@ -1180,30 +1179,23 @@ input[type="text"] {
 }
 
 /* Borda vermelha para depuração nas pedras da reserva e da mesa */
-.pedra-reserva,
-.pedra-mesa,
-.pedra-oficial {
+.pedra-reserva, .pedra-mesa, .pedra-oficial {
   border: 2px solid #2d8cff !important;
   z-index: 5000 !important;
 }
 
 /* Animação de rodar em círculo */
 .pedra-circulo.animar-circulo {
-  animation: girarCirculo 0.8s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+  animation: girarCirculo 0.8s cubic-bezier(0.77,0,0.175,1) forwards;
 }
 @keyframes girarCirculo {
-  0% {
-    transform: scale(1) rotate(0deg);
-  }
-  100% {
-    transform: scale(1.1) rotate(360deg);
-  }
+  0% { transform: scale(1) rotate(0deg); }
+  100% { transform: scale(1.1) rotate(360deg); }
 }
 
 /* Animação para alinhar em diagonal */
 .pedra-circulo.alinhar-diagonal {
-  transition: left 0.8s cubic-bezier(0.77, 0, 0.175, 1),
-    top 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+  transition: left 0.8s cubic-bezier(0.77,0,0.175,1), top 0.8s cubic-bezier(0.77,0,0.175,1);
 }
 
 #linha-vertical-pedras {
