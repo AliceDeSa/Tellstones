@@ -132,37 +132,6 @@
     </div>
   </div>
 
-  <script>
-    function setupDragDropVertical() {
-      const pedrasVerticais = document.querySelectorAll('#circle-pedras .pedra-circulo:not(.pedra-central)');
-      pedrasVerticais.forEach((div, idx) => {
-        div.onmousedown = function(e) {
-          window.dragAtivo = true;
-          e.preventDefault();
-          e.stopPropagation();
-          // ... cria ghost ...
-          function onUp(ev) {
-            window.dragAtivo = false;
-            // ... lógica de drop ...
-            renderizarPedrasCirculo(estadoJogo.reserva, null); // Isso já alinha!
-          }
-          document.addEventListener('mousemove', onMove);
-          document.addEventListener('mouseup', onUp);
-        };
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      const btn = document.getElementById('btn-alinhar-vertical');
-      if (btn) {
-        btn.onclick = function() {
-          renderizarPedrasVerticais(estadoJogo.reserva);
-          // Opcional: ocultar o círculo
-          document.getElementById('circle-pedras').style.display = 'none';
-        };
-      }
-    });
-  </script>
   <script src="script.js"></script>
 </body>
 </html>
