@@ -1805,24 +1805,3 @@
    body > .floatingchat-donate-button span {
      display: none !important; /* Esconde qualquer texto ao lado do ícone */
    }
-   
-   /* Força o Ko-fi para o canto direito inferior, ignorando o left */
-body > .floatingchat-container-wrap,
-.floatingchat-container-wrap {
-  position: fixed !important;
-  right: 24px !important;
-  left: auto !important;
-  bottom: 24px !important;
-  top: auto !important;
-  z-index: 99999 !important;
-  width: 64px !important;
-  height: 64px !important;
-  pointer-events: auto !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background: none !important;
-  box-shadow: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
