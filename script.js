@@ -101,6 +101,15 @@ function mostrarTela(tela) {
     if (creditosSom) creditosSom.style.display = "none";
     if (placarTurno) placarTurno.style.display = "";
   }
+  // Ocultar/mostrar Ko-fi conforme a tela
+  const kofiBtn = document.querySelector('.floatingchat-donate-button') || document.querySelector('.floatingchat-container-wrap');
+  if (kofiBtn) {
+    if (tela === "game") {
+      kofiBtn.style.display = "none";
+    } else {
+      kofiBtn.style.display = "flex";
+    }
+  }
 }
 
 // Função para adicionar listener de notificações globais por sala
@@ -561,6 +570,10 @@ function renderizarPedrasCirculo(pedras, pedraCentral) {
       div.style.opacity = "0";
       div.innerHTML = `<img src="${p.url}" alt="${p.nome}" draggable="false">`;
       div.setAttribute("data-idx", i);
+      // Tooltip: Arraste para o tabuleiro
+      div.onmouseenter = function(e) { showTooltip("Arraste para o Tabuleiro", e.clientX, e.clientY); };
+      div.onmousemove = function(e) { showTooltip("Arraste para o Tabuleiro", e.clientX, e.clientY); };
+      div.onmouseleave = hideTooltip;
       circle.appendChild(div);
       setTimeout(() => {
         div.style.transition = "all 0.8s cubic-bezier(0.77,0,0.175,1)";
@@ -580,6 +593,10 @@ function renderizarPedrasCirculo(pedras, pedraCentral) {
       div.style.opacity = "1";
       div.innerHTML = `<img src="${p.url}" alt="${p.nome}" draggable="false">`;
       div.setAttribute("data-idx", i);
+      // Tooltip: Arraste para o tabuleiro
+      div.onmouseenter = function(e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
+      div.onmousemove = function(e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
+      div.onmouseleave = hideTooltip;
       circle.appendChild(div);
     }
   });
@@ -680,6 +697,10 @@ function renderizarPedrasVerticaisAbsoluto(pedras) {
     div.style.top = i * espacamento + "px";
     div.innerHTML = `<img src="${p.url}" alt="${p.nome}" draggable="false">`;
     div.setAttribute("data-idx", i);
+    // Tooltip: Arraste para o tabuleiro
+    div.onmouseenter = function(e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
+    div.onmousemove = function(e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
+    div.onmouseleave = hideTooltip;
     if (estadoJogo.alinhamentoFeito && ehMinhaVez()) {
       div.onmousedown = function (e) {
         e.preventDefault();
@@ -1630,6 +1651,10 @@ function renderizarPedrasMesa(pedras) {
       div.setAttribute("data-idx", i);
       if (p.virada) {
         div.innerHTML = `<div style='width:100%;height:100%;border-radius:50%;background:#fff;border:2px solid #2d8cff;position:relative;'></div>`;
+        // Tooltip: Arraste para Mover | 2x Clique para Espiar
+        div.onmouseenter = function(e) { showTooltip("Arraste para Mover | 2x Clique para Espiar", e.clientX, e.clientY); };
+        div.onmousemove = function(e) { showTooltip("Arraste para Mover | 2x Clique para Espiar", e.clientX, e.clientY); };
+        div.onmouseleave = hideTooltip;
         // Animação dourada se for a pedra espiada
         if (estadoJogo.mesaEspiada === i) {
           const fundo = div.querySelector("div");
@@ -1722,6 +1747,10 @@ function renderizarPedrasMesa(pedras) {
       } else {
         // Pedra virada para cima: nunca permitir clique para desafio
         div.innerHTML = `<img src=\"${p.url}\" alt=\"${p.nome}\" draggable=\"false\">`;
+        // Tooltip: Arraste para Mover | 2x Clique para Esconder
+        div.onmouseenter = function(e) { showTooltip("Arraste para Mover | 2x Clique para Esconder", e.clientX, e.clientY); };
+        div.onmousemove = function(e) { showTooltip("Arraste para Mover | 2x Clique para Esconder", e.clientX, e.clientY); };
+        div.onmouseleave = hideTooltip;
         div.onclick = null;
         div.ondblclick = null;
         div.style.cursor = "not-allowed";
@@ -3278,3 +3307,18 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('[Ko-fi] DOMContentLoaded - tentando carregar Ko-fi');
   carregarKofiWidget();
 });
+
+// Tooltip global
+function showTooltip(msg, x, y) {
+  const tooltip = document.getElementById("tooltip");
+  if (!tooltip) return;
+  tooltip.innerHTML = msg;
+  tooltip.style.display = "block";
+  tooltip.style.left = (x + 12) + "px";
+  tooltip.style.top = (y + 12) + "px";
+}
+function hideTooltip() {
+  const tooltip = document.getElementById("tooltip");
+  if (!tooltip) return;
+  tooltip.style.display = "none";
+}
