@@ -1,6 +1,8 @@
+<!-- ================= INÍCIO DO DOCUMENTO ================= -->
 <html lang="pt-BR">
 
 <head>
+  <!-- ========== METADADOS E IMPORTS ========== -->
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src *; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data:;">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,8 +18,10 @@
 
   <!-- ================= TELA INICIAL ================= -->
   <div id="start-screen" class="active">
+    <!-- Título e slogan -->
     <h1>TellStones</h1>
     <div style="font-size:1.2em;color:#8ecfff;margin-bottom:18px;">Memorize. Blefe. Desafie.</div>
+    <!-- Botões principais -->
     <div>
       <button id="create-room-btn">Criar Sala</button>
       <button id="join-room-btn">Entrar em Sala</button>
@@ -66,16 +70,16 @@
 
   <!-- ================= TELA DE JOGO ================= -->
   <div id="game">
-    <!-- Informações da sala e espectadores -->
+    <!-- ======= INFORMAÇÕES DA SALA E ESPECTADORES ======= -->
     <div id="info-sala">
       <div id="codigo-sala">Código: <span id="codigo-sala-valor"></span></div>
       <div id="espectadores">Espectadores: <span id="lista-espectadores"></span></div>
     </div>
-    <!-- Ícone para abrir ações possíveis -->
+    <!-- ======= ÍCONE DE AÇÕES ======= -->
     <div id="icone-acoes" title="Ações" style="padding:0;width:60px;height:60px;display:flex;align-items:center;justify-content:center;background:none;border:none;">
       <img src="https://github.com/AliceDeSa/Tellstones/raw/main/A%C3%A7%C3%B5es.png" alt="Ações" style="width:54px;height:54px;object-fit:contain;display:block;" />
     </div>
-    <!-- Card de ações possíveis (pode ser renderizado via JS) -->
+    <!-- ======= CARD DE AÇÕES ======= -->
     <div id="box-acoes" style="display:none;">
       <h3>Ações Possíveis</h3>
       <ul>
@@ -98,7 +102,7 @@
         </li>
       </ul>
     </div>
-    <!-- Tabuleiro central -->
+    <!-- ======= TABULEIRO CENTRAL ======= -->
     <div id="tabuleiro-center">
       <div id="linha-vertical-pedras"></div>
       <div id="circle-pedras">
@@ -176,17 +180,19 @@
   <!-- Som de fundo para tela inicial e lobby -->
   <audio id="som-fundo" src="https://github.com/AliceDeSa/Tellstones/blob/main/ambient.mp3" loop style="display:none" preload="auto"></audio>
 
+  <!-- ================= KO-FI WIDGET ================= -->
   <script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>
   <script>
     kofiWidgetOverlay.draw('alicedesa', {
       'type': 'floating-chat',
-      'floating-chat.donateButton.text': '',
+      'floating-chat.donateButton.text':'',
       'floating-chat.donateButton.background-color': '#794bc4',
       'floating-chat.donateButton.text-color': '#fff',
       'floating-chat.position': 'right'
     });
   </script>
 
+  <!-- ================= TOOLTIP GLOBAL ================= -->
   <div id="tooltip" style="display:none;position:fixed;z-index:99999;padding:8px 14px;background:rgba(24,28,36,0.98);color:#ffd700;border-radius:8px;font-size:1em;box-shadow:0 2px 8px #000a;pointer-events:none;white-space:nowrap;"></div>
 
 </body>
