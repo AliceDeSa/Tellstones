@@ -17,6 +17,14 @@
   <!-- ================= PLACAR CENTRAL ================= -->
   <div id="placar-turno-central" style="display:none;"></div>
 
+  <!-- ================= BOTÃO DE MUTE GLOBAL ================= -->
+  <button id="btn-mute-global" title="Mutar/Desmutar Música"
+    style="position:fixed; top:20px; right:20px; z-index:100000; background:transparent; border:none; cursor:pointer; color:rgba(255,255,255,0.7); display:flex; align-items:center; justify-content:center; font-size:24px; transition: color 0.3s;"
+    onmouseover="this.style.color='rgba(255,255,255,1)'"
+    onmouseout="this.style.color='window.isMuted ? \'rgba(255,255,255,0.5)\' : \'rgba(255,255,255,0.7)\''">
+    🔊
+  </button>
+
   <!-- ================= TELA INICIAL ================= -->
   <div id="start-screen" class="active">
     <!-- Título e slogan -->
@@ -221,6 +229,7 @@
   <script src="script.js"></script>
   <!-- Som de fundo para tela inicial e lobby -->
   <audio id="som-fundo" src="assets/audio/ambient.mp3" loop style="display:none" preload="auto"></audio>
+  <audio id="som-click" src="assets/audio/click.wav" preload="auto"></audio>
 
   <!-- ================= KO-FI WIDGET ================= -->
   <script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>

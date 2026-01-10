@@ -175,6 +175,15 @@ function showToast(msg) {
   }, 4000);
 }
 
+// Função auxiliar para tocar som de click
+function tocarSomClick() {
+  const audio = document.getElementById("som-click");
+  if (audio) {
+    audio.currentTime = 0; // Reinicia o som se já estiver tocando
+    audio.play().catch(e => console.warn("Erro ao tocar som de click:", e));
+  }
+}
+
 // Exibe um toast interno (mensagem temporária dentro do jogo)
 function showToastInterno(msg) {
   const toast = document.getElementById("toast-interno");
@@ -221,18 +230,20 @@ function mostrarTela(tela) {
   document.getElementById("lobby").classList.remove("active");
   document.getElementById("game").classList.remove("active");
   document.getElementById(tela).classList.add("active");
-  // Som de fundo só na tela inicial e lobby
+  // Som de fundo (Regra: Tocar no Menu/Lobby, Parar no Jogo)
   const somFundo = document.getElementById("som-fundo");
   const creditosSom = document.getElementById("creditos-som");
   const placarTurno = document.getElementById("placar-turno-central");
+
   if (tela === "start-screen" || tela === "lobby") {
-    if (somFundo) {
+    if (somFundo && !window.isMuted) {
       somFundo.volume = 0.5;
       somFundo.play().catch(() => { });
     }
     if (creditosSom) creditosSom.style.display = "";
     if (placarTurno) placarTurno.style.display = "none";
   } else {
+    // Tela de Jogo ou outras: Parar música
     if (somFundo) somFundo.pause();
     if (creditosSom) creditosSom.style.display = "none";
     if (placarTurno) placarTurno.style.display = "";
@@ -937,6 +948,7 @@ function renderizarPedrasVerticaisAbsoluto(pedras) {
         if (window.tellstonesTutorial) {
           if (!window.tellstonesTutorial.verificarAcao("ARRASTAR_RESERVA")) return;
         }
+        tocarSomClick();
 
         e.preventDefault();
         e.stopPropagation();
@@ -1645,7 +1657,36 @@ if (document.getElementById("enter-room-btn")) {
 }
 
 // Evento para mostrar tela inicial ao carregar a página
+// Evento para mostrar tela inicial ao carregar a página
 window.onload = function () {
+  // Configurar botão de mute
+  window.isMuted = false;
+  const btnMute = document.getElementById("btn-mute-global");
+  if (btnMute) {
+    btnMute.onclick = function () {
+      window.isMuted = !window.isMuted;
+      const somFundo = document.getElementById("som-fundo");
+      const somClick = document.getElementById("som-click");
+      const somMoeda = document.getElementById("som-moeda");
+
+      if (window.isMuted) {
+        btnMute.innerText = "🔇";
+        if (somFundo) somFundo.pause();
+        if (somClick) somClick.muted = true;
+        if (somMoeda) somMoeda.muted = true;
+      } else {
+        btnMute.innerText = "🔊";
+        // Só retoma música se estiver em tela permitida
+        const telaGame = document.getElementById("game");
+        if (somFundo && (!telaGame || !telaGame.classList.contains("active"))) {
+          somFundo.play().catch(() => { });
+        }
+        if (somClick) somClick.muted = false;
+        if (somMoeda) somMoeda.muted = false;
+      }
+    };
+  }
+
   mostrarTela("start-screen");
 };
 
@@ -2119,6 +2160,7 @@ function renderizarPedrasMesa(pedras) {
           div.onclick = function (e) {
             e.stopPropagation();
             if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("SELECIONAR_DESAFIO")) return;
+            tocarSomClick();
             if (!estadoJogo.mesa[i] || !estadoJogo.mesa[i].virada) return;
             adicionarSilhuetaEspiada(i);
             showToastInterno("Aguarde o oponente escolher a pedra!");
@@ -2145,6 +2187,7 @@ function renderizarPedrasMesa(pedras) {
           // Permitir espiar normalmente
           div.ondblclick = function () {
             if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("ESPIAR_PEDRA")) return;
+            tocarSomClick();
             espiarPedra(i);
           };
           div.style.cursor = "pointer";
@@ -2163,6 +2206,7 @@ function renderizarPedrasMesa(pedras) {
               e.preventDefault();
               return;
             }
+            tocarSomClick();
             setTimeout(() => div.classList.add("pedra-troca-selecionada"), 0);
             e.dataTransfer.setData("idx", i);
           };
@@ -2221,6 +2265,7 @@ function renderizarPedrasMesa(pedras) {
         ) {
           div.onclick = function () {
             if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("RESPONDER_DESAFIO")) return;
+            tocarSomClick();
             abrirSeletorPedra(i);
           };
           div.style.cursor = "pointer";
@@ -2239,6 +2284,7 @@ function renderizarPedrasMesa(pedras) {
             if (estadoJogo.mesa[idx] && !estadoJogo.mesa[idx].virada) {
               // Restrição Tutorial: Strict Mode
               if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("VIRAR_PEDRA")) return;
+              tocarSomClick();
 
               estadoJogo.mesa[idx].virada = true;
               salvarEstadoJogo();
@@ -2528,6 +2574,7 @@ function renderizarOpcoesDesafio() {
     btn.className = "pedra-reserva";
     btn.innerHTML = `<img src="${p.url}" alt="${p.nome}">`;
     btn.onclick = function () {
+      tocarSomClick();
       estadoJogo.desafio.escolhaOponente = idx;
       estadoJogo.desafio.status = "resolvido";
       salvarEstadoJogo();
@@ -3120,6 +3167,7 @@ function renderizarRespostaSegabar() {
       btn.style.borderColor = "#fff";
     }
     btn.onclick = function () {
+      tocarSomClick();
       console.log("[DEBUG CLICK] Botão de pedra clicado. Index:", idxAtual, "Pedra:", idxPedra);
       estadoJogo.desafio.respostas = estadoJogo.desafio.respostas || [];
       estadoJogo.desafio.respostas[idxAtual] = idxPedra;
@@ -3606,6 +3654,7 @@ function renderizarRespostaSegabarOponente() {
       btn.classList.add("pedra-troca-selecionada");
     }
     btn.onclick = function () {
+      tocarSomClick();
       estadoJogo.desafio.respostas = estadoJogo.desafio.respostas || [];
       estadoJogo.desafio.respostas[idxAtual] = idxPedra;
       // Salva imediatamente o array de respostas no banco
