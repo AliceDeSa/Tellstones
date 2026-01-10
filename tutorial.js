@@ -485,22 +485,108 @@ class TellstonesTutorial {
         this.overlay = document.createElement("div");
         this.overlay.id = "tutorial-ui";
         this.overlay.style = `
-            position: fixed; top: 170px; right: 280px; width: 300px;
-            background: rgba(24, 28, 36, 0.98); border: 2px solid #4caf50;
+            position: fixed; 
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 300px;
+            max-width: 90vw;
+            background: rgba(24, 28, 36, 0.85); border: 2px solid #4caf50;
             border-radius: 12px; padding: 15px; color: white; z-index: 100000;
             box-shadow: 0 4px 25px rgba(0,0,0,0.7); display: flex; flex-direction: column; gap: 8px;
         `;
 
+        if (window.innerWidth > 900) {
+            this.overlay.style.top = "170px";
+            this.overlay.style.right = "280px";
+            this.overlay.style.left = "unset";
+            this.overlay.style.transform = "none";
+        } else {
+            // Mobile styles adjustments
+            this.overlay.style.width = "90vw";
+            this.overlay.style.padding = "10px";
+            // Limpa posicionamento fixo para permitir drag livre
+            // Mas define uma posição inicial padrão
+            this.overlay.style.top = "unset";
+            this.overlay.style.bottom = "20px";
+            this.overlay.style.right = "20px";
+            this.overlay.style.left = "unset";
+            this.overlay.style.transform = "none";
+            this.overlay.style.maxWidth = "280px";
+        }
+
+        document.body.appendChild(this.overlay);
+
+        // --- Drag Logic (Mouse & Touch) ---
+        let isDragging = false;
+        let startX, startY;
+        let initialLeft, initialTop;
+
+        // Define handlers no escopo de _criarUI
+        const startDrag = (clientX, clientY) => {
+            isDragging = true;
+            startX = clientX;
+            startY = clientY;
+            const rect = this.overlay.getBoundingClientRect();
+
+            initialLeft = rect.left;
+            initialTop = rect.top;
+
+            // Remove constraints de CSS para permitir movimento absoluto
+            this.overlay.style.transform = "none";
+            this.overlay.style.bottom = "auto";
+            this.overlay.style.right = "auto";
+            this.overlay.style.left = initialLeft + "px";
+            this.overlay.style.top = initialTop + "px";
+        };
+
+        const doDrag = (clientX, clientY) => {
+            if (!isDragging) return;
+            const dx = clientX - startX;
+            const dy = clientY - startY;
+            this.overlay.style.left = (initialLeft + dx) + "px";
+            this.overlay.style.top = (initialTop + dy) + "px";
+        };
+
+        const stopDrag = () => {
+            isDragging = false;
+        };
+
+        // --- HANDLER (Header) ---
         const handle = document.createElement("div");
         handle.innerText = "⋮⋮ TUTORIAL ⋮⋮";
-        handle.style = "text-align:center; font-size:15px; color:#4caf50; cursor:move; margin-bottom:5px;";
+        handle.style = "text-align:center; font-size:15px; color:#4caf50; cursor:move; margin-bottom:5px; padding: 10px; border-radius:4px;";
         this.overlay.appendChild(handle);
+
+        // -- Listeners no HANDLE (Mouse) --
+        handle.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            startDrag(e.clientX, e.clientY);
+        });
+        document.addEventListener("mousemove", (e) => doDrag(e.clientX, e.clientY));
+        document.addEventListener("mouseup", stopDrag);
+
+        // -- Listeners no HANDLE (Touch) --
+        handle.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const t = e.touches[0];
+            startDrag(t.clientX, t.clientY);
+        }, { passive: false });
+
+        document.addEventListener("touchmove", (e) => {
+            if (!isDragging) return;
+            e.preventDefault(); // Impede scroll da página
+            const t = e.touches[0];
+            doDrag(t.clientX, t.clientY);
+        }, { passive: false });
+
+        document.addEventListener("touchend", stopDrag);
+
 
         this.texto = document.createElement("div");
         this.overlay.appendChild(this.texto);
 
         this.btnNext = document.createElement("button");
-        this.btnNext.innerText = "Próximo >>";
+        this.btnNext.innerHTML = "Próximo >>";
         this.btnNext.style = `
             background: #4caf50; color: white; border: none; padding: 8px 16px;
             border-radius: 4px; cursor: pointer; align-self: flex-end; margin-top: 10px;
@@ -510,9 +596,6 @@ class TellstonesTutorial {
             this.proximo();
         };
         this.overlay.appendChild(this.btnNext);
-
-        document.body.appendChild(this.overlay);
-        this._tornarArrastavel(handle);
     }
 
     _atualizarBotao() {

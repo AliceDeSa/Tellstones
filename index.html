@@ -6,13 +6,24 @@
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy"
     content="default-src *; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data:;">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=1024, user-scalable=no">
   <meta name="mobile-web-app-capable" content="yes">
   <title>TellStones</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=mobile_fix_55">
 </head>
 
 <body>
+  <!-- ================= OVERLAY GIRAR TELA ================= -->
+  <div id="rotate-device-overlay"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#181c24; z-index:999999; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:20px;">
+    <div style="font-size:4em; color:#ffd700; margin-bottom:20px;">↻</div>
+    <h2 style="color:#fff;">Por favor, gire seu dispositivo</h2>
+    <p style="color:#baecff;">Tellstones foi feito para ser jogado na horizontal.</p>
+    <button id="btn-fullscreen-rotate"
+      style="margin-top:20px; padding:12px 24px; font-size:1.1em; background:#2d8cff; color:white; border:none; border-radius:8px; cursor:pointer;">
+      🔄 Forçar Horizontal (Tela Cheia)
+    </button>
+  </div>
 
   <!-- ================= PLACAR CENTRAL ================= -->
   <div id="placar-turno-central" style="display:none;"></div>
@@ -30,10 +41,12 @@
     <!-- Título e slogan -->
     <h1>TellStones</h1>
     <div style="font-size:1.2em;color:#8ecfff;margin-bottom:18px;">Memorize. Blefe. Desafie.</div>
+    <div style="font-size:0.8em;color:#555;margin-bottom:10px;">v1.55 (Final Fixed)</div>
     <!-- Botões principais -->
     <div id="main-menu-btns" style="display:flex; flex-direction:column; gap:10px; align-items:center;">
       <button id="tutorial-btn" style="background:#4caf50; width: 220px;">Tutorial</button>
-      <button id="bot-pve-btn" style="background:#ff9800; width: 220px;">Jogo PvE (Bot)</button>
+      <button id="bot-pve-btn" style="background:#ff9800; width: 220px;">Jogo PvE (Bot)<br><small
+          style="font-size:0.7em;">(Em desenvolvimento)</small></button>
       <button id="online-menu-btn" style="background:#2d8cff; width: 220px;">Jogo Online</button>
     </div>
 
@@ -224,9 +237,9 @@
   <!-- Script principal do jogo -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <script src="tutorial.js"></script>
-  <script src="bot.js"></script>
-  <script src="script.js"></script>
+  <script src="tutorial.js?v=mobile_fix_55"></script>
+  <script src="bot.js?v=mobile_fix_55"></script>
+  <script src="script.js?v=mobile_fix_55"></script>
   <!-- Som de fundo para tela inicial e lobby -->
   <audio id="som-fundo" src="assets/audio/ambient.mp3" loop style="display:none" preload="auto"></audio>
   <audio id="som-click" src="assets/audio/click.wav" preload="auto"></audio>

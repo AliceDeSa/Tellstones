@@ -405,8 +405,9 @@ input[type="text"] {
 
 /* Tabuleiro maior */
 #game-mesa {
-  min-width: 700px;
-  min-height: 220px;
+  min-width: 95vw;
+  /* Allow shrinking */
+  max-width: 100vw;
   padding: 24px 0;
   gap: 48px;
 }
@@ -607,6 +608,134 @@ input[type="text"] {
   z-index: 2;
 }
 
+/* DESKTOP ZOOM: Scale the BOARD wrapper only, keeping HUD safe */
+#tabuleiro-wrapper {
+  transform: scale(1.1);
+  /* 110% Board Zoom */
+  transform-origin: center center;
+}
+
+/* Ensure Game container is full layout surface */
+#game {
+  width: 100%;
+  height: 100%;
+  transform: none;
+  /* No global transform to allow fixed children */
+}
+
+/* FIX: Target Mobile Landscape explicitly */
+@media (max-width: 1025px) and (orientation: landscape) {
+
+  /* Unset Desktop Zoom on Wrapper, set Mobile Zoom on Center Container */
+  #tabuleiro-wrapper {
+    transform: none;
+    /* Let parent handle or reset */
+  }
+
+  #tabuleiro-center {
+    transform: scale(0.80);
+    /* 80% Board Zoom */
+    transform-origin: center center;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #game {
+    transform: none;
+    overflow: hidden;
+    /* Prevent scroll */
+  }
+
+  /* 1. Código da sala no canto superior ESQUERDO (HUD - Safe outside wrapper) */
+  #info-sala {
+    position: fixed;
+    top: 5px;
+    left: 5px;
+    right: auto;
+    width: auto;
+    text-align: left;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 6px 12px;
+    border-radius: 8px;
+    z-index: 1000;
+    pointer-events: auto;
+  }
+
+  /* Botão Sair - logo abaixo do info sala */
+  #info-sala-local {
+    top: 60px !important;
+    left: 10px !important;
+    right: auto !important;
+  }
+
+  /* 2. Ícone de Ações no canto superior DIREITO (HUD) */
+  #icone-acoes {
+    position: fixed;
+    top: 5px !important;
+    right: 5px !important;
+    bottom: auto !important;
+    left: auto !important;
+    margin: 0;
+    z-index: 2000;
+    transform: scale(0.9);
+  }
+
+  /* 3. Botões de Desafiar e Se Gabar (Inside Wrapper) */
+  #botoes-acoes-laterais {
+    position: absolute;
+    top: 50%;
+    right: -130px !important;
+    transform: translateY(-50%);
+    flex-direction: column;
+    display: flex;
+    gap: 12px;
+    z-index: 1000;
+  }
+
+  #botoes-acoes-laterais button {
+    min-width: 100px;
+    font-size: 1em;
+    padding: 10px 16px;
+  }
+
+  /* 4. Pedras da Reserva */
+  #reserva-pedras,
+  #pedras-reserva,
+  #circle-pedras {
+    position: fixed !important;
+    left: 10px !important;
+    top: 60% !important;
+    transform: translateY(-50%) !important;
+    width: 60px !important;
+    height: auto !important;
+    flex-direction: column !important;
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    margin: 0 !important;
+    background: none !important;
+    pointer-events: auto !important;
+  }
+
+  .pedra-reserva,
+  .pedra-circulo.pedra-reserva {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    margin-bottom: 12px !important;
+    transform: none !important;
+  }
+}
+
+@media (max-width: 900px) and (orientation: portrait) {
+  #rotate-device-overlay {
+    display: flex !important;
+  }
+}
+
 @media (max-width: 900px) {
   #cards-info {
     position: static;
@@ -618,10 +747,41 @@ input[type="text"] {
     right: unset;
   }
 
+  /* SCALE THE BOARD TO FIT SCREEN */
+  #tabuleiro-center {
+    transform-origin: center top;
+    transform: scale(0.85);
+    /* Default scale for tablets */
+    margin-top: 10px;
+  }
+
   #game-mesa {
-    min-width: 100vw;
+    min-width: 100%;
+    /* Was 100vw, changed to 100% to respect parent constraints */
     padding: 8px 0;
     gap: 12px;
+    overflow-x: hidden;
+    /* Prevent horizontal scroll */
+  }
+
+  /* UI ADJUSTMENTS */
+  #info-sala {
+    top: 10px;
+    left: 10px;
+    padding: 6px 10px;
+    font-size: 0.85em;
+    max-width: 140px;
+    /* Prevent overlap with exit btn */
+  }
+
+  #info-sala-local {
+    top: 10px !important;
+    right: 10px !important;
+  }
+
+  #btn-sair-partida {
+    font-size: 0.8em !important;
+    padding: 6px 10px !important;
   }
 
   .card-info {
@@ -645,14 +805,65 @@ input[type="text"] {
   }
 
   .pedra-reserva {
-    width: 64px;
-    height: 64px;
+    width: 50px !important;
+    height: 50px !important;
+  }
+
+  #reserva-pedras {
+    left: 4px !important;
+    top: 60px !important;
+    gap: 4px !important;
   }
 
   .card-popup {
     min-width: 90vw;
     max-width: 98vw;
     padding: 18px 8px 14px 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  #tabuleiro-center {
+    transform: scale(0.45);
+    /* Aggressive reduction to 45% */
+    margin-top: -30px;
+  }
+
+  #info-sala {
+    font-size: 0.75em;
+    background: rgba(24, 28, 36, 0.6);
+    /* Less intrusive */
+  }
+
+  #icone-acoes {
+    width: 48px !important;
+    height: 48px !important;
+    top: 10px !important;
+    /* Move to top aligned with other buttons */
+    right: 70px !important;
+    /* Beside Exit Button */
+  }
+
+  #icone-acoes img {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  /* Fix Right Side Buttons (Desafiar/Se Gabar) */
+  #botoes-acoes-laterais {
+    right: -120px !important;
+    /* Pull aggressively inwards */
+    top: 50% !important;
+    transform: translateY(-50%) scale(1.0) !important;
+    /* Reduce scale */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  #tabuleiro-wrapper {
+    transform: scale(0.9);
+    /* Scale internal wrapper slightly */
   }
 }
 
@@ -1772,6 +1983,49 @@ input[type="text"] {
   pointer-events: none;
   line-height: 1.1;
   width: 100%;
+  user-select: none;
+}
+
+/* GLOBAL MOBILE FIXES */
+* {
+  -webkit-tap-highlight-color: transparent;
+  /* Remove blue tap box on Android/iOS */
+  -webkit-touch-callout: none;
+  /* Disable long-press menu */
+}
+
+.pedra-mesa,
+.pedra-oficial {
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  /* Disable browser handling of gestures (scrolling/zooming) on stones */
+}
+
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -webkit-touch-callout: none;
+  /* CRITICAL: disable iOS/Android long-press menu */
+  pointer-events: none;
+  /* Pass events to parent div */
+}
+
+/* Permitir pointer events apenas em icones especificos se necessario, mas geralmente nao no tabuleiro */
+#icone-acoes,
+#btn-sair-partida,
+.btn-action {
+  pointer-events: auto !important;
+}
+
+#icone-acoes img {
+  pointer-events: none;
+}
+
+body {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
   user-select: none;
 }
 
