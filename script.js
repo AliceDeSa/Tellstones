@@ -4,6 +4,140 @@
 // 1. Configuração Firebase
 // =========================
 
+// =========================
+// LocalDB - Abstração para Modo Offline (Tutorial/PvE)
+// =========================
+let isLocalMode = false;
+let localData = {};
+let tellstonesBot = null;
+
+let localListeners = {}; // NEW: Global listener registry
+
+class LocalRef {
+  constructor(path) {
+    this.path = path;
+  }
+  set(val) {
+    console.log(`[LocalDB SET] ${this.path}`, val);
+    this._setVal(val);
+    this._trigger("value");
+  }
+  update(val) {
+    console.log(`[LocalDB UPDATE] ${this.path}`, val);
+    let current = this._getVal() || {};
+    Object.assign(current, val);
+    this._setVal(current);
+    this._trigger("value");
+  }
+  remove() {
+    console.log(`[LocalDB REMOVE] ${this.path}`);
+    this._setVal(null);
+    this._trigger("value");
+  }
+  push() {
+    const id = "local_" + Math.random().toString(36).substring(2, 7);
+    return new LocalRef(this.path + "/" + id);
+  }
+  on(event, callback) {
+    if (!localListeners[this.path]) localListeners[this.path] = [];
+    localListeners[this.path].push({ event, callback });
+    // Trigger immediately for 'on'
+    this.once(event, callback);
+  }
+  off() {
+    // Simple implementation: remove all listeners for this path (for tutorial purposes)
+    // In a real app we might want to remove only specific callbacks
+    localListeners[this.path] = [];
+  }
+  once(event, callback) {
+    const val = this._getVal();
+    callback({
+      val: () => val,
+      exists: () => val !== null && val !== undefined,
+      ref: this
+    });
+  }
+  transaction(updateFn, onComplete) {
+    const current = this._getVal();
+    const newVal = updateFn(current);
+    if (newVal !== undefined) {
+      this.set(newVal);
+      if (onComplete) onComplete(null, true, { val: () => newVal });
+    } else {
+      if (onComplete) onComplete(null, false, null);
+    }
+  }
+  _getVal() {
+    const parts = this.path.split("/").filter(p => p);
+    let curr = localData;
+    for (const p of parts) {
+      if (!curr) return null;
+      curr = curr[p];
+    }
+    return curr === undefined ? null : curr;
+  }
+  _setVal(val) {
+    const parts = this.path.split("/").filter(p => p);
+    let curr = localData;
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (!curr[parts[i]]) curr[parts[i]] = {};
+      curr = curr[parts[i]];
+    }
+    if (parts.length > 0) {
+      curr[parts[parts.length - 1]] = val;
+    } else {
+      localData = val;
+    }
+  }
+  _trigger(event) {
+    // Implementar bubbling simplificado: notificar listeners do path atual e de todos os pais
+    // Ex: "salas/TUTORIAL/estadoJogo/desafio" -> notifica "salas/TUTORIAL/estadoJogo" -> "salas/TUTORIAL" ...
+    const parts = this.path.split("/");
+    let currentPath = "";
+
+    // Lista de paths para notificar (do raiz até o atual)
+    const pathsToNotify = [];
+    parts.forEach(p => {
+      if (currentPath) currentPath += "/";
+      currentPath += p;
+      pathsToNotify.push(currentPath);
+    });
+    // Adiciona bubbling reverso (opcional, mas aqui queremos notificar PAIS sobre mudanças em FILHOS)
+    // O listener está em 'salas/MODO_TUTORIAL/estadoJogo', e o update pode ser lá ou em filhos.
+
+    // Iterar paths
+    console.log(`[LocalDB TRIGGER] Disparando '${event}' para paths:`, pathsToNotify);
+    pathsToNotify.forEach(notifyPath => {
+      if (localListeners[notifyPath]) {
+        console.log(`[LocalDB TRIGGER] Notificando update em: ${notifyPath}, Listeners: ${localListeners[notifyPath].length}`);
+        const ref = new LocalRef(notifyPath);
+        const val = ref._getVal();
+        localListeners[notifyPath].forEach(l => {
+          if (l.event === event) {
+            try {
+              l.callback({
+                val: () => val,
+                exists: () => val !== null && val !== undefined,
+                ref: ref,
+                key: notifyPath.split("/").pop()
+              });
+            } catch (err) {
+              console.error(`[LocalDB ERROR] Erro no listener de ${notifyPath}:`, err);
+            }
+          }
+        });
+      }
+    });
+  }
+}
+
+function getDBRef(path) {
+  if (isLocalMode) {
+    return new LocalRef(path);
+  }
+  return db.ref(path);
+}
+
 // Configuração do Firebase para conexão com o banco de dados em tempo real
 const firebaseConfig = {
   apiKey: "AIzaSyBsXOj779DLtaL1cC0uxoRp_OmnMzj703c",
@@ -58,7 +192,7 @@ function showToastInterno(msg) {
 // Cria uma nova sala no Firebase com o modo selecionado
 function criarSala(modo) {
   const codigo = gerarCodigoSala();
-  const salaRef = db.ref("salas/" + codigo);
+  const salaRef = getDBRef("salas/" + codigo);
   salaRef.set({
     modo: modo,
     jogadores: {},
@@ -71,11 +205,11 @@ function criarSala(modo) {
 
 // Entra em uma sala como jogador ou espectador
 function entrarSala(codigo, nome, tipo) {
-  const salaRef = db.ref(
+  const salaRef = getDBRef(
     "salas/" +
-      codigo +
-      "/" +
-      (tipo === "espectador" ? "espectadores" : "jogadores")
+    codigo +
+    "/" +
+    (tipo === "espectador" ? "espectadores" : "jogadores")
   );
   const novoRef = salaRef.push();
   novoRef.set({ nome: nome });
@@ -94,7 +228,7 @@ function mostrarTela(tela) {
   if (tela === "start-screen" || tela === "lobby") {
     if (somFundo) {
       somFundo.volume = 0.5;
-      somFundo.play().catch(() => {});
+      somFundo.play().catch(() => { });
     }
     if (creditosSom) creditosSom.style.display = "";
     if (placarTurno) placarTurno.style.display = "none";
@@ -112,6 +246,49 @@ function mostrarTela(tela) {
       kofiBtn.style.display = "flex";
     }
   }
+
+  // CLEANUP UI SEGABAR: Se sair da tela de jogo, remove o container de escolha de pedras
+  if (tela !== "game") {
+    const segabarContainer = document.getElementById("opcoes-resposta-segabar");
+    if (segabarContainer) {
+      segabarContainer.remove();
+    }
+  }
+}
+
+// ==== FUNÇÃO SAIR PARTIDA (GLOBAL) ====
+function sairPartida() {
+  // 1. Limpa listeners do Firebase
+  if (window.salaAtual) {
+    getDBRef("salas/" + window.salaAtual).off();
+    getDBRef("salas/" + window.salaAtual + "/estadoJogo").off();
+  }
+
+  // 2. Reseta estado local
+  window.salaAtual = null;
+  window.jogador = null;
+  window.estadoJogo = null;
+  window.jaEntrouNoGame = false;
+  window.selecionandoDesafio = false;
+  window.tutorialBoastIniciado = false;
+  window.step7BotDoubtsTriggered = false;
+
+  // 3. Limpa UI
+  if (document.getElementById("opcoes-resposta-segabar")) {
+    document.getElementById("opcoes-resposta-segabar").remove();
+  }
+  if (document.getElementById("opcoes-desafio")) {
+    document.getElementById("opcoes-desafio").remove();
+  }
+
+  // 4. Se for tutorial, finaliza
+  if (window.tellstonesTutorial) {
+    if (window.tellstonesTutorial.overlay) window.tellstonesTutorial.overlay.remove();
+    window.tellstonesTutorial = null;
+  }
+
+  // 5. Volta para tela inicial
+  mostrarTela("start-screen");
 }
 
 // Função para adicionar listener de notificações globais por sala
@@ -125,7 +302,7 @@ function adicionarListenerNotificacoes() {
   if (window.notificacaoListener) {
     window.notificacaoListener.off();
   }
-  window.notificacaoListener = db.ref("salas/" + salaAtual + "/notificacoes");
+  window.notificacaoListener = getDBRef("salas/" + salaAtual + "/notificacoes");
   window.notificacaoListener.sala = salaAtual;
   window.notificacaoListener.on("child_added", function (snap) {
     const val = snap.val();
@@ -150,7 +327,7 @@ function mostrarLobby(codigo, nome, criador = false) {
   nomeAtual = nome;
   souCriador = criador;
   adicionarListenerNotificacoes();
-  db.ref("salas/" + codigo + "/estadoJogo").once("value", function (snapshot) {
+  getDBRef("salas/" + codigo + "/estadoJogo").once("value", function (snapshot) {
     if (snapshot.exists()) {
       mesaAnterior = garantirArray(snapshot.val().mesa);
     } else {
@@ -169,7 +346,7 @@ function mostrarLobby(codigo, nome, criador = false) {
   if (btnIniciar) {
     btnIniciar.onclick = function () {
       // Buscar o modo da sala
-      db.ref("salas/" + codigo).once("value", function (snapshot) {
+      getDBRef("salas/" + codigo).once("value", function (snapshot) {
         const sala = snapshot.val();
         const jogadores =
           sala && sala.jogadores ? Object.values(sala.jogadores) : [];
@@ -182,30 +359,30 @@ function mostrarLobby(codigo, nome, criador = false) {
           return;
         }
         // Limpa campos de vencedor e sorteio da moeda antes de iniciar novo jogo
-        db.ref("salas/" + codigo + "/estadoJogo/vencedor").remove();
-        db.ref("salas/" + codigo + "/caraCoroa").remove();
-        db.ref("salas/" + codigo + "/estadoJogo/centralAlinhada").remove();
-        db.ref("salas/" + codigo + "/estadoJogo/alinhamentoFeito").remove();
-        db.ref("salas/" + codigo + "/estadoJogo/mesaEspiada").remove();
-        db.ref("salas/" + codigo + "/estadoJogo/desafio").remove();
+        getDBRef("salas/" + codigo + "/estadoJogo/vencedor").remove();
+        getDBRef("salas/" + codigo + "/caraCoroa").remove();
+        getDBRef("salas/" + codigo + "/estadoJogo/centralAlinhada").remove();
+        getDBRef("salas/" + codigo + "/estadoJogo/alinhamentoFeito").remove();
+        getDBRef("salas/" + codigo + "/estadoJogo/mesaEspiada").remove();
+        getDBRef("salas/" + codigo + "/estadoJogo/desafio").remove();
         // Garante que o botão da moeda será exibido ao iniciar o jogo
         const moedaBtn = document.getElementById("moeda-btn");
         if (moedaBtn) {
           moedaBtn.style.display = "block";
           moedaBtn.disabled = false;
         }
-        db.ref("salas/" + codigo + "/notificacao").set(
+        getDBRef("salas/" + codigo + "/notificacao").set(
           "A partida irá começar!"
         );
         setTimeout(() => {
           // Inicializa o estado do jogo ANTES de mudar o status para 'jogo'
-          db.ref("salas/" + codigo).once("value", function (snapshot) {
+          getDBRef("salas/" + codigo).once("value", function (snapshot) {
             const sala = snapshot.val();
             const jogadores =
               sala && sala.jogadores ? Object.values(sala.jogadores) : [];
             inicializarJogo(jogadores);
             salvarEstadoJogo();
-            db.ref("salas/" + codigo + "/status").set("jogo");
+            getDBRef("salas/" + codigo + "/status").set("jogo");
             showToast("Jogo iniciado!");
           });
         }, 600);
@@ -217,7 +394,7 @@ function mostrarLobby(codigo, nome, criador = false) {
   if (window.lobbyListener) {
     window.lobbyListener.off();
   }
-  window.lobbyListener = db.ref("salas/" + codigo);
+  window.lobbyListener = getDBRef("salas/" + codigo);
   window.lobbyListener.on("value", function (snapshot) {
     const sala = snapshot.val();
     // Jogadores
@@ -255,7 +432,7 @@ function mostrarLobby(codigo, nome, criador = false) {
     // Notificação de início de partida
     if (sala && sala.notificacao) {
       showToast(sala.notificacao);
-      db.ref("salas/" + codigo + "/notificacao").remove();
+      getDBRef("salas/" + codigo + "/notificacao").remove();
     }
     // Se status mudar para jogo, mostrar tela do jogo
     if (sala && sala.status === "jogo") {
@@ -294,13 +471,22 @@ let estadoJogo = {
 // Salva o estado do jogo no Firebase
 function salvarEstadoJogo() {
   if (!salaAtual) return;
-  db.ref("salas/" + salaAtual + "/estadoJogo").set(estadoJogo);
+  getDBRef("salas/" + salaAtual + "/estadoJogo").set(estadoJogo);
+  window.estadoJogo = estadoJogo;
+  if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
 }
 
 // Ouve o estado do jogo no Firebase e atualiza a interface
+// Garante que o valor seja um array (Firebase pode converter para objeto)
+function garantirArray(val) {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  return Object.values(val);
+}
+
 function ouvirEstadoJogo() {
   if (!salaAtual) return;
-  db.ref("salas/" + salaAtual + "/estadoJogo").on("value", function (snapshot) {
+  getDBRef("salas/" + salaAtual + "/estadoJogo").on("value", function (snapshot) {
     if (!snapshot.exists()) {
       return;
     }
@@ -321,7 +507,7 @@ function ouvirEstadoJogo() {
     }
     renderizarPedrasReserva();
     atualizarInfoSala(salaAtual, ultimosEspectadores);
-    db.ref("salas/" + salaAtual + "/caraCoroa").once(
+    getDBRef("salas/" + salaAtual + "/caraCoroa").once(
       "value",
       function (snapRes) {
         const data = snapRes.val();
@@ -340,8 +526,51 @@ function ouvirEstadoJogo() {
     if (!estadoJogo.centralAlinhada) {
       window.alinhamentoAnimado = false;
     }
+    // SWAP LOGIC MOVED INSIDE LISTENER
+    const troca = estadoJogo.trocaAnimacao;
+
+    if (
+      troca &&
+      (!ultimoTrocaAnimacao || ultimoTrocaAnimacao.timestamp !== troca.timestamp)
+    ) {
+      ultimoTrocaAnimacao = troca;
+      // Executa animação localmente
+      animarTrocaCircular(troca.from, troca.to, function () {
+        // Após a animação, apenas o jogador que iniciou faz a troca real no Firebase
+        // No modo correio/tutorial (isLocalMode), sempre executa
+        if (nomeAtual === troca.jogador || isLocalMode) {
+          // Troca as peças no array
+          const novaMesa = [...estadoJogo.mesa];
+          const temp = novaMesa[troca.from];
+          novaMesa[troca.from] = novaMesa[troca.to];
+          novaMesa[troca.to] = temp;
+          // Calcula o novo turno
+          let novoVez = estadoJogo.vez;
+          if (estadoJogo.jogadores.length === 2) {
+            novoVez = (estadoJogo.vez + 1) % 2;
+          } else if (estadoJogo.jogadores.length === 4) {
+            novoVez = (estadoJogo.vez + 1) % 2;
+          }
+          getDBRef("salas/" + salaAtual + "/estadoJogo").update({
+            mesa: novaMesa,
+            trocaAnimacao: null,
+            vez: novoVez
+          });
+        }
+        showToastInterno("Pedras trocadas!");
+      });
+    }
+
+    // Garante layout vertical para todos após alinhamento, mesmo se não animou
+    if (estadoJogo.centralAlinhada && estadoJogo.alinhamentoFeito) {
+      window.animouReservaCircular = false;
+      renderizarPedrasReserva();
+    }
+
+    window.estadoJogo = estadoJogo;
+    if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
   });
-  db.ref("salas/" + salaAtual + "/caraCoroa/sorteioFinalizado").once(
+  getDBRef("salas/" + salaAtual + "/caraCoroa/sorteioFinalizado").once(
     "value",
     function (snap) {
       if ((!snap.exists() || !snap.val()) && !estadoJogo.centralAlinhada) {
@@ -353,42 +582,6 @@ function ouvirEstadoJogo() {
       }
     }
   );
-  const troca = estadoJogo.trocaAnimacao;
-  if (
-    troca &&
-    (!ultimoTrocaAnimacao || ultimoTrocaAnimacao.timestamp !== troca.timestamp)
-  ) {
-    ultimoTrocaAnimacao = troca;
-    // Executa animação localmente
-    animarTrocaCircular(troca.from, troca.to, function () {
-      // Após a animação, apenas o jogador que iniciou faz a troca real no Firebase
-      if (nomeAtual === troca.jogador) {
-        // Troca as peças no array
-        const novaMesa = [...estadoJogo.mesa];
-        const temp = novaMesa[troca.from];
-        novaMesa[troca.from] = novaMesa[troca.to];
-        novaMesa[troca.to] = temp;
-        // Calcula o novo turno
-        let novoVez = estadoJogo.vez;
-        if (estadoJogo.jogadores.length === 2) {
-          novoVez = (estadoJogo.vez + 1) % 2;
-        } else if (estadoJogo.jogadores.length === 4) {
-          novoVez = (estadoJogo.vez + 1) % 2;
-        }
-        db.ref("salas/" + salaAtual + "/estadoJogo").update({
-          mesa: novaMesa,
-          trocaAnimacao: null,
-          vez: novoVez
-        });
-      }
-      showToastInterno("Pedras trocadas!");
-    });
-  }
-  // Garante layout vertical para todos após alinhamento, mesmo se não animou
-  if (estadoJogo.centralAlinhada && estadoJogo.alinhamentoFeito) {
-    window.animouReservaCircular = false;
-    renderizarPedrasReserva();
-  }
 }
 
 // Corrigir inicializarJogo para NÃO colocar a pedra central na mesa antes do sorteio
@@ -429,17 +622,22 @@ function inicializarJogo(jogadores) {
     .slice()
     .sort(() => Math.random() - 0.5);
   const pedraCentral = pedrasEmbaralhadas.shift();
-  const mesa = Array(7).fill(null);
+  // Inicializar estado customizado
   estadoJogo = {
     jogadores: jogadores.map((j) => ({
       nome: j.nome,
       pontos: 0,
       id: j.id || j.nome
     })),
-    mesa: mesa, // sem pedra central ainda
+    mesa: Array(7).fill(null), // sem pedra central ainda
     reserva: pedrasEmbaralhadas,
-    pedraCentral: { ...pedraCentral, virada: false }
-    // vez será definido pelo sorteio da moeda
+    pedraCentral: { ...pedraCentral, virada: false },
+    vez: 1, // Começa com o jogador (Aprendiz, index 1)
+    alinhamentoFeito: false,
+    centralAlinhada: false,
+    mesaEspiada: null,
+    vencedor: null,
+    trocaAnimacao: null
   };
 }
 
@@ -525,11 +723,10 @@ function atualizarInfoSala(codigo, espectadores) {
         const destaque =
           (estadoJogo.jogadores.length === 2 && i === estadoJogo.vez) ||
           (estadoJogo.jogadores.length === 4 && i % 2 === estadoJogo.vez);
-        return `<span style='${
-          destaque
-            ? "color:#ffd700;font-weight:bold;text-shadow:0 0 8px #ffd70088;"
-            : ""
-        }'>${j.nome}: ${j.pontos}</span>`;
+        return `<span style='${destaque
+          ? "color:#ffd700;font-weight:bold;text-shadow:0 0 8px #ffd70088;"
+          : ""
+          }'>${j.nome}: ${j.pontos}</span>`;
       })
       .join(" <b>|</b> ");
     placarTurnoDiv.innerHTML = `<div style='margin-bottom:4px;'>${placar}</div>`;
@@ -588,8 +785,8 @@ function renderizarPedrasCirculo(pedras, pedraCentral) {
       div.innerHTML = `<img src="${p.url}" alt="${p.nome}" draggable="false">`;
       div.setAttribute("data-idx", i);
       // Tooltip: Arraste para o tabuleiro
-      div.onmouseenter = function(e) { showTooltip("Arraste para o Tabuleiro", e.clientX, e.clientY); };
-      div.onmousemove = function(e) { showTooltip("Arraste para o Tabuleiro", e.clientX, e.clientY); };
+      div.onmouseenter = function (e) { showTooltip("Arraste para o Tabuleiro", e.clientX, e.clientY); };
+      div.onmousemove = function (e) { showTooltip("Arraste para o Tabuleiro", e.clientX, e.clientY); };
       div.onmouseleave = hideTooltip;
       circle.appendChild(div);
       setTimeout(() => {
@@ -611,8 +808,8 @@ function renderizarPedrasCirculo(pedras, pedraCentral) {
       div.innerHTML = `<img src="${p.url}" alt="${p.nome}" draggable="false">`;
       div.setAttribute("data-idx", i);
       // Tooltip: Arraste para o tabuleiro
-      div.onmouseenter = function(e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
-      div.onmousemove = function(e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
+      div.onmouseenter = function (e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
+      div.onmousemove = function (e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
       div.onmouseleave = hideTooltip;
       circle.appendChild(div);
     }
@@ -699,27 +896,48 @@ function desenharHighlightsFixos(validos, wrapper) {
 function renderizarPedrasVerticaisAbsoluto(pedras) {
   if (animacaoAlinhamentoEmAndamento) return;
   const circle = document.getElementById("circle-pedras");
-  circle.style.display = "";
+
+  // Flexbox Configuration
+  circle.style.display = "flex";
+  circle.style.flexDirection = "column";
+  circle.style.justifyContent = "flex-start"; // Start from top
+  circle.style.alignItems = "flex-start"; // Align left
+  circle.style.gap = "6px";
+  circle.style.position = "fixed";
+  circle.style.left = "20px";
+  circle.style.top = "130px"; // Adjusted top
+  circle.style.transform = "none";
+  circle.style.width = "auto";
+  circle.style.height = "auto";
+  circle.style.pointerEvents = "auto";
+  circle.style.paddingTop = "0";
   circle.innerHTML = "";
-  const alturaPedra = 80;
-  const containerAltura = 420; // aumentei ainda mais para mais espaço
-  const total = pedras.length;
-  const espacamento =
-    total > 1 ? (containerAltura - alturaPedra) / (total - 1) : 0;
+
   pedras.forEach((p, i) => {
+    if (!p) return;
     const div = document.createElement("div");
     div.className = "pedra-circulo pedra-reserva";
-    div.style.position = "absolute";
-    div.style.left = "90px";
-    div.style.top = i * espacamento + "px";
-    div.innerHTML = `<img src="${p.url}" alt="${p.nome}" draggable="false">`;
+    div.style.position = "relative";
+    div.style.left = "0";
+    div.style.top = "0";
+    div.style.width = "55px"; // Adjusted size
+    div.style.height = "55px";
+    div.innerHTML = `<img src="${p.url}" alt="${p.nome}" draggable="false" style="width:100%; height:100%;">`;
     div.setAttribute("data-idx", i);
-    // Tooltip: Arraste para o tabuleiro
-    div.onmouseenter = function(e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
-    div.onmousemove = function(e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
+
+    // Tooltip
+    div.onmouseenter = function (e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
+    div.onmousemove = function (e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
     div.onmouseleave = hideTooltip;
+
+    // Drag Logic
     if (estadoJogo.alinhamentoFeito && ehMinhaVez()) {
       div.onmousedown = function (e) {
+        // Bloqueio Tutorial: Strict Mode
+        if (window.tellstonesTutorial) {
+          if (!window.tellstonesTutorial.verificarAcao("ARRASTAR_RESERVA")) return;
+        }
+
         e.preventDefault();
         e.stopPropagation();
         const rect = div.getBoundingClientRect();
@@ -736,10 +954,11 @@ function renderizarPedrasVerticaisAbsoluto(pedras) {
         ghost.style.opacity = "0.85";
         ghost.style.zIndex = 99999;
         document.body.appendChild(ghost);
-        div.style.opacity = "0";
+        div.style.opacity = "0.3";
         div.style.pointerEvents = "none";
-        // Destacar slots válidos na mesa
+
         const wrapper = document.getElementById("tabuleiro-wrapper");
+
         let highlights = [];
         function desenharHighlights() {
           highlights.forEach((h) => h.remove());
@@ -770,6 +989,7 @@ function renderizarPedrasVerticaisAbsoluto(pedras) {
           });
         }
         desenharHighlights();
+
         let slotAlvo = null;
         function onMove(ev) {
           ghost.style.left = ev.clientX - offsetX + "px";
@@ -777,20 +997,11 @@ function renderizarPedrasVerticaisAbsoluto(pedras) {
           slotAlvo = null;
           highlights.forEach((h) => {
             const r = h.getBoundingClientRect();
-            if (
-              ev.clientX >= r.left &&
-              ev.clientX <= r.right &&
-              ev.clientY >= r.top &&
-              ev.clientY <= r.bottom
-            ) {
-              h.style.background = "transparent";
-              h.style.border = "none";
-              h.style.boxShadow = "0 0 0 1.5px #ffd70099, 0 0 4px 1px #fff3";
+            if (ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom) {
+              h.style.border = "2px solid #ffd700";
               slotAlvo = parseInt(h.getAttribute("data-slot"));
             } else {
-              h.style.background = "transparent";
               h.style.border = "none";
-              h.style.boxShadow = "0 0 0 1.5px #ffd70099, 0 0 4px 1px #fff3";
             }
           });
         }
@@ -804,12 +1015,25 @@ function renderizarPedrasVerticaisAbsoluto(pedras) {
           if (slotAlvo !== null) {
             const idxAtual = parseInt(div.getAttribute("data-idx"));
             const pedraObj = estadoJogo.reserva[idxAtual];
-            estadoJogo.reserva.splice(idxAtual, 1);
-            inserirPedraNaMesa(pedraObj, slotAlvo);
-            renderizarMesa();
-            renderizarPedrasVerticaisAbsoluto(estadoJogo.reserva);
-            setupMesaInteractions();
-            showToastInterno("Pedra colocada!");
+            console.log("[DEBUG] Soltando pedra reserva", { idxAtual, slotAlvo, pedraObj, reserva: [...estadoJogo.reserva] });
+            if (pedraObj) {
+              try {
+                estadoJogo.reserva[idxAtual] = null;
+                inserirPedraNaMesa(pedraObj, slotAlvo);
+                renderizarMesa();
+                renderizarPedrasVerticaisAbsoluto(estadoJogo.reserva);
+                setupMesaInteractions();
+                showToastInterno("Pedra colocada!");
+                if (window.tellstonesTutorial) {
+                  console.log("[DEBUG] Triggering tutorial validation");
+                  window.tellstonesTutorial.registrarAcaoConcluida();
+                }
+              } catch (e) {
+                console.error("[DEBUG] Erro ao colocar pedra:", e);
+              }
+            } else {
+              console.warn("[DEBUG] Pedra não encontrada!");
+            }
           }
           ghost.remove();
         }
@@ -870,6 +1094,10 @@ function setupMesaInteractions() {
     if (ehMinhaVez() && !estadoJogo.desafio) {
       pedra.setAttribute("draggable", "true");
       pedra.ondragstart = (e) => {
+        if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("TROCAR_PEDRAS")) {
+          e.preventDefault();
+          return;
+        }
         setTimeout(() => pedra.classList.add("pedra-troca-selecionada"), 0);
         e.dataTransfer.setData("idx", idx);
       };
@@ -888,7 +1116,7 @@ function setupMesaInteractions() {
         div.classList.remove("pedra-drop-alvo");
         const fromIdxDrop = parseInt(e.dataTransfer.getData("idx"));
         if (fromIdxDrop === idx) return;
-        db.ref("salas/" + salaAtual + "/estadoJogo").update({
+        getDBRef("salas/" + salaAtual + "/estadoJogo").update({
           trocaAnimacao: {
             from: fromIdxDrop,
             to: i,
@@ -919,7 +1147,7 @@ let escolhaJogador = null;
 function definirEscolha(escolha) {
   if (!salaAtual || !nomeAtual) return;
   // Tenta registrar a escolha apenas se ainda não houver escolha registrada
-  db.ref("salas/" + salaAtual + "/caraCoroa/escolha").transaction(function (
+  getDBRef("salas/" + salaAtual + "/caraCoroa/escolha").transaction(function (
     current
   ) {
     if (current === null) {
@@ -946,7 +1174,7 @@ let ultimoLadoNotificado = null;
 
 function ouvirCaraCoroa() {
   if (!salaAtual) return;
-  db.ref("salas/" + salaAtual + "/caraCoroa").on("value", function (snap) {
+  getDBRef("salas/" + salaAtual + "/caraCoroa").on("value", function (snap) {
     const data = snap.val();
     window.ultimoCaraCoroaData = data;
     const escolhaDiv = document.getElementById("escolha-cara-coroa");
@@ -971,7 +1199,7 @@ function ouvirCaraCoroa() {
       btnCara.style.display = "inline-flex";
       btnCara.style.flexDirection = "column";
       btnCara.style.alignItems = "center";
-      btnCara.innerHTML = `<img src='https://github.com/AliceDeSa/Tellstones/blob/main/Cara.png?raw=true' alt='Cara' style='width:80px;height:80px;border-radius:50%;margin-bottom:10px;box-shadow:0 2px 8px #0007;' /><span style='font-size:1.1em;'>Cara</span>`;
+      btnCara.innerHTML = `<img src='assets/img/Cara.png' alt='Cara' style='width:80px;height:80px;border-radius:50%;margin-bottom:10px;box-shadow:0 2px 8px #0007;' /><span style='font-size:1.1em;'>Cara</span>`;
     }
     if (btnCoroa) {
       btnCoroa.style.fontSize = "1.3em";
@@ -980,7 +1208,7 @@ function ouvirCaraCoroa() {
       btnCoroa.style.display = "inline-flex";
       btnCoroa.style.flexDirection = "column";
       btnCoroa.style.alignItems = "center";
-      btnCoroa.innerHTML = `<img src='https://github.com/AliceDeSa/Tellstones/blob/main/Coroa.png?raw=true' alt='Coroa' style='width:80px;height:80px;border-radius:50%;margin-bottom:10px;box-shadow:0 2px 8px #0007;' /><span style='font-size:1.1em;'>Coroa</span>`;
+      btnCoroa.innerHTML = `<img src='assets/img/Coroa.png' alt='Coroa' style='width:80px;height:80px;border-radius:50%;margin-bottom:10px;box-shadow:0 2px 8px #0007;' /><span style='font-size:1.1em;'>Coroa</span>`;
     }
     if (!data || !data.escolha) {
       if (escolhaDiv) escolhaDiv.style.display = "flex";
@@ -1000,7 +1228,7 @@ function ouvirCaraCoroa() {
     escolhaJogador = minhaEscolha;
     // Sincronização do feedback para ambos
     if (!data.feedbackLiberado) {
-      db.ref("salas/" + salaAtual + "/caraCoroa/feedbackLiberado").set(
+      getDBRef("salas/" + salaAtual + "/caraCoroa/feedbackLiberado").set(
         Date.now()
       );
       return;
@@ -1083,7 +1311,7 @@ function mostrarMoedaParaSorteioSincronizado(resultado, minhaEscolha) {
         mostrarNotificacaoMoeda("");
         // --- NOVO: Buscar escolha do Firebase para garantir nomeGanhador correto ---
         function tentarDefinirVencedorMoeda(tentativas = 0) {
-          db.ref("salas/" + salaAtual + "/caraCoroa/escolha").once(
+          getDBRef("salas/" + salaAtual + "/caraCoroa/escolha").once(
             "value",
             function (snapEscolha) {
               const escolhaData = snapEscolha.val();
@@ -1123,12 +1351,12 @@ function mostrarMoedaParaSorteioSincronizado(resultado, minhaEscolha) {
                 );
                 if (idx !== -1) {
                   // Atualizar o campo 'vez' dentro do objeto inteiro do estado do jogo
-                  db.ref("salas/" + salaAtual + "/estadoJogo").once(
+                  getDBRef("salas/" + salaAtual + "/estadoJogo").once(
                     "value",
                     function (snapEstado) {
                       const estado = snapEstado.val() || {};
                       estado.vez = idx;
-                      db.ref("salas/" + salaAtual + "/estadoJogo").set(estado);
+                      getDBRef("salas/" + salaAtual + "/estadoJogo").set(estado);
                       console.log(
                         "[DEBUG] vez atualizado pelo sorteio da moeda para:",
                         idx
@@ -1162,7 +1390,7 @@ function mostrarMoedaParaSorteioSincronizado(resultado, minhaEscolha) {
         tentarDefinirVencedorMoeda();
         // ---
         // NOVO: sinaliza no Firebase que o sorteio foi finalizado
-        db.ref("salas/" + salaAtual + "/caraCoroa/sorteioFinalizado").set(true);
+        getDBRef("salas/" + salaAtual + "/caraCoroa/sorteioFinalizado").set(true);
         //sincronizarPedraCentralEAlinhamento(); // agora só será chamado pelo listener
       }, 500);
     }, 2500);
@@ -1252,7 +1480,7 @@ function sincronizarPedraCentralEAlinhamento() {
     }
     // Log antes da transação do Firebase
     console.log('[ALINHAMENTO][DEBUG] Antes da transação do Firebase');
-    db.ref("salas/" + salaAtual + "/estadoJogo/centralAlinhada").transaction(
+    getDBRef("salas/" + salaAtual + "/estadoJogo/centralAlinhada").transaction(
       function (current) {
         if (current === true) return; // já foi alinhada
         return true;
@@ -1326,7 +1554,7 @@ function sincronizarPedraCentralEAlinhamento() {
             // Atualiza o array mesa inteiro no Firebase
             const novaMesa = [null, null, null, pedraCentral, null, null, null];
             console.log('[ALINHAMENTO] Atualizando Firebase com central alinhada', { novaMesa, pedraCentral });
-            db.ref("salas/" + salaAtual + "/estadoJogo").update({
+            getDBRef("salas/" + salaAtual + "/estadoJogo").update({
               mesa: novaMesa,
               pedraCentral: null,
               centralAlinhada: true,
@@ -1421,13 +1649,22 @@ window.onload = function () {
   mostrarTela("start-screen");
 };
 
+// Evento para voltar do Lobby
+if (document.getElementById("back-from-lobby-btn")) {
+  document.getElementById("back-from-lobby-btn").onclick = function () {
+    if (confirm("Deseja sair do Lobby?")) {
+      sairPartida();
+    }
+  }
+}
+
 // Função para o criador sortear e salvar o resultado
 function mostrarMoedaParaSorteioCriador() {
   garantirMoedaBtnNoDOM();
   const moedaBtn = document.getElementById("moeda-btn");
   const moedaAnimada = document.getElementById("moeda-animada");
   // Checa se já existe resultado no Firebase
-  db.ref("salas/" + salaAtual + "/caraCoroa/resultado").once(
+  getDBRef("salas/" + salaAtual + "/caraCoroa/resultado").once(
     "value",
     function (snapshot) {
       if (snapshot.exists()) {
@@ -1437,7 +1674,7 @@ function mostrarMoedaParaSorteioCriador() {
         return; // Já foi sorteado!
       }
       // NOVO: só permite sortear se a escolha existir
-      db.ref("salas/" + salaAtual + "/caraCoroa/escolha").once(
+      getDBRef("salas/" + salaAtual + "/caraCoroa/escolha").once(
         "value",
         function (snapEscolha) {
           if (!snapEscolha.exists()) {
@@ -1458,7 +1695,7 @@ function mostrarMoedaParaSorteioCriador() {
                 moedaAnimada.classList.add("moeda-girando");
               }
               // Usa transação para garantir atomicidade
-              db.ref("salas/" + salaAtual + "/caraCoroa/resultado").transaction(
+              getDBRef("salas/" + salaAtual + "/caraCoroa/resultado").transaction(
                 function (current) {
                   if (current === null) {
                     return Math.random() < 0.5 ? 0 : 1;
@@ -1474,57 +1711,143 @@ function mostrarMoedaParaSorteioCriador() {
   );
 }
 
-// Listeners dos botões da tela inicial (Criar Sala e Entrar em Sala)
-document.addEventListener("DOMContentLoaded", function () {
-  const btnCriar = document.getElementById("create-room-btn");
-  const btnEntrar = document.getElementById("join-room-btn");
+// Listeners dos botões da tela inicial
+const btnOnline = document.getElementById("online-menu-btn");
+const btnVoltarMain = document.getElementById("back-to-main-btn");
+const mainMenu = document.getElementById("main-menu-btns");
+const onlineMenu = document.getElementById("online-menu");
+const btnCriar = document.getElementById("create-room-btn");
+const btnEntrar = document.getElementById("join-room-btn");
 
-  if (btnCriar) {
-    btnCriar.onclick = function () {
-      document.getElementById("room-options").style.display = "block";
-      document.getElementById("join-room").style.display = "none";
+if (btnOnline) {
+  btnOnline.onclick = () => {
+    mainMenu.style.display = "none";
+    onlineMenu.style.display = "flex";
+  };
+}
+
+if (btnVoltarMain) {
+  btnVoltarMain.onclick = () => {
+    mainMenu.style.display = "flex";
+    onlineMenu.style.display = "none";
+    document.getElementById("room-options").style.display = "none";
+    document.getElementById("join-room").style.display = "none";
+  };
+}
+
+if (btnCriar) {
+  btnCriar.onclick = function () {
+    document.getElementById("room-options").style.display = "block";
+    document.getElementById("join-room").style.display = "none";
+  };
+}
+if (btnEntrar) {
+  btnEntrar.onclick = function () {
+    document.getElementById("room-options").style.display = "none";
+    document.getElementById("join-room").style.display = "block";
+  };
+}
+const btnDesafiar = document.getElementById("btn-desafiar");
+
+// Novos botões: Tutorial e Bot
+const btnTutorial = document.getElementById("tutorial-btn");
+const btnBot = document.getElementById("bot-pve-btn");
+
+if (btnTutorial) {
+  btnTutorial.onclick = function () {
+    iniciarModoTutorial();
+  };
+}
+
+if (btnBot) {
+  btnBot.onclick = function () {
+    alert("Modo PvE ainda em desenvolvimento!");
+    // iniciarModoBot();
+  };
+}
+
+const btnSairPartida = document.getElementById("btn-sair-partida");
+if (btnSairPartida) {
+  btnSairPartida.onclick = function () {
+    const btnVoltarLobbyManual = document.getElementById("btn-voltar-lobby");
+    if (btnVoltarLobbyManual) {
+      btnVoltarLobbyManual.click();
+    } else {
       mostrarTela("start-screen");
-      // Sincroniza nome se já preenchido no campo de entrar
-      const nomeEntrar = document.getElementById("nome-entrar").value.trim();
-      if (nomeEntrar) {
-        document.getElementById("nome-criar").value = nomeEntrar;
+      isLocalMode = false;
+      tellstonesBot = null;
+      if (window.tellstonesTutorial) {
+        window.tellstonesTutorial.finalizar();
+        window.tellstonesTutorial = null;
       }
+      // Remove tutorial UI if it exists
+      const tutorialUI = document.getElementById("tutorial-ui");
+      if (tutorialUI) tutorialUI.remove();
+    }
+  };
+  // Move o botão para dentro do container de info da sala
+  const infoSala = document.getElementById("info-sala");
+  if (infoSala) {
+    infoSala.appendChild(btnSairPartida);
+    infoSala.style.display = "flex";
+    infoSala.style.flexDirection = "column";
+    infoSala.style.alignItems = "center";
+    infoSala.style.gap = "8px";
+    infoSala.style.textAlign = "center";
+
+    btnSairPartida.style.position = "static";
+    btnSairPartida.style.margin = "8px 0 0 0";
+    btnSairPartida.style.fontSize = "0.85em";
+    btnSairPartida.style.padding = "6px 12px";
+    btnSairPartida.style.background = "rgba(244, 67, 54, 0.15)";
+    btnSairPartida.style.color = "#ff5252";
+    btnSairPartida.style.border = "1px solid #ff5252";
+    btnSairPartida.style.borderRadius = "4px";
+    btnSairPartida.style.cursor = "pointer";
+    btnSairPartida.style.transition = "all 0.2s";
+
+    btnSairPartida.onmouseover = () => {
+      btnSairPartida.style.background = "rgba(244, 67, 54, 0.3)";
+      btnSairPartida.style.boxShadow = "0 0 8px rgba(255, 82, 82, 0.4)";
+    };
+    btnSairPartida.onmouseout = () => {
+      btnSairPartida.style.background = "rgba(244, 67, 54, 0.15)";
+      btnSairPartida.style.boxShadow = "none";
     };
   }
-  if (btnEntrar) {
-    btnEntrar.onclick = function () {
-      document.getElementById("room-options").style.display = "none";
-      document.getElementById("join-room").style.display = "block";
-      mostrarTela("start-screen");
-      // Sincroniza nome se já preenchido no campo de criar
-      const nomeCriar = document.getElementById("nome-criar").value.trim();
-      if (nomeCriar) {
-        document.getElementById("nome-entrar").value = nomeCriar;
-      }
-    };
-  }
-  const btnDesafiar = document.getElementById("btn-desafiar");
-  if (btnDesafiar) {
-    btnDesafiar.onclick = function () {
-      if (!ehMinhaVez()) {
-        showToastInterno("Aguarde sua vez!");
-        return;
-      }
-      // Só permite se houver pelo menos uma pedra virada para baixo
-      const pedrasViradas = estadoJogo.mesa.filter((p) => p && p.virada);
-      if (!pedrasViradas.length) {
-        showToastInterno("Não há pedras viradas para baixo para desafiar!");
-        return;
-      }
-      showToastInterno("Selecione uma pedra virada para baixo para desafiar.");
-      window.selecionandoDesafio = true;
-      // Marcar status 'selecionando' no desafio
-      estadoJogo.desafio = { status: "selecionando" };
-      salvarEstadoJogo();
-      renderizarMesa();
-    };
-  }
-});
+}
+
+if (btnDesafiar) {
+  btnDesafiar.onclick = function () {
+    if (!ehMinhaVez()) {
+      showToastInterno("Aguarde sua vez!");
+      return;
+    }
+    // Restrição Tutorial: Strict Mode
+    if (salaAtual === "MODO_TUTORIAL" && window.tellstonesTutorial) {
+      if (!window.tellstonesTutorial.verificarAcao("BOTAO_DESAFIAR")) return;
+    }
+    // Restrição Tutorial
+    // Restrição Tutorial
+    if (salaAtual === "MODO_TUTORIAL" && window.tellstonesTutorial && window.tellstonesTutorial.passo !== 5) {
+      showToastInterno("Siga o tutorial: agora não é hora de desafiar.");
+      return;
+    }
+    // Só permite se houver pelo menos uma pedra virada para baixo
+    const pedrasViradas = estadoJogo.mesa.filter((p) => p && p.virada);
+    if (!pedrasViradas.length) {
+      showToastInterno("Não há pedras viradas para baixo para desafiar!");
+      return;
+    }
+    showToastInterno("Selecione uma pedra virada para baixo para desafiar.");
+    window.selecionandoDesafio = true;
+    // Marcar status 'selecionando' no desafio com o jogador correto
+    estadoJogo.desafio = { status: "selecionando", jogador: nomeAtual };
+    salvarEstadoJogo();
+    renderizarMesa();
+  };
+}
+
 
 // =========================
 // Função para mostrar a tela de jogo
@@ -1537,7 +1860,39 @@ function mostrarJogo(codigo, jogadores, espectadores) {
   adicionarListenerNotificacoes();
   mostrarTela("game");
   atualizarInfoSala(codigo, espectadores);
-  db.ref("salas/" + codigo + "/estadoJogo").once("value", function (snapshot) {
+
+  // Garantir que o botão de sair está no lugar certo
+  const btnSair = document.getElementById("btn-sair-partida");
+  const infoSala = document.getElementById("info-sala");
+  if (btnSair && infoSala && !infoSala.contains(btnSair)) {
+    infoSala.appendChild(btnSair);
+    infoSala.style.display = "flex";
+    infoSala.style.flexDirection = "column";
+    infoSala.style.alignItems = "center";
+    infoSala.style.gap = "8px";
+    infoSala.style.textAlign = "center";
+
+    btnSair.style.position = "static";
+    btnSair.style.margin = "8px 0 0 0";
+    btnSair.style.fontSize = "0.85em";
+    btnSair.style.padding = "6px 12px";
+    btnSair.style.background = "rgba(244, 67, 54, 0.15)";
+    btnSair.style.color = "#ff5252";
+    btnSair.style.border = "1px solid #ff5252";
+    btnSair.style.borderRadius = "4px";
+    btnSair.style.cursor = "pointer";
+    btnSair.style.transition = "all 0.2s";
+
+    btnSair.onmouseover = () => {
+      btnSair.style.background = "rgba(244, 67, 54, 0.3)";
+      btnSair.style.boxShadow = "0 0 8px rgba(255, 82, 82, 0.4)";
+    };
+    btnSair.onmouseout = () => {
+      btnSair.style.background = "rgba(244, 67, 54, 0.15)";
+      btnSair.style.boxShadow = "none";
+    };
+  }
+  getDBRef("salas/" + codigo + "/estadoJogo").once("value", function (snapshot) {
     if (snapshot.exists()) {
       mesaAnterior = garantirArray(snapshot.val().mesa);
     } else {
@@ -1615,6 +1970,11 @@ function inserirPedraNaMesa(pedraObj, slotAlvo) {
     showToastInterno("Aguarde o alinhamento da pedra central!");
     return;
   }
+  // Restrição Tutorial
+  if (salaAtual === "MODO_TUTORIAL" && window.tellstonesTutorial && window.tellstonesTutorial.passo !== 1) {
+    showToastInterno("Siga o tutorial: coloque a pedra no momento certo.");
+    return;
+  }
   if (!Array.isArray(estadoJogo.mesa) || estadoJogo.mesa.length !== 7) {
     const novaMesa = Array(7).fill(null);
     if (Array.isArray(estadoJogo.mesa)) {
@@ -1626,10 +1986,12 @@ function inserirPedraNaMesa(pedraObj, slotAlvo) {
   }
   estadoJogo.mesa[slotAlvo] = { ...pedraObj, virada: false };
   // Atualiza apenas os campos necessários, nunca sobrescreva 'vez' aqui
-  db.ref("salas/" + salaAtual + "/estadoJogo").update({
+  getDBRef("salas/" + salaAtual + "/estadoJogo").update({
     mesa: estadoJogo.mesa,
     reserva: estadoJogo.reserva
   });
+  window.estadoJogo = { ...estadoJogo };
+  if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
   console.log(
     "[DEBUG] inserirPedraNaMesa: enviando notificação de pedra colocada"
   );
@@ -1661,11 +2023,28 @@ function avancarTurno() {
   } else if (estadoJogo.jogadores.length === 4) {
     novoVez = (estadoJogo.vez + 1) % 2;
   }
+
+  // No modo Tutorial, não queremos que o turno mude automaticamente para o Bot
+  if (salaAtual === "MODO_TUTORIAL") {
+    const tutorial = window.tellstonesTutorial;
+    // Permite trocar turno apenas nos passos onde há interação de jogo real (5, 6, 7, 8)
+    // 5: Desafiar Bot, 6: Responder Bot, 7: Se Gabar, 8: Defender Se Gabar
+    const passosPermitidos = [5, 6, 7, 8];
+    console.log("[DEBUG][TURN] avancarTurno | Tutorial Passo:", tutorial.passo, "Permitido?", passosPermitidos.includes(tutorial.passo));
+    if (!tutorial || !passosPermitidos.includes(tutorial.passo)) {
+      console.log("[TUTORIAL] Turno travado no jogador para permitir passos sequenciais.");
+      window.estadoJogo = { ...estadoJogo };
+      if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
+      renderizarMesa();
+      return;
+    }
+  }
+
   estadoJogo.vez = novoVez;
-  db.ref("salas/" + salaAtual + "/estadoJogo/vez").once(
+  getDBRef("salas/" + salaAtual + "/estadoJogo/vez").once(
     "value",
     function (snap) {
-      db.ref("salas/" + salaAtual + "/estadoJogo").update({ vez: novoVez });
+      getDBRef("salas/" + salaAtual + "/estadoJogo").update({ vez: novoVez });
       atualizarInfoSala(salaAtual, ultimosEspectadores);
       renderizarMesa();
     }
@@ -1721,8 +2100,8 @@ function renderizarPedrasMesa(pedras) {
       if (p.virada) {
         div.innerHTML = `<div style='width:100%;height:100%;border-radius:50%;background:#fff;border:2px solid #2d8cff;position:relative;'></div>`;
         // Tooltip: Arraste para Mover | 2x Clique para Espiar
-        div.onmouseenter = function(e) { showTooltip("Arraste para Mover | 2x Clique para Espiar", e.clientX, e.clientY); };
-        div.onmousemove = function(e) { showTooltip("Arraste para Mover | 2x Clique para Espiar", e.clientX, e.clientY); };
+        div.onmouseenter = function (e) { showTooltip("Arraste para Mover | 2x Clique para Espiar", e.clientX, e.clientY); };
+        div.onmousemove = function (e) { showTooltip("Arraste para Mover | 2x Clique para Espiar", e.clientX, e.clientY); };
         div.onmouseleave = hideTooltip;
         // Animação dourada se for a pedra espiada
         if (estadoJogo.mesaEspiada === i) {
@@ -1739,6 +2118,7 @@ function renderizarPedrasMesa(pedras) {
           div.style.cursor = "pointer";
           div.onclick = function (e) {
             e.stopPropagation();
+            if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("SELECIONAR_DESAFIO")) return;
             if (!estadoJogo.mesa[i] || !estadoJogo.mesa[i].virada) return;
             adicionarSilhuetaEspiada(i);
             showToastInterno("Aguarde o oponente escolher a pedra!");
@@ -1751,9 +2131,10 @@ function renderizarPedrasMesa(pedras) {
             const desafioAtual = estadoJogo.desafio || {};
             desafioAtual.idxPedra = i;
             desafioAtual.status = "aguardando_resposta";
-            db.ref("salas/" + salaAtual + "/estadoJogo/desafio").set(
+            getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").set(
               desafioAtual
             );
+            if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
             window.selecionandoDesafio = false;
           };
         } else if (
@@ -1763,6 +2144,7 @@ function renderizarPedrasMesa(pedras) {
         ) {
           // Permitir espiar normalmente
           div.ondblclick = function () {
+            if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("ESPIAR_PEDRA")) return;
             espiarPedra(i);
           };
           div.style.cursor = "pointer";
@@ -1772,9 +2154,15 @@ function renderizarPedrasMesa(pedras) {
           div.style.cursor = "not-allowed";
         }
         // Permitir drag & drop APENAS se for a vez do jogador
+        // Permitir drag & drop APENAS se for a vez do jogador
+        // Restrição Tutorial: Strict Mode
         if (ehMinhaVez()) {
           div.setAttribute("draggable", "true");
           div.ondragstart = (e) => {
+            if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("TROCAR_PEDRAS")) {
+              e.preventDefault();
+              return;
+            }
             setTimeout(() => div.classList.add("pedra-troca-selecionada"), 0);
             e.dataTransfer.setData("idx", i);
           };
@@ -1793,7 +2181,7 @@ function renderizarPedrasMesa(pedras) {
             div.classList.remove("pedra-drop-alvo");
             const fromIdxDrop = parseInt(e.dataTransfer.getData("idx"));
             if (fromIdxDrop === i) return;
-            db.ref("salas/" + salaAtual + "/estadoJogo").update({
+            getDBRef("salas/" + salaAtual + "/estadoJogo").update({
               trocaAnimacao: {
                 from: fromIdxDrop,
                 to: i,
@@ -1817,17 +2205,41 @@ function renderizarPedrasMesa(pedras) {
         // Pedra virada para cima: nunca permitir clique para desafio
         div.innerHTML = `<img src=\"${p.url}\" alt=\"${p.nome}\" draggable=\"false\">`;
         // Tooltip: Arraste para Mover | 2x Clique para Esconder
-        div.onmouseenter = function(e) { showTooltip("Arraste para Mover | 2x Clique para Esconder", e.clientX, e.clientY); };
-        div.onmousemove = function(e) { showTooltip("Arraste para Mover | 2x Clique para Esconder", e.clientX, e.clientY); };
+        div.onmouseenter = function (e) { showTooltip("Arraste para Mover | 2x Clique para Esconder", e.clientX, e.clientY); };
+        div.onmousemove = function (e) { showTooltip("Arraste para Mover | 2x Clique para Esconder", e.clientX, e.clientY); };
         div.onmouseleave = hideTooltip;
         div.onclick = null;
         div.ondblclick = null;
         div.style.cursor = "not-allowed";
-        // Permitir virar se for a vez do jogador
-        if (estadoJogo.alinhamentoFeito && ehMinhaVez()) {
+
+        // Interação para responder desafio (Se Gabar / Desafio Normal)
+        if (
+          estadoJogo.desafio &&
+          estadoJogo.desafio.status === "responder_pecas" &&
+          estadoJogo.desafio.jogador === nomeAtual &&
+          ehMinhaVez()
+        ) {
+          div.onclick = function () {
+            if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("RESPONDER_DESAFIO")) return;
+            abrirSeletorPedra(i);
+          };
+          div.style.cursor = "pointer";
+          div.title = "Selecionar pedra";
+          // IMPORTANTE: Impede outros eventos (drag/flip) retornando o tratamento aqui
+          // Mas como estamos dentro do loop, usamos continue se fosse loop, mas aqui é função do forEach.
+          // Vamos garantir que bloco de flip/drag não rode se entrar aqui.
+        }
+
+        // Permitir virar se for a vez do jogador e NÃO estiver respondendo desafio
+        if (estadoJogo.alinhamentoFeito && ehMinhaVez() &&
+          (!estadoJogo.desafio || estadoJogo.desafio.status !== "responder_pecas")
+        ) {
           div.ondblclick = function () {
             const idx = parseInt(div.getAttribute("data-idx"));
             if (estadoJogo.mesa[idx] && !estadoJogo.mesa[idx].virada) {
+              // Restrição Tutorial: Strict Mode
+              if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("VIRAR_PEDRA")) return;
+
               estadoJogo.mesa[idx].virada = true;
               salvarEstadoJogo();
               console.log(
@@ -1836,6 +2248,7 @@ function renderizarPedrasMesa(pedras) {
               enviarNotificacaoGlobal(
                 `Pedra (${estadoJogo.mesa[idx].nome}) foi virada.`
               );
+              if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
               avancarTurno();
             }
           };
@@ -1861,18 +2274,29 @@ function renderizarPedrasMesa(pedras) {
           div.ondrop = (e) => {
             e.preventDefault();
             div.classList.remove("pedra-drop-alvo");
-            const fromIdxDrop = parseInt(e.dataTransfer.getData("idx"));
-            if (fromIdxDrop === i) return;
-            db.ref("salas/" + salaAtual + "/estadoJogo").update({
-              trocaAnimacao: {
-                from: fromIdxDrop,
-                to: i,
-                timestamp: Date.now(),
-                jogador: nomeAtual
+            const idxReserva = e.dataTransfer.getData("idxReserva");
+            if (idxReserva) {
+              // Veio da reserva
+              const rIdx = parseInt(idxReserva);
+              const pedraObj = estadoJogo.reserva[rIdx];
+              if (pedraObj) {
+                estadoJogo.reserva[rIdx] = null;
+                inserirPedraNaMesa(pedraObj, i);
               }
-            });
-            showToastInterno("Pedras trocadas!");
-            // Removido avancarTurno() aqui
+            } else {
+              // Veio da mesa
+              const fromIdxDrop = parseInt(e.dataTransfer.getData("idx"));
+              if (isNaN(fromIdxDrop) || fromIdxDrop === i) return;
+              getDBRef("salas/" + salaAtual + "/estadoJogo").update({
+                trocaAnimacao: {
+                  from: fromIdxDrop,
+                  to: i,
+                  timestamp: Date.now(),
+                  jogador: nomeAtual
+                }
+              });
+              showToastInterno("Pedras trocadas!");
+            }
           };
         } else {
           div.setAttribute("draggable", "false");
@@ -1922,7 +2346,7 @@ function garantirArray(objOuArray) {
 // Função para enviar notificação global para todos os jogadores
 function enviarNotificacaoGlobal(msg) {
   if (!salaAtual) return;
-  db.ref("salas/" + salaAtual + "/notificacoes").push(msg);
+  getDBRef("salas/" + salaAtual + "/notificacoes").push(msg);
 }
 
 // Exemplo de função para espiar uma pedra virada (toast privado)
@@ -1933,14 +2357,19 @@ function espiarPedra(idx) {
       `Você espiou: ${pedra.nome} <span style='display:inline-block;width:44px;height:44px;background:#fff;border-radius:50%;vertical-align:middle;margin-left:8px;box-shadow:0 1px 4px #0002;'><img src='${pedra.url}' alt='${pedra.nome}' style='width:40px;height:40px;vertical-align:middle;margin:2px;'></span>`
     );
     // Notifica todos os outros jogadores que alguém espiou
-    db.ref("salas/" + salaAtual + "/notificacoes").push({
+    getDBRef("salas/" + salaAtual + "/notificacoes").push({
       msg: `${nomeAtual} espiou uma pedra.`,
       skip: nomeAtual
     });
     // Salva só o campo mesaEspiada no Firebase
-    db.ref("salas/" + salaAtual + "/estadoJogo").update({ mesaEspiada: idx });
+    // Salva só o campo mesaEspiada no Firebase
+    getDBRef("salas/" + salaAtual + "/estadoJogo").update({ mesaEspiada: idx });
+
+    // Tutorial: Marca passo como concluído
+    if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
+
     setTimeout(() => {
-      db.ref("salas/" + salaAtual + "/estadoJogo/mesaEspiada").remove();
+      getDBRef("salas/" + salaAtual + "/estadoJogo/mesaEspiada").remove();
     }, 2200);
     avancarTurno();
   } else {
@@ -1980,7 +2409,7 @@ window.addEventListener("click", function ativarSomFundo() {
   const somFundo = document.getElementById("som-fundo");
   if (somFundo && somFundo.paused) {
     somFundo.volume = 0.5;
-    somFundo.play().catch(() => {});
+    somFundo.play().catch(() => { });
   }
   window.removeEventListener("click", ativarSomFundo);
 });
@@ -1992,7 +2421,7 @@ function garantirAudioFundoCarregado() {
       somFundo.src =
         "https://raw.githubusercontent.com/AliceDeSa/Tellstones/main/ambient.mp3";
       somFundo.load();
-      somFundo.play().catch(() => {});
+      somFundo.play().catch(() => { });
     };
   }
 }
@@ -2001,17 +2430,26 @@ garantirAudioFundoCarregado();
 // Função para renderizar as opções de desafio para o oponente
 function renderizarOpcoesDesafio() {
   // Só mostra se houver desafio pendente, for oponente e NÃO for do tipo 'segabar'
+  console.log("[DEBUG][UI] renderizarOpcoesDesafio | Desafio:", estadoJogo.desafio ? "Sim" : "Não");
+  if (estadoJogo.desafio) {
+    console.log("[DEBUG][UI] Status:", estadoJogo.desafio.status, "Tipo:", estadoJogo.desafio.tipo, "Jogador:", estadoJogo.desafio.jogador);
+  }
+
   if (
     !estadoJogo.desafio ||
     estadoJogo.desafio.status !== "aguardando_resposta" ||
     estadoJogo.desafio.tipo === "segabar"
   ) {
     // Esconde o container se não for para mostrar
+    console.log("[DEBUG][UI] Escondendo opcoes-desafio (Condição de saída atendida)");
     const antigo = document.getElementById("opcoes-desafio");
     if (antigo) antigo.style.display = "none";
     return;
   }
-  if (ehMinhaVez()) return; // Só o oponente vê
+  if (ehMinhaVez()) {
+    console.log("[DEBUG][UI] renderizarOpcoesDesafio: É minha vez, retornando (Oponente só vê).");
+    return;
+  }
   // Cria ou seleciona o container
   let container = document.getElementById("opcoes-desafio");
   if (!container) {
@@ -2025,12 +2463,20 @@ function renderizarOpcoesDesafio() {
     container.style.border = "none";
     container.style.boxShadow = "none";
     container.style.position = "relative";
+    // Forçar sempre no Body para garantir visibilidade (Nuclear Fix)
+    // Restaurar hierarquia original (dentro do tabuleiro-center)
     const tabuleiroCenter = document.getElementById("tabuleiro-center");
-    if (tabuleiroCenter)
-      tabuleiroCenter.parentNode.insertBefore(
-        container,
-        tabuleiroCenter.nextSibling
-      );
+    if (tabuleiroCenter) {
+      if (!tabuleiroCenter.contains(container)) {
+        tabuleiroCenter.insertBefore(container, tabuleiroCenter.firstChild);
+      }
+    } else {
+      document.body.appendChild(container); // Fallback apenas se não achar
+    }
+
+    // Aplicar estilos: Absolute para não empurrar, Width 740px (igual mesa)
+    container.style.cssText = "display: flex; justify-content: center; top: 7%; left: 50%; transform: translateX(-50%); padding: 0px; background: transparent; border: none; box-shadow: none; position: absolute; z-index: 99999; width: 740px; flex-direction: column; align-items: center;";
+
   } else {
     container.innerHTML = "";
     container.style.display = "flex";
@@ -2050,31 +2496,31 @@ function renderizarOpcoesDesafio() {
   const pedrasOficiais = [
     {
       nome: "Coroa",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/Coroa.svg"
+      url: "assets/img/Coroa.svg"
     },
     {
       nome: "Espada",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/espada.svg"
+      url: "assets/img/espada.svg"
     },
     {
       nome: "Balança",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/Balança.svg"
+      url: "assets/img/Balança.svg"
     },
     {
       nome: "Cavalo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/cavalo.svg"
+      url: "assets/img/cavalo.svg"
     },
     {
       nome: "Escudo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/escudo.svg"
+      url: "assets/img/escudo.svg"
     },
     {
       nome: "Bandeira",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/bandeira.svg"
+      url: "assets/img/bandeira.svg"
     },
     {
       nome: "Martelo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/martelo.svg"
+      url: "assets/img/martelo.svg"
     }
   ];
   pedrasOficiais.forEach((p, idx) => {
@@ -2085,7 +2531,12 @@ function renderizarOpcoesDesafio() {
       estadoJogo.desafio.escolhaOponente = idx;
       estadoJogo.desafio.status = "resolvido";
       salvarEstadoJogo();
+      resolverDesafioSeNecessario(); // Force logic execution
+      renderizarMesa();
       container.style.display = "none";
+
+      // Update tutorial if needed
+      if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
     };
     linha.appendChild(btn);
   });
@@ -2121,6 +2572,8 @@ const oldOuvirEstadoJogo = ouvirEstadoJogo;
 ouvirEstadoJogo = function () {
   oldOuvirEstadoJogo.apply(this, arguments);
   setTimeout(renderizarOpcoesDesafio, 100); // Garante que a UI já foi atualizada
+  setTimeout(renderizarOpcoesSegabar, 100); // Garante que a UI de Se Gabar também seja atualizada
+  setTimeout(renderizarRespostaSegabar, 100); // Garante que a UI de Resposta ao Se Gabar seja atualizada (Correção)
 };
 
 // Função para resolver o desafio após a escolha do oponente
@@ -2130,8 +2583,8 @@ function resolverDesafioSeNecessario() {
     return;
   }
   if (window.resolvendoDesafio) return;
-  // Só o desafiante executa a pontuação
-  if (!ehMinhaVez()) return;
+  // Só o desafiante executa a pontuação, EXCETO no Tutorial onde o local script manda
+  if (!ehMinhaVez() && salaAtual !== "MODO_TUTORIAL") return;
   window.resolvendoDesafio = true;
   const idxPedra = estadoJogo.desafio.idxPedra;
   const idxEscolhida = estadoJogo.desafio.escolhaOponente;
@@ -2144,31 +2597,31 @@ function resolverDesafioSeNecessario() {
   const pedrasOficiais = [
     {
       nome: "Coroa",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/Coroa.svg"
+      url: "assets/img/Coroa.svg"
     },
     {
       nome: "Espada",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/espada.svg"
+      url: "assets/img/espada.svg"
     },
     {
       nome: "Balança",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/Balança.svg"
+      url: "assets/img/Balança.svg"
     },
     {
       nome: "Cavalo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/cavalo.svg"
+      url: "assets/img/cavalo.svg"
     },
     {
       nome: "Escudo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/escudo.svg"
+      url: "assets/img/escudo.svg"
     },
     {
       nome: "Bandeira",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/bandeira.svg"
+      url: "assets/img/bandeira.svg"
     },
     {
       nome: "Martelo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/martelo.svg"
+      url: "assets/img/martelo.svg"
     }
   ];
   // Revela a pedra
@@ -2193,12 +2646,32 @@ function resolverDesafioSeNecessario() {
   // Atualiza mesa, jogadores e remove desafio
   const jogadoresAtualizados = estadoJogo.jogadores.map((j) => ({ ...j }));
   const mesaAtualizada = estadoJogo.mesa.map((p) => (p ? { ...p } : null));
-  db.ref("salas/" + salaAtual + "/estadoJogo").update({
+
+  // Troca de turno após desafio
+  const proximaVez = (estadoJogo.vez + 1) % estadoJogo.jogadores.length;
+  estadoJogo.vez = proximaVez;
+
+  getDBRef("salas/" + salaAtual + "/estadoJogo").update({
     jogadores: jogadoresAtualizados,
-    mesa: mesaAtualizada
+    mesa: mesaAtualizada,
+    vez: proximaVez
   });
-  db.ref("salas/" + salaAtual + "/estadoJogo/desafio").remove();
-  // Mensagem
+  getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+
+  // Feedback imediato para o Tutorial
+  if (salaAtual === "MODO_TUTORIAL") {
+    const msg = acertou
+      ? "Você acertou! O Mestre errou o desafio."
+      : "Você errou! O Mestre marcou ponto.";
+    showToastInterno(msg);
+
+    // Força verificação do tutorial após atualização de turno
+    if (window.tellstonesTutorial) {
+      setTimeout(() => window.tellstonesTutorial.registrarAcaoConcluida(), 500);
+    }
+  }
+
+  // Mensagem Global
   setTimeout(() => {
     // Notificação para todos os jogadores
     enviarNotificacaoGlobal(
@@ -2248,6 +2721,17 @@ function bloquearAcoesDuranteDesafio() {
     // Bloqueia pedras da mesa
     const pedrasMesa = document.querySelectorAll(".pedra-mesa, .pedra-oficial");
     pedrasMesa.forEach((div) => {
+      // Exceção: Se estiver respondendo ao desafio (Se Gabar ou Desafio Normal)
+      // E for a vez do jogador atual responder
+      if (
+        (estadoJogo.desafio.status === "responder_pecas" && estadoJogo.desafio.jogador === nomeAtual) ||
+        (estadoJogo.desafio.status === "responder_pecas_oponente" && estadoJogo.desafio.jogador !== nomeAtual)
+      ) {
+        div.style.cursor = "pointer";
+        // Não remove listeners, permite que renderizarMesa defina os cliques de resposta
+        return;
+      }
+
       div.onclick = null;
       div.ondblclick = null;
       div.onmousedown = null;
@@ -2299,7 +2783,23 @@ const btnSegabar = document.getElementById("btn-segabar");
 if (btnSegabar) {
   btnSegabar.onclick = function () {
     if (!ehMinhaVez()) {
-      showToastInterno("Aguarde sua vez!");
+      // EXCEÇÃO TUTORIAL: Se estiver no passo 7 (Se Gabar), permitir mesmo que a vez esteja desincronizada
+      if (salaAtual === "MODO_TUTORIAL" && window.tellstonesTutorial && window.tellstonesTutorial.passo === 7) {
+        // Permite passar
+        console.warn("[TUTORIAL] Forçando permissão de Se Gabar no passo 7.");
+      } else {
+        showToastInterno("Aguarde sua vez!");
+        return;
+      }
+    }
+    // Restrição Tutorial: Strict Mode
+    if (salaAtual === "MODO_TUTORIAL" && window.tellstonesTutorial) {
+      if (!window.tellstonesTutorial.verificarAcao("BOTAO_SE_GABAR")) return;
+    }
+    // Restrição Tutorial
+    // Restrição Tutorial
+    if (salaAtual === "MODO_TUTORIAL" && window.tellstonesTutorial && window.tellstonesTutorial.passo !== 7) {
+      showToastInterno("Siga o tutorial: use 'Se Gabar' no momento certo.");
       return;
     }
     // Bloqueio: só permite se houver pelo menos uma pedra virada para baixo
@@ -2339,7 +2839,8 @@ function renderizarOpcoesSegabar() {
   // Sempre que mostrar o segabar, esconde o de desafio normal
   const desafioNormal = document.getElementById("opcoes-desafio");
   if (desafioNormal) desafioNormal.style.display = "none";
-  if (ehMinhaVez()) return; // Só o oponente vê
+  // Se eu sou o jogador que está se gabando, eu não vejo as opções de resposta (acreditar/duvidar)
+  if (estadoJogo.desafio.jogador === nomeAtual) return;
   // Cria ou seleciona o container exclusivo
   let container = document.getElementById("opcoes-segabar");
   if (!container) {
@@ -2353,12 +2854,12 @@ function renderizarOpcoesSegabar() {
     container.style.border = "none";
     container.style.boxShadow = "none";
     container.style.position = "relative";
-    const tabuleiroCenter = document.getElementById("tabuleiro-center");
-    if (tabuleiroCenter)
-      tabuleiroCenter.parentNode.insertBefore(
-        container,
-        tabuleiroCenter.nextSibling
-      );
+    // Forçar sempre no Body para garantir visibilidade (Nuclear Fix)
+    // Forçar sempre no Body para garantir visibilidade (Nuclear Fix) e usar position fixed
+    document.body.appendChild(container);
+    container.style.cssText = "display: flex; justify-content: center; top: 11%; left: 50%; transform: translateX(-50%); padding: 0px; background: transparent; border: none; box-shadow: none; position: fixed; z-index: 99999; width: 740px; flex-direction: column; align-items: center;";
+
+
   } else {
     container.innerHTML = "";
     container.style.display = "flex";
@@ -2377,18 +2878,37 @@ function renderizarOpcoesSegabar() {
   btnAcreditar.className = "acao-btn";
   btnAcreditar.style.margin = "0 12px";
   btnAcreditar.onclick = function () {
+    if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("RESPONDER_DESAFIO")) return;
     console.log("[DEBUG] Clique em Acreditar");
     // Encontra o índice do jogador que se gabou
     const idx = estadoJogo.jogadores.findIndex(
       (j) => j.nome === estadoJogo.desafio.jogador
     );
     if (idx !== -1) estadoJogo.jogadores[idx].pontos++;
+
+    // Feedback explícito e correção de turno para Tutorial
+    if (salaAtual === "MODO_TUTORIAL") {
+      showToastInterno(`Você acreditou. O Mestre marcou ponto!`);
+      estadoJogo.vez = 1; // Devolve a vez para o jogador (Index 1)
+      getDBRef("salas/" + salaAtual + "/estadoJogo").update({
+        jogadores: estadoJogo.jogadores,
+        vez: 1
+      });
+      getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+      container.style.display = "none";
+
+      if (window.tellstonesTutorial) {
+        setTimeout(() => window.tellstonesTutorial.registrarAcaoConcluida(), 500);
+      }
+      return;
+    }
+
     // Remove o desafio e atualiza apenas os campos necessários
     const jogadoresAtualizados = estadoJogo.jogadores.map((j) => ({ ...j }));
-    db.ref("salas/" + salaAtual + "/estadoJogo").update({
+    getDBRef("salas/" + salaAtual + "/estadoJogo").update({
       jogadores: jogadoresAtualizados
     });
-    db.ref("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+    getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
     showToast("O jogador ganhou 1 ponto!");
     // Esconde o container para todos
     container.style.display = "none";
@@ -2400,6 +2920,32 @@ function renderizarOpcoesSegabar() {
   btnDuvidar.className = "acao-btn";
   btnDuvidar.style.margin = "0 12px";
   btnDuvidar.onclick = function () {
+    if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("RESPONDER_DESAFIO")) return;
+    // Lógica especial para Tutorial (Auto-Resolução)
+    if (salaAtual === "MODO_TUTORIAL") {
+      showToastInterno("Você duvidou! O Mestre vai provar...");
+      setTimeout(() => {
+        // Simula o Mestre acertando todas (ele é perfeito) e pontuando
+        showToastInterno("Mestre revelou as pedras e acertou! Ponto para ele.");
+        // Bot ganha ponto
+        const idxBot = estadoJogo.jogadores.findIndex(j => j.nome === "Mestre");
+        if (idxBot !== -1) estadoJogo.jogadores[idxBot].pontos++;
+
+        estadoJogo.vez = 1; // Devolve vez ao jogador (Index 1)
+        getDBRef("salas/" + salaAtual + "/estadoJogo").update({
+          jogadores: estadoJogo.jogadores,
+          vez: 1
+        });
+        getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+        container.style.display = "none";
+
+        if (window.tellstonesTutorial) {
+          setTimeout(() => window.tellstonesTutorial.registrarAcaoConcluida(), 500);
+        }
+      }, 1500);
+      return;
+    }
+
     // Inicia o fluxo de resposta para o jogador que se gabou
     estadoJogo.desafio.status = "responder_pecas";
     estadoJogo.desafio.idxAtual = 0;
@@ -2414,10 +2960,17 @@ function renderizarOpcoesSegabar() {
   btnSegabarTambem.className = "acao-btn";
   btnSegabarTambem.style.margin = "0 12px";
   btnSegabarTambem.onclick = function () {
-    // O oponente entra no fluxo de responder as pedras
-    estadoJogo.desafio.status = "responder_pecas_oponente";
-    estadoJogo.desafio.idxAtual = 0;
-    estadoJogo.desafio.respostasOponente = [];
+    if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("RESPONDER_DESAFIO")) return;
+    // Lógica correta de Counter-Boast: Inverte quem está se gabando e aguarda resposta do oponente original
+    estadoJogo.desafio.jogador = nomeAtual;
+    estadoJogo.desafio.status = "aguardando_resposta";
+
+    // Se for Tutorial, precisamos notificar para o Bot reagir
+    if (salaAtual === "MODO_TUTORIAL") {
+      // O Tutorial.js vai detectar 'aguardando_resposta' + 'Aprendiz' e fazer o Bot Duvidar
+      if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
+    }
+
     salvarEstadoJogo();
     container.style.display = "none";
   };
@@ -2434,29 +2987,51 @@ ouvirEstadoJogo = function () {
   oldOuvirEstadoJogoSegabar.apply(this, arguments);
   setTimeout(renderizarOpcoesDesafio, 100);
   setTimeout(renderizarOpcoesSegabar, 100);
+  setTimeout(renderizarRespostaSegabar, 100);
   setTimeout(resolverDesafioSeNecessario, 200);
 };
 
 // Renderizar interface de resposta do Se Gabar para o jogador que se gabou
+// Renderizar interface de resposta do Se Gabar para o jogador que se gabou
 function renderizarRespostaSegabar() {
+  console.log("[DEBUG][UI] renderizarRespostaSegabar | Chamado.");
+  if (!estadoJogo.desafio) {
+    console.log("[DEBUG][UI] renderizarRespostaSegabar | Sem desafio ativo.");
+    return;
+  }
+  console.log("[DEBUG][UI] renderizarRespostaSegabar | Estado:", estadoJogo.desafio.tipo, estadoJogo.desafio.status, "Jogador:", estadoJogo.desafio.jogador);
+
   if (
-    !estadoJogo.desafio ||
     estadoJogo.desafio.tipo !== "segabar" ||
     estadoJogo.desafio.status !== "responder_pecas"
-  )
+  ) {
+    console.log("[DEBUG][UI] renderizarRespostaSegabar | Tipo ou Status incorreto. Saindo.");
     return;
+  }
+
   // Só o jogador que se gabou vê
-  if (nomeAtual !== estadoJogo.desafio.jogador) return;
+  // EXCEÇÃO TUTORIAL: Se for "Aprendiz", mostramos para o usuário local (independente do nome real)
+  const ehTutorialAprendiz = salaAtual === "MODO_TUTORIAL" && estadoJogo.desafio.jogador === "Aprendiz";
+  console.log("[DEBUG][UI] renderizarRespostaSegabar | NomeAuth:", nomeAtual, "Target:", estadoJogo.desafio.jogador, "EhTutorial:", ehTutorialAprendiz);
+
+  if (nomeAtual !== estadoJogo.desafio.jogador && !ehTutorialAprendiz) {
+    console.log("[DEBUG][UI] Não sou o jogador do desafio. Retornando.");
+    return;
+  }
+
+  console.log("[DEBUG][UI] renderizarRespostaSegabar | Renderizando UI de Prova...");
   // Descobrir todas as pedras viradas para baixo na mesa (em ordem)
   const pedrasViradas = estadoJogo.mesa
     .map((p, idx) => ({ ...p, idx }))
     .filter((p) => p && p.virada);
   const idxAtual = estadoJogo.desafio.idxAtual || 0;
-  // Reutiliza o container do desafio
-  let container = document.getElementById("opcoes-desafio");
+  console.log("[DEBUG][UI] renderizarRespostaSegabar | Index Atual:", idxAtual, "Total:", pedrasViradas.length);
+
+  // Reutiliza o container do desafio (Agora com ID único para evitar conflitos)
+  let container = document.getElementById("opcoes-resposta-segabar");
   if (!container) {
     container = document.createElement("div");
-    container.id = "opcoes-desafio";
+    container.id = "opcoes-resposta-segabar";
     container.style.display = "flex";
     container.style.justifyContent = "center";
     container.style.margin = "0 auto";
@@ -2465,12 +3040,11 @@ function renderizarRespostaSegabar() {
     container.style.border = "none";
     container.style.boxShadow = "none";
     container.style.position = "relative";
-    const tabuleiroCenter = document.getElementById("tabuleiro-center");
-    if (tabuleiroCenter)
-      tabuleiroCenter.parentNode.insertBefore(
-        container,
-        tabuleiroCenter.nextSibling
-      );
+
+    // Forçar sempre no Body para garantir visibilidade (Nuclear Fix) e usar position fixed
+    document.body.appendChild(container);
+    container.style.cssText = "display: flex; justify-content: center; top: 5%; left: 50%; transform: translateX(-50%); padding: 0px; background: transparent; border: none; box-shadow: none; position: fixed; z-index: 99999; width: 740px; flex-direction: column; align-items: center;";
+
   } else {
     container.innerHTML = "";
     container.style.display = "flex";
@@ -2481,9 +3055,7 @@ function renderizarRespostaSegabar() {
   // Título
   const titulo = document.createElement("div");
   titulo.className = "titulo-desafio";
-  titulo.innerText = `Qual é a pedra na posição ${
-    pedrasViradas[idxAtual].idx + 1
-  }?`;
+  titulo.innerText = `Qual é a pedra na posição ${pedrasViradas[idxAtual].idx + 1}?`;
   box.appendChild(titulo);
   // Destaque dourado na pedra da mesa correspondente
   const pedrasMesa = document.querySelectorAll(".pedra-mesa");
@@ -2498,72 +3070,119 @@ function renderizarRespostaSegabar() {
   // Lista de pedras oficiais para escolher
   const linha = document.createElement("div");
   linha.className = "linha-pedras";
+  // Estilo inline para garantir layout horizontal correto (ignora CSS conflitante)
+  linha.style.cssText = "display: flex; gap: 12px; justify-content: center; margin-top: 16px; flex-wrap: wrap; width: 100%; pointer-events: auto;";
+
   const pedrasOficiais = [
     {
       nome: "Coroa",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/Coroa.svg"
+      url: "assets/img/Coroa.svg"
     },
     {
       nome: "Espada",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/espada.svg"
+      url: "assets/img/espada.svg"
     },
     {
       nome: "Balança",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/Balança.svg"
+      url: "assets/img/Balança.svg"
     },
     {
       nome: "Cavalo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/cavalo.svg"
+      url: "assets/img/cavalo.svg"
     },
     {
       nome: "Escudo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/escudo.svg"
+      url: "assets/img/escudo.svg"
     },
     {
       nome: "Bandeira",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/bandeira.svg"
+      url: "assets/img/bandeira.svg"
     },
     {
       nome: "Martelo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/martelo.svg"
+      url: "assets/img/martelo.svg"
     }
   ];
   pedrasOficiais.forEach((p, idxPedra) => {
     const btn = document.createElement("button");
-    btn.className = "pedra-reserva";
-    btn.innerHTML = `<img src="${p.url}" alt="${p.nome}">`;
+    btn.className = "pedra-opcao-segabar"; // Nome único para evitar conflito com drag-drop global
+    // Sobrepor estilos para garantir que não flutue e não seja bloqueado
+    btn.style.cssText = "position: relative; width: 64px; height: 64px; border-radius: 50%; border: 2px solid #2d8cff; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; top: auto; left: auto; transform: none; margin: 0; pointer-events: auto; z-index: 100002;";
+
+    btn.innerHTML = `<img src="${p.url}" alt="${p.nome}" style="width: 80%; height: 80%; object-fit: contain;">`;
+
     // Marcar visualmente se já foi selecionada como resposta
     if (
-      estadoJogo.desafio.respostasOponente &&
-      estadoJogo.desafio.respostasOponente[idxAtual] === idxPedra
+      estadoJogo.desafio.respostas &&
+      estadoJogo.desafio.respostas[idxAtual] === idxPedra
     ) {
-      btn.classList.add("pedra-troca-selecionada");
+      btn.style.background = "#ffd700"; // Destaque direto
+      btn.style.borderColor = "#fff";
     }
     btn.onclick = function () {
-      estadoJogo.desafio.respostasOponente =
-        estadoJogo.desafio.respostasOponente || [];
-      estadoJogo.desafio.respostasOponente[idxAtual] = idxPedra;
-      // Salva imediatamente o array de respostasOponente no banco
-      db.ref("salas/" + salaAtual + "/estadoJogo/desafio").update({
-        respostasOponente: estadoJogo.desafio.respostasOponente
+      console.log("[DEBUG CLICK] Botão de pedra clicado. Index:", idxAtual, "Pedra:", idxPedra);
+      estadoJogo.desafio.respostas = estadoJogo.desafio.respostas || [];
+      estadoJogo.desafio.respostas[idxAtual] = idxPedra;
+      // Salva imediatamente o array de respostas no banco
+      const path = "salas/" + salaAtual + "/estadoJogo/desafio";
+
+      console.log("[DEBUG CLICK] Atualizando respostas no DB:", estadoJogo.desafio.respostas);
+      getDBRef(path).update({
+        respostas: estadoJogo.desafio.respostas
       });
-      if (idxAtual + 1 < pedrasViradas.length) {
+
+      const qtdPedrasMesa = pedrasViradas.length;
+      console.log("[DEBUG CLICK] Respostas:", estadoJogo.desafio.respostas.length, "Esperadas:", qtdPedrasMesa);
+
+      if (idxAtual + 1 < qtdPedrasMesa) {
+        console.log("[DEBUG CLICK] Avançando para próxima pedra.");
+
+        // UPDATE MEMORY (Critical)
         estadoJogo.desafio.idxAtual = idxAtual + 1;
-        salvarEstadoJogo();
+        if (window.estadoJogo && window.estadoJogo.desafio) {
+          window.estadoJogo.desafio.idxAtual = idxAtual + 1;
+        }
+
+        // UPDATE DB (Granular)
+        getDBRef(path).update({ idxAtual: idxAtual + 1 });
+
+        // Removemos salvarEstadoJogo() daqui para evitar race conditions
+        console.log("[DEBUG CLICK] Estado memória atualizado para Index:", estadoJogo.desafio.idxAtual);
+
+        // FORÇAR UPDATE DE UI IMEDIATO
+        renderizarRespostaSegabar();
+
       } else {
-        // Só muda para 'verificar_respostas_oponente' se todas as respostas estiverem preenchidas
-        const respostas = estadoJogo.desafio.respostasOponente;
-        if (
-          respostas.length === pedrasViradas.length &&
-          !respostas.includes(undefined)
-        ) {
-          estadoJogo.desafio.status = "verificar_respostas_oponente";
-          db.ref("salas/" + salaAtual + "/estadoJogo/desafio").update({
-            status: "verificar_respostas_oponente"
+        // Só muda para 'verificar_respostas' se todas as respostas estiverem preenchidas
+        const respostas = estadoJogo.desafio.respostas;
+
+        // Verifica se não tem undefined
+        const completou = respostas.length === qtdPedrasMesa && !respostas.includes(undefined);
+        console.log("[DEBUG CLICK] Completou?", completou);
+
+        if (completou) {
+          console.log("[DEBUG CLICK] Setando status para 'verificar_respostas'");
+          estadoJogo.desafio.status = "verificar_respostas";
+          // Update direto no DB para garantir gatilho
+          getDBRef(path).update({
+            status: "verificar_respostas"
           });
+          // Log extra para confirmar local state update
+          salvarEstadoJogo(); // Aqui mantemos pois é o trigger final de mudança de fase
+          console.log("[DEBUG CLICK] Estado salvo com status verificar_respostas");
+
+          // FORÇAR UPDATE DE UI IMEDIATO (Direct Drive)
+          console.log("[DEBUG CLICK] Forçando re-renderização imediata.");
+          renderizarRespostaSegabar();
+          verificarRespostasSegabar();
+
         } else {
-          // Se faltar alguma resposta, não muda o status e apenas salva o estado
+          console.log("[DEBUG CLICK] Respostas incompletas. Salvando estado atual.");
           salvarEstadoJogo();
+
+          // FORÇAR UPDATE DE UI IMEDIATO
+          console.log("[DEBUG CLICK] Forçando re-renderização imediata (Próxima pedra).");
+          renderizarRespostaSegabar();
         }
       }
     };
@@ -2572,68 +3191,177 @@ function renderizarRespostaSegabar() {
   box.appendChild(linha);
   container.appendChild(box);
 }
+
 // Chamar renderizarRespostaSegabar sempre que o estado do jogo mudar
 const oldOuvirEstadoJogoSegabar2 = ouvirEstadoJogo;
 ouvirEstadoJogo = function () {
   oldOuvirEstadoJogoSegabar2.apply(this, arguments);
-  setTimeout(renderizarOpcoesDesafio, 100);
-  setTimeout(renderizarOpcoesSegabar, 100);
-  setTimeout(renderizarRespostaSegabar, 120);
-  setTimeout(renderizarRespostaSegabarOponente, 130);
-  setTimeout(resolverDesafioSeNecessario, 200);
-  setTimeout(verificarRespostasSegabar, 250);
-  setTimeout(verificarRespostasSegabarOponente, 260);
+  // Reduzir delays para tornar UI mais responsiva no tutorial
+  setTimeout(renderizarOpcoesDesafio, 50);
+  setTimeout(renderizarOpcoesSegabar, 50);
+  setTimeout(renderizarRespostaSegabar, 50); // Reduzido de 120
+  setTimeout(renderizarRespostaSegabarOponente, 60);
+  setTimeout(resolverDesafioSeNecessario, 100);
+  setTimeout(verificarRespostasSegabar, 150);
+  setTimeout(verificarRespostasSegabarOponente, 160);
 };
 
 // Adicionar notificações para o fluxo de Se Gabar (duvidar)
 function verificarRespostasSegabar() {
-  if (
-    !estadoJogo.desafio ||
-    estadoJogo.desafio.status !== "verificar_respostas"
-  ) {
+  console.log("[DEBUG VERIFY] verificarRespostasSegabar chamado.");
+  if (!estadoJogo.desafio) {
+    console.log("[DEBUG VERIFY] Sem desafio.");
     return;
   }
-  if (!ehMinhaVez()) {
+
+  // ============== NUCLEAR TUTORIAL BYPASS ==============
+  // Se for tutorial, ignoramos status e vez. Apenas verificamos se completou.
+  if (salaAtual === "MODO_TUTORIAL") {
+    const pedrasViradasTut = estadoJogo.mesa
+      .map((p, idx) => ({ ...p, idx }))
+      .filter((p) => p && p.virada);
+    const respostasTut = estadoJogo.desafio.respostas || [];
+
+    // Se ainda não preencheu tudo, sai silenciosamente
+    if (respostasTut.length < pedrasViradasTut.length || respostasTut.includes(undefined)) {
+      return;
+    }
+
+    console.log("[DEBUG VERIFY] Tutorial: Respostas completas. Validando...");
+
+    // Validação
+    const pedrasOficiais = [
+      { nome: "Coroa", url: "assets/img/Coroa.svg" },
+      { nome: "Espada", url: "assets/img/espada.svg" },
+      { nome: "Balança", url: "assets/img/Balança.svg" },
+      { nome: "Cavalo", url: "assets/img/cavalo.svg" },
+      { nome: "Escudo", url: "assets/img/escudo.svg" },
+      { nome: "Bandeira", url: "assets/img/bandeira.svg" },
+      { nome: "Martelo", url: "assets/img/martelo.svg" }
+    ];
+
+    let acertouTodas = true;
+    for (let i = 0; i < pedrasViradasTut.length; i++) {
+      const idxMesa = pedrasViradasTut[i].idx;
+      const nomePedraMesa = estadoJogo.mesa[idxMesa] ? estadoJogo.mesa[idxMesa].nome : "";
+      const idxResposta = respostasTut[i];
+      const nomePedraEscolhida = (typeof idxResposta !== "undefined" && pedrasOficiais[idxResposta]) ? pedrasOficiais[idxResposta].nome : "";
+
+      console.log(`[DEBUG VERIFY] Comparando [${i}]: Mesa (Idx ${idxMesa}) = '${nomePedraMesa}' vs Escolha (Idx ${idxResposta}) = '${nomePedraEscolhida}'`);
+
+      if (!nomePedraMesa || !nomePedraEscolhida || nomePedraMesa !== nomePedraEscolhida) {
+        console.log("[DEBUG VERIFY] Mismatch encontrado!");
+        acertouTodas = false;
+        // Não break para ver o resto
+      }
+    }
+
+    console.log("[DEBUG VERIFY] Tutorial Resultado. Acertou?", acertouTodas);
+
+    if (acertouTodas) {
+      console.log("[DEBUG VERIFY] ACERTOU! Iniciando sequência de vitória.");
+      showToastInterno("Parabéns! Você provou seu conhecimento!");
+      setTimeout(() => {
+        console.log("[DEBUG VERIFY] Timeout 1.5s executado. Limpando desafio...");
+        getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+        if (window.estadoJogo && window.estadoJogo.desafio) {
+          window.estadoJogo.desafio = null;
+          salvarEstadoJogo();
+        }
+        if (window.tellstonesTutorial) {
+          console.log("[DEBUG VERIFY] Chamando registrarAcaoConcluida e proximo.");
+          window.tellstonesTutorial.registrarAcaoConcluida();
+          setTimeout(() => {
+            console.log("[DEBUG VERIFY] Chamando proximo() forçado.");
+            if (window.tellstonesTutorial) window.tellstonesTutorial.proximo();
+          }, 200);
+        } else {
+          console.error("[DEBUG VERIFY] ERRO: window.tellstonesTutorial não encontrado!");
+        }
+      }, 1500);
+    } else {
+      // FAIL FORWARD: Usuário pediu para finalizar mesmo se errar
+      console.log("[DEBUG VERIFY] ERROU! (Mas avançando tutorial por request)");
+      showToastInterno("Que pena! Você errou. O Mestre venceu este desafio.");
+
+      setTimeout(() => {
+        console.log("[DEBUG VERIFY] Timeout Fail-Forward executado.");
+        getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+        if (window.estadoJogo && window.estadoJogo.desafio) {
+          window.estadoJogo.desafio = null;
+          salvarEstadoJogo();
+        }
+        if (window.tellstonesTutorial) {
+          window.tellstonesTutorial.registrarAcaoConcluida();
+          setTimeout(() => {
+            if (window.tellstonesTutorial) window.tellstonesTutorial.proximo();
+          }, 200);
+        }
+      }, 2000); // 2s para ler a mensagem de derrota
+    }
+    return; // FIM DO BYPASS TUTORIAL
+  }
+  // =====================================================
+
+  console.log("[DEBUG VERIFY] Status Standard:", estadoJogo.desafio.status);
+
+  if (estadoJogo.desafio.status !== "verificar_respostas") {
     return;
   }
+
+  // Exceção Tutorial: Sempre permitir validação no modo tutorial
+  const ehVezTutorial = salaAtual === "MODO_TUTORIAL";
+  if (!ehMinhaVez() && !ehVezTutorial) {
+    console.log("[DEBUG VERIFY] Não é minha vez e não é tutorial exception.");
+    return;
+  }
+
   const pedrasViradas = estadoJogo.mesa
     .map((p, idx) => ({ ...p, idx }))
     .filter((p) => p && p.virada);
+
   const respostas = estadoJogo.desafio.respostas || [];
+  console.log("[DEBUG VERIFY] Pedras Viradas:", pedrasViradas.length, "Respostas:", respostas.length);
+
   if (
     respostas.length < pedrasViradas.length ||
-    respostas.includes(undefined)
+    respostas.includes(undefined) ||
+    respostas.includes(null)
   ) {
+    console.log("[DEBUG VERIFY] Respostas incompletas ou com gaps.");
     return;
   }
+
+  console.log("[DEBUG VERIFY] Tudo pronto. Verificando acertos...");
+
   const pedrasOficiais = [
     {
       nome: "Coroa",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/Coroa.svg"
+      url: "assets/img/Coroa.svg"
     },
     {
       nome: "Espada",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/espada.svg"
+      url: "assets/img/espada.svg"
     },
     {
       nome: "Balança",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/Balança.svg"
+      url: "assets/img/Balança.svg"
     },
     {
       nome: "Cavalo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/cavalo.svg"
+      url: "assets/img/cavalo.svg"
     },
     {
       nome: "Escudo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/escudo.svg"
+      url: "assets/img/escudo.svg"
     },
     {
       nome: "Bandeira",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/bandeira.svg"
+      url: "assets/img/bandeira.svg"
     },
     {
       nome: "Martelo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/martelo.svg"
+      url: "assets/img/martelo.svg"
     }
   ];
   let acertouTodas = true;
@@ -2660,7 +3388,55 @@ function verificarRespostasSegabar() {
     }
   }
   const mesaAtualizada = estadoJogo.mesa.map((p) => (p ? { ...p } : null));
-  db.ref("salas/" + salaAtual + "/estadoJogo/mesa").set(mesaAtualizada);
+  /* Restaurando a atualização da mesa para TODOS os modos */
+  getDBRef("salas/" + salaAtual + "/estadoJogo/mesa").set(mesaAtualizada);
+
+  /* LÓGICA ESPECÍFICA PARA TUTORIAL */
+  /* LÓGICA ESPECÍFICA PARA TUTORIAL */
+  if (salaAtual === "MODO_TUTORIAL") {
+    console.log("[DEBUG VERIFY] Entrou lógica Tutorial. Acertou?", acertouTodas);
+    if (acertouTodas) {
+      showToastInterno("Parabéns! Você provou seu conhecimento!");
+      // Delay para remoção para dar tempo de ler
+      setTimeout(() => {
+        console.log("[DEBUG VERIFY] Timeout de sucesso executando.");
+        // Remove do DB
+        getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+
+        // FORCE LOCAL UPDATE (Nuclear Option)
+        // Garante que a UI do tutorial perceba que o desafio sumiu, mesmo se o listener falhar
+        if (window.estadoJogo && window.estadoJogo.desafio) {
+          window.estadoJogo.desafio = null;
+          salvarEstadoJogo(); // Salva estado limpo localmente
+        }
+
+        // Notifica o tutorial explicitamente
+        if (window.tellstonesTutorial) {
+          console.log("[DEBUG VERIFY] Chamando registrarAcaoConcluida e proximo.");
+          window.tellstonesTutorial.registrarAcaoConcluida();
+          // AUTO-ADVANCE FINAL: Garante que vá para a tela de finalização
+          setTimeout(() => {
+            if (window.tellstonesTutorial) window.tellstonesTutorial.proximo();
+          }, 200);
+        }
+      }, 1500);
+    } else {
+      showToastInterno("Ops! Alguma pedra está errada. Tente novamente!");
+      console.log("[DEBUG VERIFY] Resposta errada no tutorial. Resetando para tentar de novo.");
+      // Não remove o desafio, permite tentar de novo (resetando status para responder)
+      getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").update({
+        status: "responder_pecas"
+      });
+      // Update local também
+      if (window.estadoJogo.desafio) {
+        window.estadoJogo.desafio.status = "responder_pecas";
+        salvarEstadoJogo();
+      }
+    }
+    return;
+  }
+
+  // Lógica normal do jogo
   const desafiante = estadoJogo.desafio.jogador;
   const jogadores = estadoJogo.jogadores || [];
   const oponente =
@@ -2678,7 +3454,7 @@ function verificarRespostasSegabar() {
         "Derrota"
       );
     }
-    db.ref("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+    getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
     setTimeout(() => {
       avancarTurno();
     }, 1200);
@@ -2696,13 +3472,13 @@ function verificarRespostasSegabar() {
     } else if (nomeAtual === oponente) {
       mostrarTelaVitoria("O adversário errou! Você venceu o jogo!", "Vitória!");
     }
-    db.ref("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+    getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
     setTimeout(() => {
       avancarTurno();
     }, 1200);
     return;
   }
-  db.ref("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+  getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
   avancarTurno();
 }
 // Chamar verificarRespostasSegabar sempre que o estado do jogo mudar
@@ -2746,12 +3522,32 @@ function renderizarRespostaSegabarOponente() {
     container.style.border = "none";
     container.style.boxShadow = "none";
     container.style.position = "relative";
+    // Forçar sempre no Body para garantir visibilidade (Nuclear Fix)
+    document.body.appendChild(container);
+    container.style.position = "fixed";
+    container.style.top = "calc(50% - 220px)";
+    container.style.left = "50%";
+    container.style.transform = "translateX(-50%)";
+    container.style.zIndex = "99999";
+    container.style.width = "auto";
+    container.style.background = "transparent";
+    container.style.border = "none";
+    container.style.boxShadow = "none";
+    container.style.padding = "0";
+    container.style.borderRadius = "0";
+    container.style.display = "flex";
+
+    // Restaurar hierarquia original
     const tabuleiroCenter = document.getElementById("tabuleiro-center");
-    if (tabuleiroCenter)
-      tabuleiroCenter.parentNode.insertBefore(
-        container,
-        tabuleiroCenter.nextSibling
-      );
+    if (tabuleiroCenter) {
+      if (!tabuleiroCenter.contains(container)) {
+        tabuleiroCenter.insertBefore(container, tabuleiroCenter.firstChild);
+      }
+    } else {
+      document.body.appendChild(container);
+    }
+
+    container.style.cssText = "display: flex; justify-content: center; top: 18%; left: 50%; transform: translateX(-50%); padding: 0px; background: transparent; border: none; box-shadow: none; position: absolute; z-index: 99999; width: 740px; flex-direction: column; align-items: center;";
   } else {
     container.innerHTML = "";
     container.style.display = "flex";
@@ -2762,9 +3558,8 @@ function renderizarRespostaSegabarOponente() {
   // Título
   const titulo = document.createElement("div");
   titulo.className = "titulo-desafio";
-  titulo.innerText = `Qual é a pedra na posição ${
-    pedrasViradas[idxAtual].idx + 1
-  }?`;
+  titulo.innerText = `Qual é a pedra na posição ${pedrasViradas[idxAtual].idx + 1
+    }?`;
   box.appendChild(titulo);
   // Lista de pedras oficiais para escolher
   const linha = document.createElement("div");
@@ -2772,31 +3567,31 @@ function renderizarRespostaSegabarOponente() {
   const pedrasOficiais = [
     {
       nome: "Coroa",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/Coroa.svg"
+      url: "assets/img/Coroa.svg"
     },
     {
       nome: "Espada",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/espada.svg"
+      url: "assets/img/espada.svg"
     },
     {
       nome: "Balança",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/Balança.svg"
+      url: "assets/img/Balança.svg"
     },
     {
       nome: "Cavalo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/cavalo.svg"
+      url: "assets/img/cavalo.svg"
     },
     {
       nome: "Escudo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/escudo.svg"
+      url: "assets/img/escudo.svg"
     },
     {
       nome: "Bandeira",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/bandeira.svg"
+      url: "assets/img/bandeira.svg"
     },
     {
       nome: "Martelo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/martelo.svg"
+      url: "assets/img/martelo.svg"
     }
   ];
   pedrasOficiais.forEach((p, idxPedra) => {
@@ -2811,26 +3606,25 @@ function renderizarRespostaSegabarOponente() {
       btn.classList.add("pedra-troca-selecionada");
     }
     btn.onclick = function () {
-      estadoJogo.desafio.respostasOponente =
-        estadoJogo.desafio.respostasOponente || [];
-      estadoJogo.desafio.respostasOponente[idxAtual] = idxPedra;
-      // Salva imediatamente o array de respostasOponente no banco
-      db.ref("salas/" + salaAtual + "/estadoJogo/desafio").update({
-        respostasOponente: estadoJogo.desafio.respostasOponente
+      estadoJogo.desafio.respostas = estadoJogo.desafio.respostas || [];
+      estadoJogo.desafio.respostas[idxAtual] = idxPedra;
+      // Salva imediatamente o array de respostas no banco
+      getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").update({
+        respostas: estadoJogo.desafio.respostas
       });
       if (idxAtual + 1 < pedrasViradas.length) {
         estadoJogo.desafio.idxAtual = idxAtual + 1;
         salvarEstadoJogo();
       } else {
-        // Só muda para 'verificar_respostas_oponente' se todas as respostas estiverem preenchidas
-        const respostas = estadoJogo.desafio.respostasOponente;
+        // Só muda para 'verificar_respostas' se todas as respostas estiverem preenchidas
+        const respostas = estadoJogo.desafio.respostas;
         if (
           respostas.length === pedrasViradas.length &&
           !respostas.includes(undefined)
         ) {
-          estadoJogo.desafio.status = "verificar_respostas_oponente";
-          db.ref("salas/" + salaAtual + "/estadoJogo/desafio").update({
-            status: "verificar_respostas_oponente"
+          estadoJogo.desafio.status = "verificar_respostas";
+          getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").update({
+            status: "verificar_respostas"
           });
         } else {
           // Se faltar alguma resposta, não muda o status e apenas salva o estado
@@ -2867,31 +3661,31 @@ function verificarRespostasSegabarOponente() {
   const pedrasOficiais = [
     {
       nome: "Coroa",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/Coroa.svg"
+      url: "assets/img/Coroa.svg"
     },
     {
       nome: "Espada",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/espada.svg"
+      url: "assets/img/espada.svg"
     },
     {
       nome: "Balança",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/Balança.svg"
+      url: "assets/img/Balança.svg"
     },
     {
       nome: "Cavalo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/cavalo.svg"
+      url: "assets/img/cavalo.svg"
     },
     {
       nome: "Escudo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/escudo.svg"
+      url: "assets/img/escudo.svg"
     },
     {
       nome: "Bandeira",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/bandeira.svg"
+      url: "assets/img/bandeira.svg"
     },
     {
       nome: "Martelo",
-      url: "https://github.com/AliceDeSa/Tellstones/raw/main/martelo.svg"
+      url: "assets/img/martelo.svg"
     }
   ];
   let acertouTodas = true;
@@ -2920,7 +3714,7 @@ function verificarRespostasSegabarOponente() {
   }
   // Atualiza mesa
   const mesaAtualizada = estadoJogo.mesa.map((p) => (p ? { ...p } : null));
-  db.ref("salas/" + salaAtual + "/estadoJogo/mesa").set(mesaAtualizada);
+  getDBRef("salas/" + salaAtual + "/estadoJogo/mesa").set(mesaAtualizada);
   // Atualiza placar e envia notificações
   const desafiante = estadoJogo.desafio.jogador;
   const jogadores = estadoJogo.jogadores || [];
@@ -2939,7 +3733,7 @@ function verificarRespostasSegabarOponente() {
         "Derrota"
       );
     }
-    db.ref("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+    getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
     setTimeout(() => {
       avancarTurno();
     }, 1200);
@@ -2952,13 +3746,13 @@ function verificarRespostasSegabarOponente() {
     } else if (nomeAtual === desafiante) {
       mostrarTelaVitoria("O oponente errou! Você venceu o jogo!", "Vitória!");
     }
-    db.ref("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+    getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
     setTimeout(() => {
       avancarTurno();
     }, 1200);
     return;
   }
-  db.ref("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+  getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
   avancarTurno();
 }
 
@@ -3039,7 +3833,7 @@ if (btnVoltarLobby) {
       window.notificacaoListener.off();
       window.notificacaoListener = null;
     }
-    db.ref().off();
+    getDBRef().off();
     // Limpa variáveis globais principais
     salaAtual = null;
     nomeAtual = null;
@@ -3052,6 +3846,13 @@ if (btnVoltarLobby) {
     window.animouReservaCircular = false;
     window.selecionandoDesafio = false;
     window.resolvendoDesafio = false;
+    // Limpa tutorial se existir
+    if (window.tellstonesTutorial) {
+      window.tellstonesTutorial.finalizar();
+      window.tellstonesTutorial = null;
+    }
+    const tutorialUI = document.getElementById("tutorial-ui");
+    if (tutorialUI) tutorialUI.remove();
     // Limpa UI
     document.getElementById("game").classList.remove("active");
     document.getElementById("lobby").classList.remove("active");
@@ -3113,11 +3914,11 @@ renderizarMarcadoresPonto = function () {
         nomeVencedor =
           pontosEsq >= 3
             ? estadoJogo.jogadores[0].nome +
-              " e " +
-              estadoJogo.jogadores[2].nome
+            " e " +
+            estadoJogo.jogadores[2].nome
             : estadoJogo.jogadores[1].nome +
-              " e " +
-              estadoJogo.jogadores[3].nome;
+            " e " +
+            estadoJogo.jogadores[3].nome;
       }
       nomesVencedores =
         pontosEsq >= 3
@@ -3136,7 +3937,7 @@ renderizarMarcadoresPonto = function () {
 // Função para salvar o vencedor no estado do jogo
 function salvarVencedor(nomes, motivo) {
   if (!salaAtual) return;
-  db.ref("salas/" + salaAtual + "/estadoJogo/vencedor").set({ nomes, motivo });
+  getDBRef("salas/" + salaAtual + "/estadoJogo/vencedor").set({ nomes, motivo });
 }
 
 // Exibir tela de vitória/derrota para todos ao detectar estadoJogo.vencedor
@@ -3175,8 +3976,8 @@ function garantirMoedaBtnNoDOM() {
     btn.style.height = "auto";
     btn.innerHTML = `
       <span id="moeda-animada" style="display:inline-block;width:80px;height:80px;position:relative;perspective:300px;">
-        <img id="moeda-frente" src="https://github.com/AliceDeSa/Tellstones/blob/main/Cara.png?raw=true" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
-        <img id="moeda-verso" src="https://github.com/AliceDeSa/Tellstones/blob/main/Coroa.png?raw=true" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transform:rotateY(180deg);transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
+        <img id="moeda-frente" src="assets/img/Cara.png" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
+        <img id="moeda-verso" src="assets/img/Coroa.png" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transform:rotateY(180deg);transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
       </span>
     `;
     wrapper.appendChild(btn);
@@ -3190,7 +3991,8 @@ function animarTrocaCircular(idxA, idxB, callback) {
   const pedrasMesa = document.getElementById("pedras-mesa");
   const positions = getSlotPositions(wrapper, 7, 68.39, 40);
   // Bloqueia ações
-  let overlay = document.createElement("div");
+  // Bloqueia ações
+  const overlay = document.createElement("div"); // Changed let to const for safety
   overlay.style.position = "fixed";
   overlay.style.left = "0";
   overlay.style.top = "0";
@@ -3204,11 +4006,15 @@ function animarTrocaCircular(idxA, idxB, callback) {
   // Pega as divs reais
   const divA = pedrasMesa.querySelector(`[data-idx='${idxA}']`);
   const divB = pedrasMesa.querySelector(`[data-idx='${idxB}']`);
+
   if (!divA || !divB) {
+    console.error("[SWAP DEBUG] ERRO: Elementos DOM não encontrados para troca!", idxA, idxB);
     overlay.remove();
+    window.animacaoTrocaEmAndamento = false; // FIX: Reset flag
     if (callback) callback();
     return;
   }
+  console.log("[SWAP DEBUG] Elementos encontrados. Iniciando animação visual.");
   // Pega posição dos slots na tela (centro exato do slot)
   const wrapperRect = wrapper.getBoundingClientRect();
   function slotCenter(pos) {
@@ -3281,8 +4087,13 @@ function animarTrocaCircular(idxA, idxB, callback) {
       divB.style.display = "";
       overlay.remove();
       window.animacaoTrocaEmAndamento = false;
-      renderizarMesa(); // Garante atualização da UI após a animação
-      if (callback) callback();
+      if (callback) {
+        callback();
+        // Renderiza APÓS o callback ter atualizado o estado (se for síncrono)
+        // Se for assíncrono, o listener do DB cuidará disso.
+      } else {
+        renderizarMesa();
+      }
     }
   }
   requestAnimationFrame(animarFrame);
@@ -3304,7 +4115,7 @@ function carregarKofiWidget() {
     console.log('[Ko-fi] kofiWidgetOverlay já existe, desenhando widget');
     kofiWidgetOverlay.draw('alicedesa', {
       'type': 'floating-chat',
-      'floating-chat.donateButton.text':'', // Sem texto
+      'floating-chat.donateButton.text': '', // Sem texto
       'floating-chat.donateButton.background-color': '#794bc4',
       'floating-chat.donateButton.text-color': '#fff',
       'floating-chat.position': 'right', // Canto direito inferior
@@ -3317,12 +4128,12 @@ function carregarKofiWidget() {
     var script = document.createElement('script');
     script.id = 'kofi-widget-script';
     script.src = 'https://storage.ko-fi.com/cdn/scripts/overlay-widget.js';
-    script.onload = function() {
+    script.onload = function () {
       console.log('[Ko-fi] Script do Ko-fi carregado');
       if (window.kofiWidgetOverlay) {
         kofiWidgetOverlay.draw('alicedesa', {
           'type': 'floating-chat',
-          'floating-chat.donateButton.text':'', // Sem texto
+          'floating-chat.donateButton.text': '', // Sem texto
           'floating-chat.donateButton.background-color': '#794bc4',
           'floating-chat.donateButton.text-color': '#fff',
           'floating-chat.position': 'right', // Canto direito inferior
@@ -3352,7 +4163,7 @@ function moverKofiParaDireita() {
 (function garantirKofiSempreVisivel() {
   const meuContainer = document.getElementById('kofi-fixo-direita');
   if (!meuContainer) return;
-  const observer = new MutationObserver(function() {
+  const observer = new MutationObserver(function () {
     var kofiBtn = document.querySelector('.floatingchat-container-wrap');
     if (kofiBtn && !meuContainer.contains(kofiBtn)) {
       meuContainer.appendChild(kofiBtn);
@@ -3372,7 +4183,7 @@ function moverKofiParaDireita() {
 
 // Garante carregamento do Ko-fi após DOM pronto
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   console.log('[Ko-fi] DOMContentLoaded - tentando carregar Ko-fi');
   carregarKofiWidget();
 });
@@ -3390,4 +4201,357 @@ function hideTooltip() {
   const tooltip = document.getElementById("tooltip");
   if (!tooltip) return;
   tooltip.style.display = "none";
+}
+
+// =========================
+// 9. Modo PvE e Tutorial
+
+function iniciarModoBot() {
+  isLocalMode = true;
+  localData = {};
+  nomeAtual = "Você";
+  salaAtual = "MODO_PVE";
+  souCriador = true;
+
+  const jogadores = [
+    { nome: "Você", id: "p1", pontos: 0 },
+    { nome: "Bot", id: "p2", pontos: 0 }
+  ];
+
+  inicializarJogo(jogadores);
+
+  // No modo local, simulamos o "sorteio" ganhando sempre ou aleatório
+  localData = {
+    salas: {
+      MODO_PVE: {
+        status: "jogo",
+        jogadores: {
+          p1: { nome: "Você" },
+          p2: { nome: "Bot" }
+        },
+        estadoJogo: {
+          ...estadoJogo,
+          vez: 0,
+          centralAlinhada: true,
+          alinhamentoFeito: true,
+          mesa: [null, null, null, estadoJogo.pedraCentral, null, null, null],
+          pedraCentral: null
+        },
+        caraCoroa: {
+          escolha: { nome: "Você", escolha: "cara" },
+          resultado: 0,
+          sorteioFinalizado: true,
+          feedbackLiberado: Date.now()
+        }
+      }
+    }
+  };
+
+  estadoJogo = localData.salas.MODO_PVE.estadoJogo;
+  tellstonesBot = new TellstonesBot("Bot");
+
+  mostrarJogo("MODO_PVE", [{ nome: "Você", id: "p1", pontos: 0 }, { nome: "Bot", id: "p2", pontos: 0 }], []);
+  ouvirEstadoJogo();
+  salvarEstadoJogo();
+
+  showToast("Modo PvE Iniciado! Você começa.");
+}
+
+function iniciarModoTutorial() {
+  isLocalMode = true;
+  localData = {};
+  nomeAtual = "Aprendiz";
+  salaAtual = "MODO_TUTORIAL";
+  souCriador = true;
+
+  const jogadores = [
+    { nome: "Mestre", id: "p2", pontos: 0 },
+    { nome: "Aprendiz", id: "p1", pontos: 0 }
+  ];
+
+  inicializarJogo(jogadores);
+
+  // Setup inicial do tutorial
+  estadoJogo.centralAlinhada = true;
+  estadoJogo.alinhamentoFeito = true;
+  estadoJogo.mesa = [null, null, null, estadoJogo.pedraCentral, null, null, null];
+  estadoJogo.pedraCentral = null;
+  estadoJogo.vez = 0;
+
+  localData = {
+    salas: {
+      MODO_TUTORIAL: {
+        status: "jogo",
+        jogadores: { p1: { nome: "Aprendiz" }, p2: { nome: "Mestre" } },
+        estadoJogo: estadoJogo,
+        caraCoroa: { sorteioFinalizado: true }
+      }
+    }
+  };
+
+  mostrarJogo("MODO_TUTORIAL", jogadores, []);
+  ouvirEstadoJogo();
+  salvarEstadoJogo();
+
+  // Inicializa o Bot no modo tutorial para que ele possa jogar depois
+  tellstonesBot = new TellstonesBot("Mestre");
+
+  setTimeout(() => {
+    try {
+      if (window.TellstonesTutorial) {
+        console.log("[TUTORIAL] Iniciando instância...");
+        window.tellstonesTutorial = new TellstonesTutorial();
+        window.tellstonesTutorial.iniciar();
+      } else {
+        console.error("[TUTORIAL] Classe TellstonesTutorial não encontrada no window.");
+        showToastInterno("Erro: Tutorial não pôde ser iniciado.");
+      }
+    } catch (e) {
+      console.error("[TUTORIAL] Erro ao iniciar:", e);
+    }
+  }, 500);
+}
+
+// Hook para o turno do Bot
+const oldOuvirEstadoJogoBot = ouvirEstadoJogo;
+ouvirEstadoJogo = function () {
+  oldOuvirEstadoJogoBot.apply(this, arguments);
+
+  if (isLocalMode && tellstonesBot && !estadoJogo.vencedor) {
+    const idxBot = estadoJogo.jogadores.findIndex(j => j.nome === "Bot");
+    const isBotTurn = (estadoJogo.vez === idxBot % 2);
+
+    if (isBotTurn && !window.botProcessando) {
+      // Inibir o Bot no modo tutorial completamente (Scriptado)
+      if (salaAtual === "MODO_TUTORIAL") {
+        return;
+      }
+      window.botProcessando = true;
+      console.log("[BOT] Minha vez! Pensando...");
+      setTimeout(() => {
+        const jogada = tellstonesBot.fazerJogada(estadoJogo);
+        console.log("[BOT] Jogada decidida:", jogada);
+        if (jogada) {
+          executarJogadaBot(jogada);
+        }
+        window.botProcessando = false;
+      }, 1500);
+    }
+  }
+};
+
+// LOGICA PARA BOT RESPONDER A DESAFIOS (Executa fora do turno 'vez', pois é uma resposta)
+if (isLocalMode && tellstonesBot && estadoJogo.desafio && estadoJogo.desafio.status === "aguardando_resposta") {
+  const d = estadoJogo.desafio;
+  // Se o desafio não foi iniciado pelo Bot, o Bot precisa responder (se for o alvo)
+  // No modo local PvE/Tutorial, assumimos que se não foi o Bot quem desafiou, foi o jogador, então Bot responde.
+  // Check extra: jogador !== "Mestre" (nome da instancia do bot) ou "Bot"
+  if (d.jogador !== "Mestre" && d.jogador !== "Bot" && !window.botRespondendo) {
+    window.botRespondendo = true;
+    console.log("[BOT] Detectado desafio contra o Bot. Pensando na resposta...");
+    setTimeout(() => {
+      const resposta = tellstonesBot.responderDesafio(estadoJogo);
+      console.log("[BOT] Resposta ao desafio:", resposta);
+
+      if (resposta.tipo === "responder_desafio") {
+        // Bot escolheu uma pedra (resposta a desafio normal)
+        estadoJogo.desafio.escolhaOponente = resposta.idx;
+        estadoJogo.desafio.status = "resolvido";
+        salvarEstadoJogo();
+      } else if (resposta.tipo === "acreditar") {
+        // Bot acreditou no Se Gabar
+        const idxJogador = estadoJogo.jogadores.findIndex(j => j.nome === d.jogador);
+        if (idxJogador !== -1) estadoJogo.jogadores[idxJogador].pontos++;
+        // Remover desafio
+        getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+        delete estadoJogo.desafio;
+        showToast("Bot acreditou em você!");
+        salvarEstadoJogo();
+        avancarTurno();
+      } else if (resposta.tipo === "duvidar") {
+        // Bot duvidou do Se Gabar
+        estadoJogo.desafio.status = "responder_pecas";
+        estadoJogo.desafio.idxAtual = 0;
+        estadoJogo.desafio.respostas = [];
+        salvarEstadoJogo();
+        showToast("Bot duvidou de você! Prove que sabe as pedras.");
+      }
+
+      window.botRespondendo = false;
+    }, 2000);
+  }
+}
+;
+
+function executarJogadaBot(jogada) {
+  if (jogada.tipo === 'colocar') {
+    const pedra = estadoJogo.reserva[jogada.pedraIdx];
+    estadoJogo.reserva.splice(jogada.pedraIdx, 1);
+    inserirPedraNaMesa(pedra, jogada.slot);
+  } else if (jogada.tipo === 'esconder') {
+    estadoJogo.mesa[jogada.idx].virada = true;
+    salvarEstadoJogo();
+    enviarNotificacaoGlobal(`Bot escondeu uma pedra.`);
+    avancarTurno();
+  } else if (jogada.tipo === 'espiar') {
+    espiarPedra(jogada.idx);
+  } else if (jogada.tipo === 'mover') {
+    avancarTurno();
+  } else if (jogada.tipo === 'segabar') {
+    estadoJogo.desafio = { tipo: "segabar", status: "aguardando_resposta", jogador: "Mestre" };
+    salvarEstadoJogo();
+    showToastInterno("O Bot se gabou! Você acredita?");
+  } else if (jogada.tipo === 'desafiar') {
+    const desafio = { status: "aguardando_resposta", idxPedra: jogada.idx, tipo: "normal", jogador: "Mestre" };
+    estadoJogo.desafio = desafio;
+    salvarEstadoJogo();
+    showToastInterno("O Bot te desafiou!");
+  }
+}
+
+
+// =========================
+// UI para Seleção de Pedra (Prova do Se Gabar)
+// =========================
+function abrirSeletorPedra(idxMesa) {
+  // Evita abrir múltiplos
+  if (document.getElementById("seletor-pedra-modal")) return;
+
+  const modal = document.createElement("div");
+  modal.id = "seletor-pedra-modal";
+  modal.style.position = "fixed";
+  modal.style.left = "0";
+  modal.style.top = "0";
+  modal.style.width = "100vw";
+  modal.style.height = "100vh";
+  modal.style.background = "rgba(0,0,0,0.8)";
+  modal.style.zIndex = "100000";
+  modal.style.display = "flex";
+  modal.style.flexDirection = "column";
+  modal.style.alignItems = "center";
+  modal.style.justifyContent = "center";
+
+  const box = document.createElement("div");
+  box.style.background = "#222";
+  box.style.padding = "24px";
+  box.style.borderRadius = "12px";
+  box.style.textAlign = "center";
+  box.style.maxWidth = "90%";
+  box.style.border = "1px solid #444";
+  box.innerHTML = "<h3>Qual é esta pedra?</h3><p style='margin-bottom:16px;color:#aaa'>Se errar, você perde imediatamente.</p>";
+
+  const grid = document.createElement("div");
+  grid.style.display = "flex";
+  grid.style.flexWrap = "wrap";
+  grid.style.gap = "12px";
+  grid.style.justifyContent = "center";
+
+  const pedrasOficiais = [
+    { nome: "Coroa", url: "assets/img/Coroa.svg" },
+    { nome: "Espada", url: "assets/img/espada.svg" },
+    { nome: "Balança", url: "assets/img/Balança.svg" },
+    { nome: "Cavalo", url: "assets/img/cavalo.svg" },
+    { nome: "Escudo", url: "assets/img/escudo.svg" },
+    { nome: "Martelo", url: "assets/img/martelo.svg" },
+    { nome: "Bandeira", url: "assets/img/bandeira.svg" }
+  ];
+
+  pedrasOficiais.forEach(p => {
+    const btn = document.createElement("button");
+    btn.style.background = "transparent";
+    btn.style.border = "2px solid #555";
+    btn.style.borderRadius = "8px";
+    btn.style.padding = "8px";
+    btn.style.cursor = "pointer";
+    btn.style.display = "flex";
+    btn.style.flexDirection = "column";
+    btn.style.alignItems = "center";
+    btn.style.transition = "all 0.2s";
+
+    btn.onmouseover = () => { btn.style.borderColor = "#fff"; btn.style.background = "#333"; };
+    btn.onmouseout = () => { btn.style.borderColor = "#555"; btn.style.background = "transparent"; };
+
+    const img = document.createElement("img");
+    img.src = p.url;
+    img.style.width = "48px";
+    img.style.height = "48px";
+    img.style.marginBottom = "4px";
+
+    const span = document.createElement("span");
+    span.innerText = p.nome;
+    span.style.color = "#eee";
+    span.style.fontSize = "0.9em";
+
+    btn.appendChild(img);
+    btn.appendChild(span);
+
+    btn.onclick = () => {
+      verificarEscolhaPedra(idxMesa, p.nome);
+      modal.remove();
+    };
+
+    grid.appendChild(btn);
+  });
+
+  const btnCancelar = document.createElement("button");
+  btnCancelar.innerText = "Cancelar";
+  btnCancelar.style.marginTop = "20px";
+  btnCancelar.style.padding = "8px 16px";
+  btnCancelar.style.background = "#d32f2f";
+  btnCancelar.style.color = "white";
+  btnCancelar.style.border = "none";
+  btnCancelar.style.borderRadius = "4px";
+  btnCancelar.style.cursor = "pointer";
+  btnCancelar.onclick = () => modal.remove();
+
+  box.appendChild(grid);
+  box.appendChild(btnCancelar);
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+}
+
+function verificarEscolhaPedra(idxMesa, nomeEscolhido) {
+  const pedraReal = estadoJogo.mesa[idxMesa];
+  if (!pedraReal) return;
+
+  if (pedraReal.nome === nomeEscolhido) {
+    showToastInterno("Correto!");
+    // Revela a pedra
+    estadoJogo.mesa[idxMesa].virada = false;
+
+    // Verifica se ainda tem pedras viradas
+    const aindaTemViradas = estadoJogo.mesa.some(p => p && p.virada);
+
+    // No tutorial, precisamos dar feedback visual se o desafio continuar
+    salvarEstadoJogo();
+    renderizarMesa();
+
+    if (!aindaTemViradas) {
+      // Venceu o Se Gabar!
+      showToast("Você provou seu conhecimento e VENCEU!");
+      const idxJogador = estadoJogo.jogadores.findIndex(j => j.nome === nomeAtual);
+      if (idxJogador !== -1) estadoJogo.jogadores[idxJogador].pontos++; // Ganha ponto ou vence o jogo
+
+      // Finaliza o desafio
+      getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
+
+      // No tutorial, garante que o passo seja concluído
+      if (salaAtual === "MODO_TUTORIAL" && window.tellstonesTutorial) {
+        setTimeout(() => window.tellstonesTutorial.registrarAcaoConcluida(), 500);
+      }
+    }
+  } else {
+    showToastInterno(`Errou! A pedra era ${pedraReal.nome}. Você perdeu.`);
+    // Revela a pedra para mostrar o erro
+    estadoJogo.mesa[idxMesa].virada = false;
+
+    // Oponente vence
+    // Em tutorial, podemos impedir a derrota ou mostrar msg educativa?
+    // Vamos deixar perder para aprender
+
+    // Finaliza desafio (Derrota)
+    estadoJogo.desafio = null;
+    salvarEstadoJogo();
+    renderizarMesa();
+  }
 }

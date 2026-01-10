@@ -4,7 +4,8 @@
 <head>
   <!-- ========== METADADOS E IMPORTS ========== -->
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src *; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data:;">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src *; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data:;">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="mobile-web-app-capable" content="yes">
   <title>TellStones</title>
@@ -22,9 +23,22 @@
     <h1>TellStones</h1>
     <div style="font-size:1.2em;color:#8ecfff;margin-bottom:18px;">Memorize. Blefe. Desafie.</div>
     <!-- Botões principais -->
-    <div>
-      <button id="create-room-btn">Criar Sala</button>
-      <button id="join-room-btn">Entrar em Sala</button>
+    <div id="main-menu-btns" style="display:flex; flex-direction:column; gap:10px; align-items:center;">
+      <button id="tutorial-btn" style="background:#4caf50; width: 220px;">Tutorial</button>
+      <button id="bot-pve-btn" style="background:#ff9800; width: 220px;">Jogo PvE (Bot)</button>
+      <button id="online-menu-btn" style="background:#2d8cff; width: 220px;">Jogo Online</button>
+    </div>
+
+    <!-- Menu Online -->
+    <div id="online-menu" style="display:none; flex-direction:column; gap:10px; align-items:center;">
+      <button id="back-to-main-btn" title="Voltar"
+        style="position:absolute; top:10px; right:10px; background:transparent; border:none; cursor:pointer; color:#fff; font-size:24px; padding:0;">
+        &#8617;
+      </button>
+      <div style="display:flex; gap:10px;">
+        <button id="create-room-btn">Criar Sala</button>
+        <button id="join-room-btn">Entrar em Sala</button>
+      </div>
     </div>
     <!-- Opções para criar sala/lobby -->
     <div id="room-options" style="display:none;">
@@ -42,7 +56,8 @@
     <!-- Opções para entrar em sala -->
     <div id="join-room" style="display:none;">
       <input type="text" id="nome-entrar" placeholder="Seu nome" maxlength="20" style="margin-bottom:8px;width:90%"><br>
-      <input type="text" id="room-code" placeholder="Código da sala" maxlength="8" style="margin-bottom:8px;width:90%"><br>
+      <input type="text" id="room-code" placeholder="Código da sala" maxlength="8"
+        style="margin-bottom:8px;width:90%"><br>
       <label style="color:#f1f1f1;">
         <input type="radio" name="tipo-entrada" value="jogador" checked> Jogador
       </label>
@@ -55,6 +70,10 @@
 
   <!-- ================= LOBBY ================= -->
   <div id="lobby">
+    <button id="back-from-lobby-btn" title="Voltar"
+      style="position:absolute; top:20px; right:20px; background:transparent; border:none; cursor:pointer; color:#fff; font-size:24px; padding:0;">
+      &#8617;
+    </button>
     <h2>Lobby da Partida</h2>
     <div id="lobby-codigo" style="margin-bottom:10px;"></div>
     <div>
@@ -76,8 +95,9 @@
       <div id="espectadores">Espectadores: <span id="lista-espectadores"></span></div>
     </div>
     <!-- ======= ÍCONE DE AÇÕES ======= -->
-    <div id="icone-acoes" title="Ações" style="padding:0;width:60px;height:60px;display:flex;align-items:center;justify-content:center;background:none;border:none;">
-      <img src="https://github.com/AliceDeSa/Tellstones/raw/main/A%C3%A7%C3%B5es.png" alt="Ações" style="width:54px;height:54px;object-fit:contain;display:block;" />
+    <div id="icone-acoes" title="Ações"
+      style="padding:0;width:60px;height:60px;display:flex;align-items:center;justify-content:center;background:none;border:none;">
+      <img src="assets/img/Ações.png" alt="Ações" style="width:54px;height:54px;object-fit:contain;display:block;" />
     </div>
     <!-- ======= CARD DE AÇÕES ======= -->
     <div id="box-acoes" style="display:none;">
@@ -109,7 +129,8 @@
         <!-- pedras renderizadas via JS -->
       </div>
       <div id="tabuleiro-wrapper" style="width:740px;height:320px;position:relative;display:inline-block;">
-        <img id="tabuleiro" src="https://github.com/AliceDeSa/Tellstones/blob/main/Tabuleiro.jpg?raw=true" alt="Tabuleiro Tellstones" style="width:740px;height:320px;object-fit:contain;" />
+        <img id="tabuleiro" src="assets/img/Tabuleiro.jpg" alt="Tabuleiro Tellstones"
+          style="width:740px;height:320px;object-fit:contain;" />
         <div id="pedras-mesa"></div>
         <!-- Marcadores de ponto à esquerda (Jogador 1 ou Dupla 1) -->
         <div class="marcador-ponto marcador-esquerda" data-idx="0"></div>
@@ -119,14 +140,23 @@
         <div class="marcador-ponto marcador-direita" data-idx="0"></div>
         <div class="marcador-ponto marcador-direita" data-idx="1"></div>
         <div class="marcador-ponto marcador-direita" data-idx="2"></div>
+        <div id="info-sala-local" style="position: absolute; top: 10px; right: 10px; z-index: 100;">
+          <button id="btn-sair-partida"
+            style="background:#f44336; color:white; border:none; border-radius:4px; padding:8px 12px; cursor:pointer; font-weight:bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">Sair
+            da Partida</button>
+        </div>
         <!-- Botão e animação da moeda -->
-        <button id="moeda-btn" title="Lançar moeda" style="background:none;border:none;outline:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;width:auto;height:auto;display:none;">
-          <span id="moeda-animada" style="display:inline-block;width:80px;height:80px;position:relative;perspective:300px;">
-            <img id="moeda-frente" src="https://github.com/AliceDeSa/Tellstones/blob/main/Cara.png?raw=true" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
-            <img id="moeda-verso" src="https://github.com/AliceDeSa/Tellstones/blob/main/Coroa.png?raw=true" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transform:rotateY(180deg);transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
+        <button id="moeda-btn" title="Lançar moeda"
+          style="background:none;border:none;outline:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;width:auto;height:auto;display:none;">
+          <span id="moeda-animada"
+            style="display:inline-block;width:80px;height:80px;position:relative;perspective:300px;">
+            <img id="moeda-frente" src="assets/img/Cara.png"
+              style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
+            <img id="moeda-verso" src="assets/img/Coroa.png"
+              style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transform:rotateY(180deg);transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
           </span>
         </button>
-        <audio id="som-moeda" src="https://github.com/AliceDeSa/Tellstones/raw/main/moeda.mp3" preload="auto"></audio>
+        <audio id="som-moeda" src="assets/audio/moeda.mp3" preload="auto"></audio>
         <div id="botoes-acoes-laterais">
           <button id="btn-desafiar">Desafiar</button>
           <button id="btn-segabar">Se Gabar</button>
@@ -138,7 +168,7 @@
 
   <!-- ================= CARTA DE AÇÕES ================= -->
   <div id="carta-acoes" style="display:none;">
-    <img src="https://github.com/AliceDeSa/Tellstones/raw/main/ad5d0fc0-caaf-424b-b71c-4334c8e62921.png" alt="Carta de Ações" id="img-carta-acoes" />
+    <img src="assets/img/ad5d0fc0-caaf-424b-b71c-4334c8e62921.png" alt="Carta de Ações" id="img-carta-acoes" />
     <div id="conteudo-acoes">
       <!-- As ações serão renderizadas aqui via JS -->
     </div>
@@ -149,26 +179,36 @@
   <div id="toast" style="display:none"></div>
 
   <!-- ================= ESCOLHA CARA OU COROA ================= -->
-  <div id="escolha-cara-coroa" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); z-index:4000; align-items:center; justify-content:center;">
-    <div style="background:#222; padding:32px 40px; border-radius:16px; box-shadow:0 4px 32px #000a; text-align:center;">
+  <div id="escolha-cara-coroa"
+    style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); z-index:4000; align-items:center; justify-content:center;">
+    <div
+      style="background:#222; padding:32px 40px; border-radius:16px; box-shadow:0 4px 32px #000a; text-align:center;">
       <h2>Escolha: Cara ou Coroa ?</h2>
-      <button id="btn-cara" style="margin:12px 24px; font-size:1.2em; display:inline-flex; flex-direction:column; align-items:center;">
-        <img src="https://github.com/AliceDeSa/Tellstones/blob/main/Cara.png?raw=true" alt="Cara" style="width:48px;height:48px;border-radius:50%;margin-bottom:6px;box-shadow:0 2px 8px #0007;" />
+      <button id="btn-cara"
+        style="margin:12px 24px; font-size:1.2em; display:inline-flex; flex-direction:column; align-items:center;">
+        <img src="assets/img/Cara.png" alt="Cara"
+          style="width:48px;height:48px;border-radius:50%;margin-bottom:6px;box-shadow:0 2px 8px #0007;" />
         Cara
       </button>
-      <button id="btn-coroa" style="margin:12px 24px; font-size:1.2em; display:inline-flex; flex-direction:column; align-items:center;">
-        <img src="https://github.com/AliceDeSa/Tellstones/blob/main/Coroa.png?raw=true" alt="Coroa" style="width:48px;height:48px;border-radius:50%;margin-bottom:6px;box-shadow:0 2px 8px #0007;" />
+      <button id="btn-coroa"
+        style="margin:12px 24px; font-size:1.2em; display:inline-flex; flex-direction:column; align-items:center;">
+        <img src="assets/img/Coroa.png" alt="Coroa"
+          style="width:48px;height:48px;border-radius:50%;margin-bottom:6px;box-shadow:0 2px 8px #0007;" />
         Coroa
       </button>
     </div>
   </div>
 
   <!-- ================= TELA DE VITÓRIA/DERROTA ================= -->
-  <div id="tela-vitoria" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:99999; align-items:center; justify-content:center; flex-direction:column;">
-    <div id="tela-vitoria-conteudo" style="background:#232942; color:#fff; padding:48px 60px; border-radius:18px; box-shadow:0 4px 32px #000a; text-align:center; max-width:90vw;">
+  <div id="tela-vitoria"
+    style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:99999; align-items:center; justify-content:center; flex-direction:column;">
+    <div id="tela-vitoria-conteudo"
+      style="background:#232942; color:#fff; padding:48px 60px; border-radius:18px; box-shadow:0 4px 32px #000a; text-align:center; max-width:90vw;">
       <h2 id="tela-vitoria-titulo">Vitória!</h2>
       <p id="tela-vitoria-msg">Parabéns, você venceu!</p>
-      <button id="btn-voltar-lobby" style="margin-top:32px; font-size:1.1em; padding:12px 32px; border-radius:8px; background:#2d8cff; color:#fff; border:none; cursor:pointer;">Voltar ao Lobby</button>
+      <button id="btn-voltar-lobby"
+        style="margin-top:32px; font-size:1.1em; padding:12px 32px; border-radius:8px; background:#2d8cff; color:#fff; border:none; cursor:pointer;">Voltar
+        ao Lobby</button>
     </div>
   </div>
 
@@ -176,16 +216,18 @@
   <!-- Script principal do jogo -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="tutorial.js"></script>
+  <script src="bot.js"></script>
   <script src="script.js"></script>
   <!-- Som de fundo para tela inicial e lobby -->
-  <audio id="som-fundo" src="https://github.com/AliceDeSa/Tellstones/blob/main/ambient.mp3" loop style="display:none" preload="auto"></audio>
+  <audio id="som-fundo" src="assets/audio/ambient.mp3" loop style="display:none" preload="auto"></audio>
 
   <!-- ================= KO-FI WIDGET ================= -->
   <script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>
   <script>
     kofiWidgetOverlay.draw('alicedesa', {
       'type': 'floating-chat',
-      'floating-chat.donateButton.text':'',
+      'floating-chat.donateButton.text': '',
       'floating-chat.donateButton.background-color': '#794bc4',
       'floating-chat.donateButton.text-color': '#fff',
       'floating-chat.position': 'right'
@@ -193,7 +235,9 @@
   </script>
 
   <!-- ================= TOOLTIP GLOBAL ================= -->
-  <div id="tooltip" style="display:none;position:fixed;z-index:99999;padding:8px 14px;background:rgba(24,28,36,0.98);color:#ffd700;border-radius:8px;font-size:1em;box-shadow:0 2px 8px #000a;pointer-events:none;white-space:nowrap;"></div>
+  <div id="tooltip"
+    style="display:none;position:fixed;z-index:99999;padding:8px 14px;background:rgba(24,28,36,0.98);color:#ffd700;border-radius:8px;font-size:1em;box-shadow:0 2px 8px #000a;pointer-events:none;white-space:nowrap;">
+  </div>
 
 </body>
 
