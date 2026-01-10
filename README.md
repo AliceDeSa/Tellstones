@@ -1,3 +1,5 @@
+https://alicedesa.github.io/Tellstones/
+
 # TellStones Online
 
 Um jogo digital fielmente inspirado no **Tellstones: King's Gambit**, desenvolvido como projeto de estudo. O jogo é totalmente em português e suporta partidas online em tempo real, modo espectador e um tutorial interativo completo.
@@ -59,3 +61,4 @@ Contribuições são bem-vindas! Se você quiser melhorar a IA do Bot, adicionar
 ---
 
 **"Memorize. Blefe. Desafie."**
+
