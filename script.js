@@ -224,6 +224,15 @@ function entrarSala(codigo, nome, tipo) {
   novoRef.set({ nome: nome });
 }
 
+// Função auxiliar para tocar som de press (botões da UI)
+function tocarSomPress() {
+  const audio = document.getElementById("som-press");
+  if (audio) {
+    audio.currentTime = 0;
+    audio.play().catch(e => console.warn("Erro ao tocar som de press:", e));
+  }
+}
+
 // Alterna entre as telas principais do app
 function mostrarTela(tela) {
   document.getElementById("start-screen").classList.remove("active");
@@ -234,6 +243,7 @@ function mostrarTela(tela) {
   const somFundo = document.getElementById("som-fundo");
   const creditosSom = document.getElementById("creditos-som");
   const placarTurno = document.getElementById("placar-turno-central");
+  const btnMute = document.getElementById("btn-mute-global");
 
   if (tela === "start-screen" || tela === "lobby") {
     if (somFundo && !window.isMuted) {
@@ -242,11 +252,13 @@ function mostrarTela(tela) {
     }
     if (creditosSom) creditosSom.style.display = "";
     if (placarTurno) placarTurno.style.display = "none";
+    if (btnMute) btnMute.style.display = "flex"; // Mostrar botão mute
   } else {
     // Tela de Jogo ou outras: Parar música
     if (somFundo) somFundo.pause();
     if (creditosSom) creditosSom.style.display = "none";
     if (placarTurno) placarTurno.style.display = "";
+    if (btnMute) btnMute.style.display = "none"; // Esconder botão mute no jogo
   }
   // Ocultar/mostrar Ko-fi conforme a tela
   const kofiBtn = document.querySelector('.floatingchat-donate-button') || document.querySelector('.floatingchat-container-wrap');
@@ -356,6 +368,7 @@ function mostrarLobby(codigo, nome, criador = false) {
   const btnIniciar = document.getElementById("lobby-iniciar");
   if (btnIniciar) {
     btnIniciar.onclick = function () {
+      tocarSomPress();
       // Buscar o modo da sala
       getDBRef("salas/" + codigo).once("value", function (snapshot) {
         const sala = snapshot.val();
@@ -1628,6 +1641,7 @@ function sincronizarPedraCentralEAlinhamento() {
 // Evento para o botão de criar sala
 if (document.getElementById("start-game-btn")) {
   document.getElementById("start-game-btn").onclick = function () {
+    tocarSomPress();
     const modo = document.querySelector('input[name="mode"]:checked').value;
     const nome = document.getElementById("nome-criar").value.trim();
     if (!nome) return alert("Digite seu nome!");
@@ -1642,6 +1656,7 @@ if (document.getElementById("start-game-btn")) {
 // Evento para o botão de entrar em sala
 if (document.getElementById("enter-room-btn")) {
   document.getElementById("enter-room-btn").onclick = function () {
+    tocarSomPress();
     const codigo = document
       .getElementById("room-code")
       .value.trim()
@@ -1659,21 +1674,21 @@ if (document.getElementById("enter-room-btn")) {
 // Evento para mostrar tela inicial ao carregar a página
 // Evento para mostrar tela inicial ao carregar a página
 window.onload = function () {
-  // Configurar botão de mute
+  // Configurar botão de mute (Apenas Música)
   window.isMuted = false;
   const btnMute = document.getElementById("btn-mute-global");
   if (btnMute) {
+    // Atualizar tooltip para refletir a função
+    btnMute.title = "Mutar/Desmutar Música de Fundo";
+
     btnMute.onclick = function () {
       window.isMuted = !window.isMuted;
       const somFundo = document.getElementById("som-fundo");
-      const somClick = document.getElementById("som-click");
-      const somMoeda = document.getElementById("som-moeda");
+      // SFX não são mais afetados pelo botão de mute global
 
       if (window.isMuted) {
         btnMute.innerText = "🔇";
         if (somFundo) somFundo.pause();
-        if (somClick) somClick.muted = true;
-        if (somMoeda) somMoeda.muted = true;
       } else {
         btnMute.innerText = "🔊";
         // Só retoma música se estiver em tela permitida
@@ -1681,8 +1696,6 @@ window.onload = function () {
         if (somFundo && (!telaGame || !telaGame.classList.contains("active"))) {
           somFundo.play().catch(() => { });
         }
-        if (somClick) somClick.muted = false;
-        if (somMoeda) somMoeda.muted = false;
       }
     };
   }
@@ -1693,6 +1706,7 @@ window.onload = function () {
 // Evento para voltar do Lobby
 if (document.getElementById("back-from-lobby-btn")) {
   document.getElementById("back-from-lobby-btn").onclick = function () {
+    tocarSomPress();
     if (confirm("Deseja sair do Lobby?")) {
       sairPartida();
     }
@@ -1729,6 +1743,7 @@ function mostrarMoedaParaSorteioCriador() {
           if (moedaBtn) {
             moedaBtn.style.display = "block";
             moedaBtn.onclick = function () {
+              tocarSomPress();
               moedaBtn.onclick = null; // desabilita localmente
               if (moedaAnimada) {
                 moedaAnimada.classList.remove("moeda-girando");
@@ -1762,6 +1777,7 @@ const btnEntrar = document.getElementById("join-room-btn");
 
 if (btnOnline) {
   btnOnline.onclick = () => {
+    tocarSomPress();
     mainMenu.style.display = "none";
     onlineMenu.style.display = "flex";
   };
@@ -1769,6 +1785,7 @@ if (btnOnline) {
 
 if (btnVoltarMain) {
   btnVoltarMain.onclick = () => {
+    tocarSomPress();
     mainMenu.style.display = "flex";
     onlineMenu.style.display = "none";
     document.getElementById("room-options").style.display = "none";
@@ -1778,12 +1795,14 @@ if (btnVoltarMain) {
 
 if (btnCriar) {
   btnCriar.onclick = function () {
+    tocarSomPress();
     document.getElementById("room-options").style.display = "block";
     document.getElementById("join-room").style.display = "none";
   };
 }
 if (btnEntrar) {
   btnEntrar.onclick = function () {
+    tocarSomPress();
     document.getElementById("room-options").style.display = "none";
     document.getElementById("join-room").style.display = "block";
   };
@@ -1796,12 +1815,14 @@ const btnBot = document.getElementById("bot-pve-btn");
 
 if (btnTutorial) {
   btnTutorial.onclick = function () {
+    tocarSomPress();
     iniciarModoTutorial();
   };
 }
 
 if (btnBot) {
   btnBot.onclick = function () {
+    tocarSomPress();
     alert("Modo PvE ainda em desenvolvimento!");
     // iniciarModoBot();
   };
@@ -1810,6 +1831,7 @@ if (btnBot) {
 const btnSairPartida = document.getElementById("btn-sair-partida");
 if (btnSairPartida) {
   btnSairPartida.onclick = function () {
+    tocarSomPress();
     const btnVoltarLobbyManual = document.getElementById("btn-voltar-lobby");
     if (btnVoltarLobbyManual) {
       btnVoltarLobbyManual.click();

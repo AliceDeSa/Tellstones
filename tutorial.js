@@ -505,7 +505,10 @@ class TellstonesTutorial {
             background: #4caf50; color: white; border: none; padding: 8px 16px;
             border-radius: 4px; cursor: pointer; align-self: flex-end; margin-top: 10px;
         `;
-        this.btnNext.onclick = () => this.proximo();
+        this.btnNext.onclick = () => {
+            if (window.tocarSomPress) window.tocarSomPress();
+            this.proximo();
+        };
         this.overlay.appendChild(this.btnNext);
 
         document.body.appendChild(this.overlay);
