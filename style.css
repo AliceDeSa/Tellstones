@@ -37,6 +37,8 @@ h1 {
 #game-codigo {
   color: #fff;
   text-shadow: 0 2px 8px #000a;
+  user-select: text !important;
+  cursor: text;
 }
 
 #vez {
@@ -448,7 +450,10 @@ input[type="text"] {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  z-index: 50;
+  gap: 18px;
+  gap: 18px;
+  z-index: 3000;
+  /* FORCE ABOVE CARD (2000) */
 }
 
 .icone-flutuante {
@@ -489,6 +494,8 @@ input[type="text"] {
   z-index: 100;
   display: none;
   animation: popupIn 0.2s;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 @keyframes popupIn {
@@ -671,17 +678,7 @@ input[type="text"] {
     right: auto !important;
   }
 
-  /* 2. Ícone de Ações no canto superior DIREITO (HUD) */
-  #icone-acoes {
-    position: fixed;
-    top: 5px !important;
-    right: 5px !important;
-    bottom: auto !important;
-    left: auto !important;
-    margin: 0;
-    z-index: 2000;
-    transform: scale(0.9);
-  }
+
 
   /* 3. Botões de Desafiar e Se Gabar (Inside Wrapper) */
   #botoes-acoes-laterais {
@@ -1279,6 +1276,9 @@ input[type="text"] {
   width: 370px;
   max-width: 95vw;
   pointer-events: auto;
+  transform: scale(0.9);
+  /* Desktop: Reduce size slightly */
+  transform-origin: top right;
 }
 
 #img-carta-acoes {
@@ -1303,8 +1303,9 @@ input[type="text"] {
   color: #222;
   font-size: 1em;
   text-align: left;
-  pointer-events: none;
-  overflow: hidden;
+  pointer-events: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -2205,6 +2206,26 @@ body>.floatingchat-donate-button {
   align-items: center !important;
   justify-content: center !important;
   padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+/* Controla a visibilidade do ícone movido para o body */
+#icone-acoes {
+  display: none !important;
+  /* Escondido por padrão */
+}
+
+/* Quando o jogo está ativo, mostra o ícone (precisa ser irmão do #game) */
+#game.active~#icone-acoes {
+  display: flex !important;
+  /* Default desktop pos */
+  position: fixed !important;
+  top: 20px;
+  right: 20px;
+  z-index: 2000;
 }
 
 body>.floatingchat-donate-button img {
@@ -2219,4 +2240,74 @@ body>.floatingchat-donate-button img {
 body>.floatingchat-donate-button span {
   display: none !important;
   /* Esconde qualquer texto ao lado do ícone */
+}
+
+/* ===== Mobile Landscape Fixes (Action Card) ===== */
+@media screen and (max-height: 500px) {
+  #carta-acoes {
+    top: 50% !important;
+    /* Center vertically */
+    bottom: auto !important;
+    left: auto !important;
+    /* NOT center horizontal */
+    right: 10px !important;
+    /* Stick to right side */
+    transform: translateY(-50%) !important;
+    /* Only vertical translation */
+    height: 90vh !important;
+    width: auto !important;
+    /* display: flex !important; REMOVED */
+    /* align-items: flex-start !important; REMOVED */
+  }
+
+  #img-carta-acoes {
+    height: 90vh !important;
+    width: auto !important;
+    min-width: 320px !important;
+    /* Ensure minimum width for text */
+    max-width: 90vw !important;
+    overflow: hidden;
+    /* Prevent image spill */
+  }
+
+  #conteudo-acoes {
+    height: 75% !important;
+    /* Reduced height to increase bottom margin */
+    /* Taller area => smaller margins */
+    width: 85% !important;
+    left: 50% !important;
+    top: 42% !important;
+    /* Shifted UP 3% (was 45%) */
+    transform: translate(-50%, -50%) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    padding-top: 5px;
+  }
+
+  /* Fix Toggle Icon on Mobile Landscape */
+  #icone-acoes {
+    position: fixed !important;
+    top: 10px !important;
+    right: 10px !important;
+    /* Top right corner */
+    left: auto !important;
+    z-index: 200000 !important;
+    /* NUCLEAR OPTION: FORCE ABOVE EVERYTHING */
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    /* Remove white circle/square/borders */
+    border-radius: 0 !important;
+  }
+
+  /* Internal Close Button - HIDDEN as per user request */
+  .fechar-card {
+    display: none !important;
+  }
+}
+
+/* Default state for close button (hidden on desktop usually, but useful to have) */
+.fechar-card {
+  display: none;
 }

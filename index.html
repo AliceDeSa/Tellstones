@@ -9,7 +9,8 @@
   <meta name="viewport" content="width=1024, user-scalable=no">
   <meta name="mobile-web-app-capable" content="yes">
   <title>TellStones</title>
-  <link rel="stylesheet" href="style.css?v=mobile_fix_55">
+  <link rel="stylesheet" href="style.css?v=3.00">
+  <link rel="icon" type="image/png" href="assets/img/Coroa.png">
 </head>
 
 <body>
@@ -41,7 +42,9 @@
     <!-- Título e slogan -->
     <h1>TellStones</h1>
     <div style="font-size:1.2em;color:#8ecfff;margin-bottom:18px;">Memorize. Blefe. Desafie.</div>
-    <div style="font-size:0.8em;color:#555;margin-bottom:10px;">v1.55 (Final Fixed)</div>
+    <div style="font-size:0.8em;color:#555;margin-bottom:4px;">v3.7 (Persistence & Scoring)</div>
+    <div style="font-size:0.65em;color:#666;margin-bottom:12px;max-width:260px;line-height:1.2;">Latest: Correção Pontos
+      Se Gabar, Reveal e Save Config</div>
     <!-- Botões principais -->
     <div id="main-menu-btns" style="display:flex; flex-direction:column; gap:10px; align-items:center;">
       <button id="tutorial-btn" style="background:#4caf50; width: 220px;">Tutorial</button>
@@ -116,10 +119,7 @@
       <div id="espectadores">Espectadores: <span id="lista-espectadores"></span></div>
     </div>
     <!-- ======= ÍCONE DE AÇÕES ======= -->
-    <div id="icone-acoes" title="Ações"
-      style="padding:0;width:60px;height:60px;display:flex;align-items:center;justify-content:center;background:none;border:none;">
-      <img src="assets/img/Ações.png" alt="Ações" style="width:54px;height:54px;object-fit:contain;display:block;" />
-    </div>
+    <!-- Ícone de ações removido daqui e movido para o body para corrigir z-index -->
     <!-- ======= CARD DE AÇÕES ======= -->
     <div id="box-acoes" style="display:none;">
       <h3>Ações Possíveis</h3>
@@ -187,6 +187,13 @@
     </div>
   </div>
 
+  <!-- ================= ÍCONE DE AÇÕES (GLOBAL) ================= -->
+  <!-- Movido para fora de #game para garantir z-index superior ao card -->
+  <div id="icone-acoes" title="Ações"
+    style="padding:0;width:60px;height:60px;display:none;align-items:center;justify-content:center;background:none;border:none;">
+    <img src="assets/img/Ações.png" alt="Ações" style="width:54px;height:54px;object-fit:contain;display:block;" />
+  </div>
+
   <!-- ================= CARTA DE AÇÕES ================= -->
   <div id="carta-acoes" style="display:none;">
     <img src="assets/img/ad5d0fc0-caaf-424b-b71c-4334c8e62921.png" alt="Carta de Ações" id="img-carta-acoes" />
@@ -237,24 +244,42 @@
   <!-- Script principal do jogo -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <script src="tutorial.js?v=mobile_fix_55"></script>
-  <script src="bot.js?v=mobile_fix_55"></script>
-  <script src="script.js?v=mobile_fix_55"></script>
+  <script src="tutorial.js?v=multiplayer_final_56"></script>
+  <script src="bot.js?v=multiplayer_final_56"></script>
+  <script src="src/core/constants.js"></script>
+  <script src="src/utils/utils.js"></script>
+  <script src="src/services/network.js"></script>
+  <script src="src/core/GameRules.js"></script>
+  <script src="src/config/GameConfig.js"></script>
+  <script src="src/ui/AnimationManager.js"></script>
+  <script src="src/ui/Renderer.js"></script>
+  <script src="src/core/InputHandler.js"></script>
+  <script src="src/core/GameController.js"></script>
+
+  <!-- Game Modes -->
+  <script src="src/modes/GameMode.js?v=multiplayer_final_57"></script>
+  <script src="src/modes/MultiplayerMode.js?v=multiplayer_final_57"></script>
+  <script src="src/modes/PvEMode.js?v=multiplayer_final_57"></script>
+  <script src="src/modes/TutorialMode.js?v=multiplayer_final_57"></script>
+
+  <script src="script.js?v=multiplayer_final_57"></script>
   <!-- Som de fundo para tela inicial e lobby -->
   <audio id="som-fundo" src="assets/audio/ambient.mp3" loop style="display:none" preload="auto"></audio>
   <audio id="som-click" src="assets/audio/click.wav" preload="auto"></audio>
-  <audio id="som-press" src="assets/audio/press.mp3" preload="auto"></audio>
+  <audio id="som-press" src="assets/audio/click.wav" preload="auto"></audio>
+  <audio id="som-desafio" src="assets/audio/som%20teste.wav" preload="auto"></audio>
 
   <!-- ================= KO-FI WIDGET ================= -->
   <script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>
   <script>
-    kofiWidgetOverlay.draw('alicedesa', {
-      'type': 'floating-chat',
-      'floating-chat.donateButton.text': '',
-      'floating-chat.donateButton.background-color': '#794bc4',
-      'floating-chat.donateButton.text-color': '#fff',
-      'floating-chat.position': 'right'
-    });
+    if (window.kofiWidgetOverlay && !document.getElementById('kofi-widget-overlay')) {
+      kofiWidgetOverlay.draw('alicedesa', {
+        'type': 'floating-chat',
+        'floating-chat.donateButton.text': '',
+        'floating-chat.donateButton.background-color': '#794bc4',
+        'floating-chat.donateButton.text-color': '#fff'
+      });
+    }
   </script>
 
   <!-- ================= TOOLTIP GLOBAL ================= -->

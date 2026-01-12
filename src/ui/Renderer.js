@@ -1,0 +1,650 @@
+// =========================
+// Renderização e Manipulação de DOM (Renderer)
+// =========================
+
+const Renderer = {
+
+    // Adiciona slots fixos proporcionais no tabuleiro
+    desenharSlotsFixos: function () {
+        const wrapper = document.getElementById("tabuleiro-wrapper");
+        if (!wrapper) return;
+        // Remove slots antigos, se existirem
+        const antigos = wrapper.querySelectorAll(".slot-fixo");
+        antigos.forEach((el) => el.remove());
+        if (!window.GameConfig) return;
+        const CFG = GameConfig.LAYOUT;
+        const positions = this.getSlotPositions(wrapper, CFG.SLOT_COUNT, CFG.STONE_SIZE, CFG.Y_OFFSET_FIXED);
+        for (let i = 0; i < CFG.SLOT_COUNT; i++) {
+            const slot = document.createElement("div");
+            slot.className = "slot-fixo";
+            slot.setAttribute("data-slot", i);
+            slot.style.position = "absolute";
+            slot.style.width = CFG.STONE_SIZE + "px";
+            slot.style.height = CFG.STONE_SIZE + "px";
+            slot.style.left = positions[i].left + "px";
+            slot.style.top = positions[i].top + "px";
+            slot.style.transform = "translate(-50%, -50%)";
+            slot.style.border = "none";
+            slot.style.background = "transparent";
+            // slot.innerText = i+1; // Se quiser numerar as posições
+            wrapper.appendChild(slot);
+        }
+    },
+
+    // Renderiza a imagem do tabuleiro na tela
+    renderizarMesa: function () {
+        if (window.animacaoTrocaEmAndamento) return;
+        // Garante que a mesa sempre tenha 7 slots e é array
+        if (!window.estadoJogo) return;
+        window.estadoJogo.mesa = garantirArray(window.estadoJogo.mesa);
+        if (window.estadoJogo.mesa.length !== 7) {
+            const novaMesa = Array(7).fill(null);
+            // Se vier como array de 1 elemento, mas a pedra tem que ir para o centro
+            if (
+                window.estadoJogo.mesa.length === 1 &&
+                window.estadoJogo.mesa[0] &&
+                window.estadoJogo.centralAlinhada
+            ) {
+                novaMesa[3] = window.estadoJogo.mesa[0];
+            } else {
+                window.estadoJogo.mesa.forEach((p, i) => {
+                    if (p) novaMesa[i] = p;
+                });
+            }
+            window.estadoJogo.mesa = novaMesa;
+        }
+        // Requer função global renderizarPedrasMesa (ou mover para Renderer no futuro)
+        // Por enquanto, chamamos a global se existir.
+        if (typeof renderizarPedrasMesa === 'function') {
+            renderizarPedrasMesa(window.estadoJogo.mesa);
+        } else if (typeof this.renderizarPedrasMesa === 'function') {
+            this.renderizarPedrasMesa(window.estadoJogo.mesa);
+        }
+        this.desenharSlotsFixos(); // Adiciona os slots fixos ao tabuleiro
+
+        // Garante a atualização da UI de Desafio
+        if (typeof this.renderizarOpcoesDesafio === 'function') this.renderizarOpcoesDesafio();
+        if (typeof this.renderizarOpcoesSegabar === 'function') this.renderizarOpcoesSegabar();
+        if (typeof this.renderizarRespostaSegabar === 'function') this.renderizarRespostaSegabar();
+    },
+
+    // Atualiza informações da sala, espectadores, placar e turno no topo da tela
+    atualizarInfoSala: function (codigo, espectadores) {
+        document.getElementById("codigo-sala-valor").innerText = codigo;
+        document.getElementById("lista-espectadores").innerHTML = espectadores
+            .map((e) => `<span>${e.nome}</span>`)
+            .join(", ");
+        const infoSala = document.getElementById("info-sala");
+        if (
+            (!codigo || codigo.trim() === "") &&
+            (!espectadores || espectadores.length === 0)
+        ) {
+            infoSala.style.display = "none";
+        } else {
+            infoSala.style.display = "";
+        }
+
+        // Placar centralizado, destacando o jogador da vez em amarelo
+        const placarTurnoDiv = document.getElementById("placar-turno-central");
+        if (
+            placarTurnoDiv &&
+            window.estadoJogo &&
+            window.estadoJogo.jogadores &&
+            window.estadoJogo.jogadores.length > 0
+        ) {
+            const placar = window.estadoJogo.jogadores
+                .map((j, i) => {
+                    const destaque =
+                        (window.estadoJogo.jogadores.length === 2 && i === window.estadoJogo.vez) ||
+                        (window.estadoJogo.jogadores.length === 4 && i % 2 === window.estadoJogo.vez);
+                    return `<span style='${destaque
+                        ? "color:#ffd700;font-weight:bold;text-shadow:0 0 8px #ffd70088;"
+                        : ""
+                        }'>${j.nome}: ${j.pontos}</span>`;
+                })
+                .join(" <b>|</b> ");
+            placarTurnoDiv.innerHTML = `<div style='margin-bottom:4px;'>${placar}</div>`;
+        }
+        if (typeof renderizarMarcadoresPonto === 'function') renderizarMarcadoresPonto();
+    },
+
+    // Renderiza as pedras da reserva
+    renderizarPedrasReserva: function () {
+        // Só bloqueia animação se o alinhamento ainda não foi feito
+        if (window.animacaoAlinhamentoEmAndamento && !window.estadoJogo.alinhamentoFeito) return;
+        window.estadoJogo.reserva = garantirArray(window.estadoJogo.reserva);
+        // O layout depende apenas do alinhamentoFeito global
+        if (window.estadoJogo.alinhamentoFeito) {
+            this.renderizarPedrasVerticaisAbsoluto(window.estadoJogo.reserva);
+        } else {
+            this.renderizarPedrasCirculo(window.estadoJogo.reserva, window.estadoJogo.pedraCentral);
+        }
+    },
+
+    // Renderiza as pedras em círculo ao redor da pedra central
+    renderizarPedrasCirculo: function (pedras, pedraCentral) {
+        const circle = document.getElementById("circle-pedras");
+        if (!circle || !pedras || pedras.length === 0) return;
+        circle.style.display = "";
+        circle.innerHTML = "";
+        const angStep = 360 / pedras.length;
+        const raio = 100;
+        if (typeof window.animouReservaCircular === "undefined")
+            window.animouReservaCircular = false;
+        let animar = false;
+        // Só anima se ainda não animou, o DOM está pronto e houver pedras
+        if (!window.animouReservaCircular && pedras.length > 0) {
+            animar = true;
+        }
+        const TEMPO_ANIMACAO_PEDRA = 180;
+        pedras.forEach((p, i) => {
+            const ang = ((angStep * i - 90) * Math.PI) / 180;
+            const x = Math.cos(ang) * raio + 90;
+            const y = Math.sin(ang) * raio + 90;
+            const div = document.createElement("div");
+            div.className = "pedra-circulo pedra-reserva";
+            if (animar) {
+                div.style.left = "90px";
+                div.style.top = "90px";
+                div.style.transform = "scale(0.2)";
+                div.style.opacity = "0";
+                div.innerHTML = `<img src="${p.url}" alt="${p.nome}" draggable="false">`;
+                div.setAttribute("data-idx", i);
+                div.onmouseenter = function (e) { showTooltip("Arraste para o Tabuleiro", e.clientX, e.clientY); };
+                div.onmousemove = function (e) { showTooltip("Arraste para o Tabuleiro", e.clientX, e.clientY); };
+                div.onmouseleave = hideTooltip;
+                circle.appendChild(div);
+                setTimeout(() => {
+                    div.style.transition = "all 0.8s cubic-bezier(0.77,0,0.175,1)";
+                    div.style.left = x + "px";
+                    div.style.top = y + "px";
+                    div.style.transform = "scale(1)";
+                    div.style.opacity = "1";
+                    if (i === pedras.length - 1) {
+                        window.animouReservaCircular = true;
+                    }
+                }, TEMPO_ANIMACAO_PEDRA + i * TEMPO_ANIMACAO_PEDRA);
+            } else {
+                div.style.left = x + "px";
+                div.style.top = y + "px";
+                div.style.transform = "scale(1)";
+                div.style.opacity = "1";
+                // Hide info for hidden stones or reserve (reserve is always visible though)
+                // For reserve, stones are visible.
+                div.innerHTML = `<img src="${p.url}" alt="Pedra" draggable="false">`;
+                div.setAttribute("data-idx", i);
+                div.onmouseenter = function (e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
+                div.onmousemove = function (e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
+                div.onmouseleave = hideTooltip;
+                circle.appendChild(div);
+            }
+        });
+
+        if (pedraCentral) {
+            const central = document.createElement("div");
+            central.className = "pedra-circulo pedra-reserva pedra-central";
+            central.style.left = "90px";
+            central.style.top = "90px";
+            central.innerHTML = `<img src="${pedraCentral.url}" alt="${pedraCentral.nome}" draggable="false">`;
+            central.onmousedown = null;
+            central.style.cursor = "not-allowed";
+            central.title = "Aguarde o alinhamento";
+            circle.appendChild(central);
+        }
+    },
+
+    // Renderiza as pedras verticais (após alinhamento)
+    renderizarPedrasVerticaisAbsoluto: function (pedras) {
+        if (window.animacaoAlinhamentoEmAndamento) return;
+        const circle = document.getElementById("circle-pedras");
+
+        circle.style.display = "flex";
+        circle.style.flexDirection = "column";
+        circle.style.justifyContent = "flex-start";
+        circle.style.alignItems = "flex-start";
+        circle.style.gap = "6px";
+        circle.style.position = "fixed";
+
+        if (window.innerWidth < 900) {
+            circle.style.left = "40px";
+            circle.style.top = "20px";
+            circle.style.transform = "scale(0.65)";
+            circle.style.transformOrigin = "top left";
+            circle.style.flexWrap = "wrap";
+            circle.style.maxHeight = "90vh";
+        } else {
+            circle.style.left = "20px";
+            circle.style.top = "130px";
+            circle.style.transform = "none";
+        }
+
+        circle.style.width = "auto";
+        circle.style.height = "auto";
+        circle.style.pointerEvents = "auto";
+        circle.style.paddingTop = "0";
+        circle.innerHTML = "";
+
+        pedras.forEach((p, i) => {
+            if (!p) return;
+            const div = document.createElement("div");
+            div.className = "pedra-circulo pedra-reserva";
+            div.style.position = "relative";
+            div.style.left = "0";
+            div.style.top = "0";
+            div.style.width = "55px";
+            div.style.height = "55px";
+            div.innerHTML = `<img src="${p.url}" alt="${p.nome}" draggable="false" style="width:100%; height:100%;">`;
+            div.setAttribute("data-idx", i);
+
+            // Delegate Interaction and Visuals to InputHandler
+            if (window.InputHandler) {
+                window.InputHandler.setupReservaItem(div, p, i, true);
+            }
+
+            // Visual State Management (Disabled/Enabled cursor)
+            if (!(window.estadoJogo.alinhamentoFeito && ehMinhaVez())) {
+                div.style.cursor = "not-allowed";
+                div.title = window.estadoJogo.alinhamentoFeito
+                    ? "Aguarde sua vez"
+                    : "Aguarde o alinhamento";
+                // Remove listeners added by InputHandler if disabled to prevent drag start
+                div.onmousedown = null;
+                div.ontouchstart = null;
+            } else {
+                div.style.cursor = "pointer";
+                div.title = "";
+            }
+            circle.appendChild(div);
+        });
+    },
+
+    getSlotPositions: function (wrapper, count, slotSize, gap) {
+        const w = wrapper.clientWidth;
+        const h = wrapper.clientHeight;
+        const positions = [];
+        const cy = h / 2;
+        let actualGap = gap;
+        let actualSlotSize = slotSize;
+        const totalWidthNeeded = (count * slotSize) + ((count - 1) * gap);
+        if (totalWidthNeeded > w) {
+            const scale = (w * 0.95) / totalWidthNeeded;
+            actualSlotSize = slotSize * scale;
+            actualGap = gap * scale;
+        }
+        const totalW = (count * actualSlotSize) + ((count - 1) * actualGap);
+        let startX = (w - totalW) / 2;
+        for (let i = 0; i < count; i++) {
+            positions.push({
+                left: startX + (i * (actualSlotSize + actualGap)) + (actualSlotSize / 2),
+                top: cy
+            });
+        }
+        return positions;
+    },
+
+    desenharHighlightsFixos: function (validos, wrapper) {
+        const positions = this.getSlotPositions(wrapper, 7, 68.39, 40);
+        const antigos = wrapper.querySelectorAll(".highlight-slot");
+        antigos.forEach((h) => h.remove());
+        validos.forEach((slotIdx) => {
+            const highlight = document.createElement("div");
+            highlight.className = "highlight-slot";
+            highlight.style.position = "absolute";
+            highlight.style.width = "68.39px";
+            highlight.style.height = "68.39px";
+            highlight.style.left = positions[slotIdx].left + "px";
+            highlight.style.top = positions[slotIdx].top + "px";
+            highlight.style.transform = "translate(-50%, -50%)";
+            highlight.style.background = "transparent";
+            highlight.style.border = "none";
+            highlight.style.borderRadius = "50%";
+            highlight.style.zIndex = 10000;
+            highlight.style.pointerEvents = "none";
+            highlight.setAttribute("data-slot", slotIdx);
+            //highlight.style.boxShadow = "0 0 0 2.5px #ffd70088, 0 0 8px 2px #fff3";
+            //wrapper.appendChild(highlight);
+        });
+    },
+
+    animarPedraReservaParaMesa: function (ghost, wrapper, slotIdx, callback) {
+        const larguraWrapper = wrapper.offsetWidth;
+        const larguraPedra = 80;
+        const slots = 7;
+        const slotLargura = larguraWrapper / slots;
+        const leftFinal =
+            wrapper.getBoundingClientRect().left +
+            slotLargura * slotIdx +
+            slotLargura / 2 -
+            larguraPedra / 2;
+        const topFinal =
+            wrapper.getBoundingClientRect().top +
+            wrapper.offsetHeight / 2 -
+            larguraPedra / 2;
+        const leftStart = parseFloat(ghost.style.left);
+        const topStart = parseFloat(ghost.style.top);
+        const anim = ghost.animate(
+            [
+                { left: leftStart + "px", top: topStart + "px" },
+                { left: leftFinal + "px", top: topFinal + "px" }
+            ],
+            {
+                duration: 700,
+                easing: "cubic-bezier(0.77, 0, 0.175, 1)",
+                fill: "forwards"
+            }
+        );
+        anim.onfinish = function () {
+            if (callback) callback();
+        };
+    },
+
+    // Renderiza as opções de pedras para o desafio (Duvidar)
+    renderizarOpcoesDesafio: function () {
+        const estadoJogo = window.estadoJogo;
+        if (!estadoJogo || !estadoJogo.desafio) {
+            // Esconde o container se não for para mostrar
+            const antigo = document.getElementById("opcoes-desafio");
+            if (antigo) antigo.style.display = "none";
+            return;
+        }
+
+        // Condições de saída
+        // Condições de saída atualizadas
+        const status = estadoJogo.desafio.status;
+        const validStatus = ["responder", "aguardando_resposta"].includes(status);
+
+        if (!validStatus) {
+            const antigo = document.getElementById("opcoes-desafio");
+            if (antigo) antigo.style.display = "none";
+            return;
+        }
+
+        // Se eu sou o DESAFIANTE, eu não vejo as opções de resposta (o oponente vê)
+        // Se eu sou o desafiado, eu vejo.
+        // O desafiante é 'desafio.jogador'.
+        if (estadoJogo.desafio.jogador === window.nomeAtual) {
+            return;
+        }
+
+        let container = document.getElementById("opcoes-desafio");
+        if (!container) {
+            container = document.createElement("div");
+            container.id = "opcoes-desafio";
+            // Estilos
+            container.style.cssText = "display: flex; justify-content: center; top: 7%; left: 50%; transform: translateX(-50%); padding: 0px; background: transparent; border: none; box-shadow: none; position: absolute; z-index: 99999; width: 740px; flex-direction: column; align-items: center;";
+
+            // Tenta inserir no tabuleiro-center
+            const tabuleiroCenter = document.getElementById("tabuleiro-center");
+            if (tabuleiroCenter) {
+                tabuleiroCenter.insertBefore(container, tabuleiroCenter.firstChild);
+            } else {
+                document.body.appendChild(container); // Fallback
+            }
+        } else {
+            container.innerHTML = "";
+            container.style.display = "flex";
+        }
+
+        const box = document.createElement("div");
+        box.className = "box-desafio";
+        const titulo = document.createElement("div");
+        titulo.className = "titulo-desafio";
+        titulo.innerText = "Adivinhe a peça do desafio!";
+        box.appendChild(titulo);
+
+        const linha = document.createElement("div");
+        linha.className = "linha-pedras";
+
+        // Importante: PEDRAS_OFICIAIS deve estar disponível globalmente ou via Constants
+        const pedras = (window.PEDRAS_OFICIAIS) ? window.PEDRAS_OFICIAIS : [
+            { nome: "Coroa", url: "assets/img/Coroa.svg" },
+            { nome: "Espada", url: "assets/img/espada.svg" },
+            { nome: "Balança", url: "assets/img/Balança.svg" },
+            { nome: "Cavalo", url: "assets/img/cavalo.svg" },
+            { nome: "Escudo", url: "assets/img/escudo.svg" },
+            { nome: "Bandeira", url: "assets/img/bandeira.svg" },
+            { nome: "Martelo", url: "assets/img/martelo.svg" }
+        ];
+
+        pedras.forEach((p, idx) => {
+            const btn = document.createElement("button");
+            btn.className = "pedra-reserva pedra-opcao";
+            // Ensure visual interactivity overrides any default class state
+            btn.style.setProperty("cursor", "pointer", "important");
+            btn.style.setProperty("pointer-events", "auto", "important");
+            btn.innerHTML = `<img src="${p.url}" alt="${p.nome}">`;
+            btn.onclick = function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.tocarSomClick) window.tocarSomClick();
+
+                // Atualiza estado localmente e dispara resolução via Controller
+                if (window.GameController) {
+                    window.GameController.resolverDesafio(idx);
+                } else {
+                    // Fallback temporário
+                    estadoJogo.desafio.escolhaOponente = idx;
+                    estadoJogo.desafio.status = "resolvido";
+                    window.salvarEstadoJogo(); // Global call
+                }
+
+                if (window.Renderer && window.Renderer.renderizarMesa) window.Renderer.renderizarMesa();
+                container.style.display = "none";
+
+                if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
+            };
+            linha.appendChild(btn);
+        });
+        box.appendChild(linha);
+        container.appendChild(box);
+
+
+    },
+
+    // Renderizar opções de resposta ao Se Gabar (Acreditar / Duvidar / Se Gabar Também)
+    renderizarOpcoesSegabar: function () {
+        const estadoJogo = window.estadoJogo;
+        if (
+            !estadoJogo.desafio ||
+            estadoJogo.desafio.tipo !== "segabar" ||
+            estadoJogo.desafio.status !== "aguardando_resposta"
+        ) {
+            const antigo = document.getElementById("opcoes-segabar");
+            if (antigo) antigo.style.display = "none";
+            return;
+        }
+
+        const desafioNormal = document.getElementById("opcoes-desafio");
+        if (desafioNormal) desafioNormal.style.display = "none";
+
+        if (estadoJogo.desafio.jogador === window.nomeAtual) return;
+
+        let container = document.getElementById("opcoes-segabar");
+        if (!container) {
+            container = document.createElement("div");
+            container.id = "opcoes-segabar";
+            document.body.appendChild(container); // Nuclear Fix
+            container.style.cssText = "display: flex; justify-content: center; top: 11%; left: 50%; transform: translateX(-50%); padding: 0px; background: transparent; border: none; box-shadow: none; position: fixed; z-index: 99999; width: 740px; flex-direction: column; align-items: center;";
+        } else {
+            container.innerHTML = "";
+            container.style.display = "flex";
+        }
+
+        const box = document.createElement("div");
+        box.className = "box-desafio";
+        box.style.display = "flex";
+        box.style.flexDirection = "row";
+        box.style.justifyContent = "center";
+        box.style.alignItems = "center";
+        box.style.gap = "18px";
+
+        // Botão Acreditar
+        const btnAcreditar = this.criarBotaoAcao("Acreditar", () => {
+            if (window.GameController) window.GameController.responderSegabar("acreditar");
+        });
+
+        // Botão Duvidar
+        const btnDuvidar = this.criarBotaoAcao("Duvidar", () => {
+            if (window.GameController) window.GameController.responderSegabar("duvidar");
+        });
+
+        // Botão Se Gabar Também
+        const btnSegabarTambem = this.criarBotaoAcao("Se Gabar Também", () => {
+            if (window.GameController) window.GameController.responderSegabar("segabar_tambem");
+        });
+
+        box.appendChild(btnAcreditar);
+        box.appendChild(btnDuvidar);
+        box.appendChild(btnSegabarTambem);
+        container.appendChild(box);
+    },
+
+    // Renderizar interface de resposta do Se Gabar para o jogador que se gabou (Exame)
+    renderizarRespostaSegabar: function () {
+        const estadoJogo = window.estadoJogo;
+        const nomeAtual = window.nomeAtual;
+
+        if (!estadoJogo.desafio || estadoJogo.desafio.tipo !== "segabar" || estadoJogo.desafio.status !== "responder_pecas") {
+            // Limpeza visual se necessário
+            const container = document.getElementById("opcoes-resposta-segabar");
+            if (container) container.style.display = "none";
+            return;
+        }
+
+        const ehTutorialAprendiz = window.salaAtual === "MODO_TUTORIAL" && estadoJogo.desafio.jogador === "Aprendiz";
+        // Check visibility: Only the Boaster sees this UI
+        // If "Se Gabar Também" happened, the role swapped, so this check naturally works because 
+        // estado.desafio.jogador was updated to the new boaster.
+        // But we double check to ensure NO ONE ELSE sees it.
+        if (nomeAtual !== estadoJogo.desafio.jogador && !ehTutorialAprendiz) {
+            const container = document.getElementById("opcoes-resposta-segabar");
+            if (container) {
+                container.style.display = "none";
+                container.innerHTML = ""; // Force clear content
+            }
+            return;
+        }
+
+        // --- NEW SAFETY CHECK ---
+        // Se eu SOU o oponente que acabou de duvidar, eu NÃO devo ver essa tela.
+        // O estado 'responder_pecas' é para quem TEM QUE RESPONDER (o Boaster).
+        // Se eu cliquei em Duvidar, eu sou apenas observador da prova.
+        if (estadoJogo.desafio.escolhaOponente === 'duvidar' && nomeAtual !== estadoJogo.desafio.jogador) {
+            const container = document.getElementById("opcoes-resposta-segabar");
+            if (container) {
+                container.style.setProperty("display", "none", "important");
+                container.innerHTML = "";
+            }
+            return;
+        }
+
+        const pedrasViradas = estadoJogo.mesa
+            .map((p, idx) => ({ ...p, idx }))
+            .filter((p) => p && p.virada);
+
+        const idxAtual = estadoJogo.desafio.idxAtual || 0;
+        // Proteção contra índice fora de limites (vitória/derrota já processada)
+        if (idxAtual >= pedrasViradas.length) return;
+
+        let container = document.getElementById("opcoes-resposta-segabar");
+        if (!container) {
+            container = document.createElement("div");
+            container.id = "opcoes-resposta-segabar";
+            document.body.appendChild(container);
+            container.style.cssText = "display: flex; justify-content: center; top: 5%; left: 50%; transform: translateX(-50%); padding: 0px; background: transparent; border: none; box-shadow: none; position: fixed; z-index: 200000; width: 740px; flex-direction: column; align-items: center; pointer-events: none;";
+        } else {
+            container.innerHTML = "";
+            container.style.display = "flex";
+        }
+
+        const box = document.createElement("div");
+        box.className = "box-desafio";
+        box.style.pointerEvents = "auto";
+
+        const titulo = document.createElement("div");
+        titulo.className = "titulo-desafio";
+        titulo.innerText = `Qual é a pedra na posição ${pedrasViradas[idxAtual].idx + 1}?`;
+        box.appendChild(titulo);
+
+        // Helper para destacar
+        const pedrasMesa = document.querySelectorAll(".pedra-mesa");
+        pedrasMesa.forEach((el) => {
+            // Assumindo que a ordem do DOM segue a ordem do array (o que é verdade no Renderer atual)
+            // Um data-idx seria mais seguro, mas vamos usar a ordem natural ou recalcular
+            const parent = el.parentElement; // tab-wrapper
+            // Melhor usar Renderer.getSlotPositions para marcar?
+            // Simplificação: vamos marcar TODAS visualmente que são viradas, e a ESPECIAl atual com outra cor?
+            // Por enquanto, manter simples.
+        });
+
+        // Lista de pedras para escolha
+        const linha = document.createElement("div");
+        linha.className = "linha-pedras";
+        linha.style.cssText = "display: flex; gap: 12px; justify-content: center; margin-top: 16px; flex-wrap: wrap; width: 100%; pointer-events: auto;";
+
+        const pedras = window.PEDRAS_OFICIAIS || [
+            { nome: "Coroa", url: "assets/img/Coroa.svg" },
+            { nome: "Espada", url: "assets/img/espada.svg" },
+            { nome: "Balança", url: "assets/img/Balança.svg" },
+            { nome: "Cavalo", url: "assets/img/cavalo.svg" },
+            { nome: "Escudo", url: "assets/img/escudo.svg" },
+            { nome: "Bandeira", url: "assets/img/bandeira.svg" },
+            { nome: "Martelo", url: "assets/img/martelo.svg" }
+        ];
+        pedras.forEach((p) => {
+            const btn = document.createElement("button");
+            // NÃO usar 'pedra-reserva' para evitar draggables/listeners globais e position:absolute
+            btn.className = "";
+            btn.style.cssText = `
+                position: relative;
+                width: 70px;
+                height: 70px;
+                background: #fff;
+                border: 2px solid rgba(255,255,255,0.3);
+                border-radius: 50%;
+                cursor: pointer !important;
+                pointer-events: auto !important;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                transition: transform 0.2s, border-color 0.2s;
+                opacity: 1 !important;
+            `;
+
+            btn.innerHTML = `<img src="${p.url}" alt="${p.nome}" style="width: 80%; height: 80%; pointer-events: none;">`;
+
+            btn.onmouseover = () => {
+                btn.style.borderColor = "#fff";
+                btn.style.transform = "scale(1.1)";
+            };
+            btn.onmouseout = () => {
+                btn.style.borderColor = "rgba(255,255,255,0.3)";
+                btn.style.transform = "scale(1)";
+            };
+
+            btn.onclick = function () {
+                if (window.tocarSomClick) window.tocarSomClick();
+                if (window.GameController) window.GameController.verificarRespostaSegabar(pedrasViradas[idxAtual].idx, p.nome);
+            };
+            linha.appendChild(btn);
+        });
+        box.appendChild(linha);
+        container.appendChild(box);
+    },
+
+    // Helper UTILS
+    criarBotaoAcao: function (texto, onClick) {
+        const btn = document.createElement("button");
+        btn.innerText = texto;
+        btn.className = "acao-btn";
+        btn.style.margin = "0 12px";
+        btn.onclick = onClick;
+        return btn;
+    }
+
+
+
+};
+
+window.Renderer = Renderer;

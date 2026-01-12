@@ -40,7 +40,7 @@ class TellstonesTutorial {
                     // Garante que é vez do jogador
                     window.estadoJogo.vez = 1;
                     salvarEstadoJogo();
-                    renderizarMesa();
+                    if (window.Renderer) window.Renderer.renderizarMesa();
                 },
                 validacao: () => {
                     const pedras = window.estadoJogo.mesa.filter(p => p !== null);
@@ -161,7 +161,7 @@ class TellstonesTutorial {
                         // Força UI update visual imediato (embora listener vá capturar)
                         showToast("O Mestre desafiou você!");
                         window.tutorialDesafioIniciado = true; // Flag set
-                        renderizarOpcoesDesafio(); // Força renderização imediata manual
+                        if (window.Renderer) window.Renderer.renderizarOpcoesDesafio();
                     }
                 },
                 validacao: () => {
@@ -235,7 +235,7 @@ class TellstonesTutorial {
                             }
                         }
 
-                        renderizarMesa();
+                        if (window.Renderer) window.Renderer.renderizarMesa();
                         return true; // CONCLUI O PASSO 7 (como solicitado: desbloqueia o próximo APENAS AGORA)
                     }
 
@@ -280,7 +280,7 @@ class TellstonesTutorial {
 
                     showToast("O Mestre está se gabando!");
                     window.tutorialBoastIniciado = true;
-                    renderizarOpcoesSegabar(); // Força UI manual
+                    if (window.Renderer) window.Renderer.renderizarOpcoesSegabar(); // Força UI manual
                 },
                 permissoes: { acoes: ["RESPONDER_DESAFIO"] },
                 validacao: () => {
@@ -300,7 +300,7 @@ class TellstonesTutorial {
                             window.estadoJogo.desafio.respostas = [];
                             window.estadoJogo.vez = 1;
                             salvarEstadoJogo();
-                            renderizarMesa();
+                            if (window.Renderer) window.Renderer.renderizarMesa();
                             // Forçar atualização da UI de resposta (nuclear fallback)
                             if (typeof renderizarRespostaSegabar === "function") {
                                 console.log("[TUTORIAL] Forçando renderizarRespostaSegabar manual.");
@@ -358,7 +358,7 @@ class TellstonesTutorial {
                         window.estadoJogo.vez = 1;
 
                         showToastInterno("Vamos testar sua memória uma última vez!");
-                        renderizarMesa();
+                        if (window.Renderer) window.Renderer.renderizarMesa();
 
                         // Disparar UI render
                         if (typeof renderizarRespostaSegabar === "function") {
@@ -375,7 +375,7 @@ class TellstonesTutorial {
                             window.estadoJogo.desafio.respostas = [];
                             window.estadoJogo.vez = 1;
                             salvarEstadoJogo();
-                            renderizarMesa();
+                            if (window.Renderer) window.Renderer.renderizarMesa();
                         }
                     }
                 },
@@ -469,9 +469,9 @@ class TellstonesTutorial {
         window.estadoJogo.vez = 1;
         window.estadoJogo.desafio = null;
         salvarEstadoJogo();
-        renderizarMesa();
-        if (typeof renderizarPedrasVerticaisAbsoluto === "function") {
-            renderizarPedrasVerticaisAbsoluto(window.estadoJogo.reserva);
+        if (window.Renderer) {
+            window.Renderer.renderizarMesa();
+            window.Renderer.renderizarPedrasReserva();
         }
     }
 
