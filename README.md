@@ -2,7 +2,7 @@ https://alicedesa.github.io/Tellstones/
 
 # TellStones Online (v3.0)
 
-Um jogo digital fielmente inspirado no **Tellstones: King's Gambit**, desenvolvido como projeto de estudo avançado. Esta versão (**New Horizons**) reescreveu a arquitetura do zero, trazendo estabilidade profissional, modularidade e suporte robusto para múltiplos modos de jogo.
+Esta versão (**New Horizons**) reescreveu a arquitetura do zero, trazendo estabilidade profissional, modularidade e suporte robusto para múltiplos modos de jogo.
 
 > **"Memorize. Blefe. Desafie."**
 
@@ -89,3 +89,4 @@ Projeto de código aberto para fins educacionais. Sinta-se à vontade para abrir
 ---
 *Versão Atual: v3.1 (Final Polish Edition)*
 *Última atualização: 12/01/2026*
+
