@@ -2670,4 +2670,27 @@ body {
   .premium-modal {
     width: 90%;
   }
+
+  /* FIX: Start Screen Mobile Layout */
+  #start-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    transform: none;
+    display: flex;
+    /* Use flex instead of block */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    /* Prevent dragging/scrolling */
+    background: transparent;
+    /* Keep transparency */
+    margin: 0;
+    padding: 0;
+  }
 }
