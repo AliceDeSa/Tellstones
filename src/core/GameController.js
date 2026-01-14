@@ -14,6 +14,10 @@ const GameController = {
         // Cria estado inicial puro
         const novoEstado = GameRules.createInitialState(jogadores, PEDRAS_OFICIAIS);
         this.atualizarEstado(novoEstado);
+
+        // IMPORTANT: Persist state immediately so listeners pick it up
+        this.persistirEstado();
+
         return novoEstado;
     },
 
@@ -183,6 +187,7 @@ const GameController = {
 
         if (!errou) {
             // VENCEU O DESAFIO
+            if (window.tocarSomSucesso) window.tocarSomSucesso();
             if (window.showToast) window.showToast("Você provou seu conhecimento e VENCEU 3 PONTOS!");
 
             // Robust Scoring: Update directly via Firebase Transaction/Update to avoid race
@@ -210,6 +215,7 @@ const GameController = {
         } else {
             // ERROU
             // ERROU - Ponto ao oponente
+            if (window.tocarSomFalha) window.tocarSomFalha();
             if (window.showToastInterno) window.showToastInterno(`Você errou a sequência! Oponente ganha 3 PONTOS.`);
             estado.desafio = null;
 

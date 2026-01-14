@@ -61,6 +61,26 @@ function tocarSomDesafio() {
     }
 }
 
+// Sucesso (Challenge Won)
+function tocarSomSucesso() {
+    const audio = document.getElementById("som-sucesso");
+    if (audio) {
+        audio.currentTime = 0;
+        audio.volume = 0.5;
+        audio.play().catch(e => console.warn("Erro ao tocar som de sucesso:", e));
+    }
+}
+
+// Falha (Challenge Lost)
+function tocarSomFalha() {
+    const audio = document.getElementById("som-falha");
+    if (audio) {
+        audio.currentTime = 0;
+        audio.volume = 0.5;
+        audio.play().catch(e => console.warn("Erro ao tocar som de falha:", e));
+    }
+}
+
 // Garante que o valor seja um array (Firebase pode converter para objeto)
 function garantirArray(val) {
     if (!val) return [];

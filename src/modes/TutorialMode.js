@@ -59,6 +59,28 @@ class TutorialMode extends GameMode {
         this.listenToState();
     }
 
+    cleanup() {
+        super.cleanup();
+
+        // Remove Tutorial Manager
+        if (this.tutorialManager) {
+            if (this.tutorialManager.cleanup) this.tutorialManager.cleanup();
+            this.tutorialManager = null;
+        }
+        window.tellstonesTutorial = null;
+
+        // Remove UI Overlay
+        const overlay = document.getElementById("tutorial-ui");
+        if (overlay) overlay.remove();
+
+        // Limpa listeners locais
+        const ref = getDBRef("salas/MODO_TUTORIAL/estadoJogo");
+        if (ref && ref.off) ref.off();
+
+        // Limpa local data para evitar persistencia
+        if (window.clearLocalData) window.clearLocalData("salas/MODO_TUTORIAL");
+    }
+
     listenToState() {
         // Standard listener, but we might want to intercept for Tutorial validation?
         // Actually validation is mostly in UI/Controller. Listener just reflects state.
@@ -132,10 +154,19 @@ class TutorialMode extends GameMode {
         }
 
         // PONTUAR
+        let vencedor = null;
         if (acertou) {
             estado.jogadores[idxOponente].pontos = (estado.jogadores[idxOponente].pontos || 0) + 1;
+            vencedor = estado.jogadores[idxOponente];
         } else {
             estado.jogadores[idxDesafiante].pontos = (estado.jogadores[idxDesafiante].pontos || 0) + 1;
+            vencedor = estado.jogadores[idxDesafiante];
+        }
+
+        if (vencedor && vencedor.id === "p1") {
+            if (window.tocarSomSucesso) window.tocarSomSucesso();
+        } else {
+            if (window.tocarSomFalha) window.tocarSomFalha();
         }
 
         estado.vez = idxOponente;

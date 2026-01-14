@@ -15,18 +15,70 @@ body {
   background-size: cover;
   color: #f1f1f1;
   font-family: "Segoe UI", Arial, sans-serif;
+  cursor: url("assets/img/cursor_opt.png") 0 0, auto;
+}
+
+button,
+.token,
+.pedra-oficial,
+a,
+.clickable {
+  cursor: url("assets/img/cursor_opt.png") 0 0, pointer !important;
 }
 
 /* =====================================================
            TÍTULOS E TEXTOS
            ===================================================== */
 h1 {
-  font-family: "Georgia", serif;
-  font-size: 2.2em;
-  letter-spacing: 2px;
-  margin-bottom: 8px;
-  color: #fff;
-  text-shadow: 0 2px 8px #000a;
+  font-family: "Cinzel Decorative", serif;
+  font-size: 3.5em;
+  letter-spacing: 4px;
+  margin-bottom: 0px;
+  background: linear-gradient(180deg, #ffd700 20%, #fff0a0 50%, #b8860b 90%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 4px 2px rgba(0, 0, 0, 0.8));
+  text-transform: uppercase;
+  font-weight: 700;
+  /* Fix cutoff */
+  padding-right: 0.2em;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#slogan-main {
+  font-family: "Cinzel", serif;
+  font-size: 1.1em;
+  letter-spacing: 4px;
+  color: #8ecfff;
+  margin-top: 4px;
+  margin-bottom: 28px;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(142, 207, 255, 0.6);
+  font-weight: 400;
+}
+
+#version-info {
+  font-family: "Cinzel", serif;
+  font-size: 0.75em;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 2px;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px #000;
+}
+
+#sub-info {
+  font-family: "Cinzel", serif;
+  font-size: 0.65em;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 20px;
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.3;
+  text-shadow: 0 1px 2px #000;
 }
 
 #lobby h2,
@@ -66,7 +118,6 @@ input[type="text"] {
 /* =====================================================
            TELAS PRINCIPAIS (INICIAL, LOBBY, JOGO)
            ===================================================== */
-#start-screen,
 #lobby {
   max-width: 400px;
   margin: 40px auto;
@@ -75,6 +126,19 @@ input[type="text"] {
   border-radius: 10px;
   text-align: center;
   box-shadow: 0 2px 16px #0008;
+  position: relative;
+  z-index: 2;
+  display: none;
+}
+
+#start-screen {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 30px;
+  background: transparent;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: none;
   position: relative;
   z-index: 2;
   display: none;
@@ -148,7 +212,7 @@ input[type="text"] {
 }
 
 #start-screen button {
-  margin: 10px;
+  margin: 0;
   padding: 10px 20px;
   font-size: 1em;
   border-radius: 5px;
@@ -156,11 +220,52 @@ input[type="text"] {
   background: #2d8cff;
   color: #fff;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.3s ease;
+  font-family: "Cinzel Decorative", serif;
+  letter-spacing: 1px;
 }
 
 #start-screen button:hover {
-  background: #1a5fb4;
+  filter: brightness(1.1);
+  transform: scale(1.02);
+}
+
+#start-screen #tutorial-btn {
+  background: url("assets/img/Borda_Verde.webp") no-repeat center center;
+  background-size: 100% 100%;
+  width: 320px;
+  height: 80px;
+  font-size: 1.25em;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+#start-screen #bot-pve-btn {
+  background: url("assets/img/Borda_Dourada.webp") no-repeat center center;
+  background-size: 100% 100%;
+  width: 320px;
+  height: 80px;
+  font-size: 1.25em;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+#start-screen #online-menu-btn {
+  background: url("assets/img/Borda_Preta.webp") no-repeat center center;
+  background-size: 100% 100%;
+  width: 320px;
+  height: 80px;
+  font-size: 1.25em;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+#start-screen #tutorial-btn:hover,
+#start-screen #bot-pve-btn:hover,
+#start-screen #online-menu-btn:hover {
+  filter: brightness(1.2);
+  box-shadow: none;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 /* =====================================================
@@ -2310,4 +2415,259 @@ body>.floatingchat-donate-button span {
 /* Default state for close button (hidden on desktop usually, but useful to have) */
 .fechar-card {
   display: none;
+}
+
+/* ================================= PREMIUM START SCREEN CSS ================================= */
+/* Premium Body Background Override */
+body {
+  background: #0d1117 url('assets/img/Fundo.jpg') no-repeat center 25% fixed;
+  background-size: 100% auto;
+  font-family: 'Times New Roman', serif;
+}
+
+/* Fallback background if image missing */
+#start-screen.premium-screen {
+  background: radial-gradient(circle at center, #1b212c 0%, #0d1117 100%);
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+/* --- TYPOGRAPHY --- */
+.game-title {
+  font-family: 'Cinzel', serif;
+  font-size: 5em;
+  letter-spacing: 0.1em;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(180deg, #FDE08D 0%, #D4AF37 40%, #8B6508 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.8));
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.game-subtitle {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4em;
+  font-style: italic;
+  color: #a8cfff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  margin-top: 10px;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+}
+
+/* Divider Ornament between Title and Subtitle */
+.divider-ornament {
+  margin: 15px 0;
+  opacity: 0.9;
+}
+
+/* --- BUTTONS --- */
+.menu-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 50px;
+  width: 380px;
+}
+
+.premium-btn {
+  position: relative;
+  width: 100%;
+  height: 64px;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  background: transparent;
+  font-family: 'Cinzel', serif;
+  font-size: 1.25em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #fff;
+  /* Fallback */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, filter 0.2s;
+  overflow: visible;
+}
+
+.premium-btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+}
+
+.premium-btn:active {
+  transform: scale(0.98);
+}
+
+.btn-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+/* METALLIC THEMES */
+/* Common Border Structure */
+.premium-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  /* Fancy shape simulation using clip-path or borders */
+  /* Let's use simple CSS gradients for the "Bar" look with diamond tips */
+  background: linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.8) 15%, rgba(0, 0, 0, 0.8) 85%, transparent 100%);
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.5);
+}
+
+.premium-btn::after {
+  /* Metallic Rim */
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 15px;
+  right: 15px;
+  bottom: 0;
+  z-index: 0;
+  border: 2px solid;
+  border-image: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.8) 100%) 1;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+  background-size: cover;
+}
+
+/* GOLD VARIANT */
+.btn-gold {
+  color: #4a3415;
+}
+
+.btn-gold::after {
+  background: linear-gradient(180deg, #FDE08D 0%, #D4AF37 50%, #8B6508 100%);
+  border-color: #D4AF37;
+  border-radius: 4px;
+  /* Slight round logic override */
+  clip-path: polygon(5% 0, 95% 0, 100% 50%, 95% 100%, 5% 100%, 0% 50%);
+}
+
+.btn-gold .btn-text {
+  color: #3e2704;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+/* JADE VARIANT */
+.btn-jade {
+  color: #e0fff0;
+}
+
+.btn-jade::after {
+  background: linear-gradient(180deg, #5c9e78 0%, #2e8b57 50%, #054a29 100%);
+  clip-path: polygon(5% 0, 95% 0, 100% 50%, 95% 100%, 5% 100%, 0% 50%);
+  box-shadow: inset 0 0 10px #000;
+}
+
+.btn-jade .btn-text {
+  color: #d1ffe6;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* STEEL VARIANT */
+.btn-steel {
+  color: #e0f0ff;
+}
+
+.btn-steel::after {
+  background: linear-gradient(180deg, #7aa3c9 0%, #4682b4 50%, #1e3c54 100%);
+  clip-path: polygon(5% 0, 95% 0, 100% 50%, 95% 100%, 5% 100%, 0% 50%);
+}
+
+.start-footer {
+  position: absolute;
+  bottom: 20px;
+  font-size: 0.8em;
+  color: #666;
+  font-family: sans-serif;
+  opacity: 0.6;
+}
+
+/* MODALS (Room Options etc) */
+.premium-modal {
+  background: rgba(13, 17, 23, 0.95);
+  border: 2px solid #D4AF37;
+  padding: 30px;
+  border-radius: 4px;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  min-width: 320px;
+}
+
+.gold-text {
+  color: #D4AF37;
+  font-family: 'Cinzel', serif;
+  margin-bottom: 10px;
+}
+
+.premium-input {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #4682b4;
+  color: #fff;
+  padding: 10px;
+  width: 100%;
+  font-family: 'Cinzel', serif;
+  text-align: center;
+}
+
+.small-btn {
+  width: auto !important;
+  padding: 0 40px;
+  height: 48px;
+  font-size: 1em;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #a8cfff;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  margin-top: 10px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+  .game-title {
+    font-size: 3em;
+  }
+
+  .menu-container {
+    width: 90%;
+  }
+
+  .premium-modal {
+    width: 90%;
+  }
 }

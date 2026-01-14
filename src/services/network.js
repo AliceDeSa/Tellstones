@@ -3,16 +3,7 @@
 // =========================
 
 // Configuração do Firebase
-const firebaseConfig = {
-    apiKey: "AIzaSyBsXOj779DLtaL1cC0uxoRp_OmnMzj703c",
-    authDomain: "tellstones-alice.firebaseapp.com",
-    databaseURL: "https://tellstones-alice-default-rtdb.firebaseio.com",
-    projectId: "tellstones-alice",
-    storageBucket: "tellstones-alice.firebasestorage.app",
-    messagingSenderId: "357049051853",
-    appId: "1:357049051853:web:90abf9a1925fb7e9d79784",
-    measurementId: "G-QK5X0YDD54"
-};
+const firebaseConfig = window.firebaseSecrets || {};
 
 // Inicializa Firebase se disponível
 if (typeof firebase !== 'undefined') {
@@ -27,7 +18,7 @@ const db = (typeof firebase !== 'undefined') ? firebase.database() : null;
 // LocalDB - Abstração para Modo Offline (Tutorial/PvE)
 // =========================
 let isLocalMode = false;
-let localData = {};
+window.localData = window.localData || {};
 let localListeners = {}; // Registro global de listeners
 
 class LocalRef {
@@ -35,12 +26,14 @@ class LocalRef {
         this.path = path;
     }
     set(val) {
-        console.log(`[LocalDB SET] ${this.path}`, val);
+        const logVal = (typeof val === 'object' && val !== null) ? JSON.stringify(val).substring(0, 100) + (JSON.stringify(val).length > 100 ? "..." : "") : val;
+        console.log(`[LocalDB SET] ${this.path} = ${logVal}`);
         this._setVal(val);
         this._trigger("value");
     }
     update(val) {
-        console.log(`[LocalDB UPDATE] ${this.path}`, val);
+        const logVal = (typeof val === 'object' && val !== null) ? JSON.stringify(val).substring(0, 100) + (JSON.stringify(val).length > 100 ? "..." : "") : val;
+        console.log(`[LocalDB UPDATE] ${this.path} += ${logVal}`);
         let current = this._getVal() || {};
         Object.assign(current, val);
         this._setVal(current);
@@ -85,7 +78,7 @@ class LocalRef {
     }
     _getVal() {
         const parts = this.path.split("/").filter(p => p);
-        let curr = localData;
+        let curr = window.localData;
         for (const p of parts) {
             if (!curr) return null;
             curr = curr[p];
@@ -94,7 +87,7 @@ class LocalRef {
     }
     _setVal(val) {
         const parts = this.path.split("/").filter(p => p);
-        let curr = localData;
+        let curr = window.localData;
         for (let i = 0; i < parts.length - 1; i++) {
             if (!curr[parts[i]]) curr[parts[i]] = {};
             curr = curr[parts[i]];
@@ -102,7 +95,7 @@ class LocalRef {
         if (parts.length > 0) {
             curr[parts[parts.length - 1]] = val;
         } else {
-            localData = val;
+            window.localData = val;
         }
     }
     _trigger(event) {
@@ -152,10 +145,10 @@ window.isLocalMode = isLocalMode;
 window.setIsLocalMode = (val) => { isLocalMode = val; }; // helper if needed
 window.clearLocalData = (path) => {
     if (!path) {
-        localData = {};
+        window.localData = {};
     } else {
         const parts = path.split("/").filter(p => p);
-        let curr = localData;
+        let curr = window.localData;
         for (let i = 0; i < parts.length - 1; i++) {
             if (!curr[parts[i]]) return;
             curr = curr[parts[i]];

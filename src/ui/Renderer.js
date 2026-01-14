@@ -4,6 +4,98 @@
 
 const Renderer = {
 
+    // Renderiza as pedras na mesa (tabuleiro)
+    renderizarPedrasMesa: function (mesa) {
+        const wrapper = document.getElementById("tabuleiro-wrapper");
+        if (!wrapper) return;
+
+        // Remove pedras antigas (mas mantém slots)
+        const antigas = wrapper.querySelectorAll(".pedra-mesa");
+        antigas.forEach(el => el.remove());
+
+        if (!window.GameConfig) return;
+        const CFG = GameConfig.LAYOUT;
+        const positions = this.getSlotPositions(wrapper, CFG.SLOT_COUNT, CFG.STONE_SIZE, CFG.Y_OFFSET_FIXED);
+
+        mesa.forEach((p, i) => {
+            if (!p) return;
+
+            const div = document.createElement("div");
+            div.className = "pedra-mesa"; // Classe base
+            div.setAttribute("data-idx", i);
+            div.style.position = "absolute";
+            div.style.width = CFG.STONE_SIZE + "px";
+            div.style.height = CFG.STONE_SIZE + "px";
+            div.style.left = positions[i].left + "px";
+            div.style.top = positions[i].top + "px";
+            div.style.transform = "translate(-50%, -50%)";
+            div.style.background = "transparent";
+            div.style.border = "none";
+
+            // Logic for image (Face Up or Down)
+            // Se virada, mostra costas? Depende. Em Tellstones, virada = face down (escondida).
+            const imgUrl = p.virada ? "assets/img/Costas.png" : p.url;
+            div.innerHTML = `<img src="${imgUrl}" alt="${p.nome}" draggable="false" style="width:100%; height:100%; border-radius:50%; pointer-events:none;">`;
+
+            // HIGHLIGHT CHALLENGED STONE
+            // Se existe um desafio ativo e esta pedra é o alvo
+            const desafio = window.estadoJogo.desafio;
+            if (desafio && !desafio.resolvido && (desafio.alvo === i || desafio.pedra === i || desafio.idxPedra === i)) {
+                div.style.boxShadow = "0 0 15px 5px yellow";
+                div.style.border = "2px solid yellow";
+                div.style.transform = "translate(-50%, -50%) scale(1.1)";
+                div.style.zIndex = "100";
+            } else {
+                div.style.boxShadow = "0 0 20px rgba(0,0,0,0.5)";
+            }
+
+            // Click Handler for Challenge Selection
+
+            // Click Handler for Challenge Selection
+            div.onclick = function () {
+                if (window.selecionandoDesafio) {
+                    if (!p.virada) {
+                        if (window.showToastInterno) window.showToastInterno("Escolha uma pedra virada para desafiar!");
+                        return;
+                    }
+                    console.log("[Renderer] Pedra selecionada para desafio:", i);
+                    // Update State Logic
+                    if (window.GameController) {
+                        // Direct call ? Or update state?
+                        // Legacy logic used script.js variables.
+                        // Let's manually trigger the state update needed.
+                        if (confirm(`Desafiar a pedra na posição ${i + 1}?`)) {
+                            window.selecionandoDesafio = false;
+                            // Update Challenge State
+                            if (window.estadoJogo.desafio) {
+                                window.estadoJogo.desafio.pedra = i; // Save index (Legacy?)
+                                window.estadoJogo.desafio.alvo = i; // Target Index (Standard)
+                                window.estadoJogo.desafio.tipo = 'desafio'; // FIX: Explicitly set type so Bot recognizes it
+                                window.estadoJogo.desafio.status = 'responder'; // Player (Challenger) picks name ?? 
+                                // WAIT. If Player Challenges Bot, Bot must GUESS.
+                                // So status should be 'responder' (waiting for response).
+                                // But typically 'responder' means the DEFENDER must respond.
+                                // In this case, Bot is Defender. So yes, 'responder' is correct for Bot to trigger.
+
+                                window.GameController.persistirEstado();
+                            }
+                        }
+                    }
+                }
+            };
+
+            // Tooltip
+            if (p.virada) {
+                div.onmouseenter = (e) => window.showTooltip("Pedra Escondida", e.clientX, e.clientY);
+            } else {
+                div.onmouseenter = (e) => window.showTooltip(p.nome, e.clientX, e.clientY);
+            }
+            div.onmouseleave = window.hideTooltip;
+
+            wrapper.appendChild(div);
+        });
+    },
+
     // Adiciona slots fixos proporcionais no tabuleiro
     desenharSlotsFixos: function () {
         const wrapper = document.getElementById("tabuleiro-wrapper");
@@ -138,6 +230,9 @@ const Renderer = {
         }
         const TEMPO_ANIMACAO_PEDRA = 180;
         pedras.forEach((p, i) => {
+            // Guard: p pode ser null se a pedra já foi jogada
+            if (!p) return;
+
             const ang = ((angStep * i - 90) * Math.PI) / 180;
             const x = Math.cos(ang) * raio + 90;
             const y = Math.sin(ang) * raio + 90;
@@ -266,8 +361,9 @@ const Renderer = {
         let actualGap = gap;
         let actualSlotSize = slotSize;
         const totalWidthNeeded = (count * slotSize) + ((count - 1) * gap);
-        if (totalWidthNeeded > w) {
-            const scale = (w * 0.95) / totalWidthNeeded;
+        const maxW = w * 0.90; // Force 5% margin aside
+        if (totalWidthNeeded > maxW) {
+            const scale = maxW / totalWidthNeeded;
             actualSlotSize = slotSize * scale;
             actualGap = gap * scale;
         }
@@ -338,6 +434,98 @@ const Renderer = {
         };
     },
 
+    // --- DEBUG: BOT MEMORY OVERLAY ---
+    renderBotMemoryDebug: function (botBrain) {
+        let container = document.getElementById("bot-memory-debug");
+
+        // Strict Dev Mode Check: If NOT dev mode, ensure hidden and return
+        const params = new URLSearchParams(window.location.search);
+        const isDev = localStorage.getItem('tellstones_dev_mode') === 'true' || params.get('dev') === 'true';
+
+        if (!isDev) {
+            if (container) container.remove(); // Or style.display = 'none'
+            return;
+        }
+
+        if (!container) {
+            container = document.createElement("div");
+            container.id = "bot-memory-debug";
+            container.style.position = "absolute";
+            container.style.top = "0";
+            container.style.left = "0";
+            container.style.width = "100%";
+            container.style.height = "100%";
+            container.style.pointerEvents = "none";
+            container.style.zIndex = "99999";
+            document.getElementById("tabuleiro-wrapper").appendChild(container);
+        }
+
+        container.innerHTML = "";
+        if (!botBrain || !botBrain.memory) return;
+
+        const wrapper = document.getElementById("tabuleiro-wrapper");
+        const positions = this.getSlotPositions(wrapper, 7, 68.39, 40);
+
+        positions.forEach((pos, idx) => {
+            const mem = botBrain.memory[idx];
+            if (mem) {
+                const badge = document.createElement("div");
+                // Estilo "Tutoria Like" (Caixa flutuante)
+                badge.style.position = "absolute";
+                badge.style.left = pos.left + "px";
+                badge.style.top = (pos.top - 60) + "px"; // Acima da pedra
+                badge.style.transform = "translateX(-50%)";
+                badge.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+                badge.style.color = "#00ff00"; // Hacker Green
+                badge.style.padding = "4px 8px";
+                badge.style.borderRadius = "4px";
+                badge.style.fontSize = "10px";
+                badge.style.fontFamily = "monospace";
+                badge.style.textAlign = "center";
+                badge.style.border = "1px solid #00ff00";
+                badge.style.pointerEvents = "none";
+
+                const confPercent = Math.round(mem.confidence * 100);
+                badge.innerHTML = `<div>${mem.stoneName}</div><div style="font-weight:bold">${confPercent}%</div>`;
+
+                container.appendChild(badge);
+            }
+        });
+    },
+
+    // --- NOVA FUNÇÃO DE TROCA (Delegada para AnimationManager) ---
+    animarTroca: function (fromIdx, toIdx, pedraFromData, pedraToData, callback) {
+        if (window.AnimationManager) {
+            window.AnimationManager.playSwap(fromIdx, toIdx, callback);
+        } else {
+            console.warn("AnimationManager missing, running callback immediately.");
+            if (callback) callback();
+        }
+    },
+
+    lastTrocaTimestamp: 0,
+
+    monitorarTrocas: function (estado, onComplete) {
+        if (!estado || !estado.trocaAnimacao) return;
+        const troca = estado.trocaAnimacao;
+
+        // Evita re-executar mesma animação
+        if (troca.timestamp <= this.lastTrocaTimestamp) return;
+        this.lastTrocaTimestamp = troca.timestamp;
+
+        // Identificar pedras
+        const pedraA = estado.mesa[troca.from];
+        const pedraB = estado.mesa[troca.to];
+
+        // Executa
+        this.animarTroca(troca.from, troca.to, pedraA, pedraB, () => {
+            // Após animar, força re-render final
+            // E chama callback para efetivar troca de dados se necessário
+            if (onComplete) onComplete(troca);
+            this.renderizarMesa();
+        });
+    },
+
     // Renderiza as opções de pedras para o desafio (Duvidar)
     renderizarOpcoesDesafio: function () {
         const estadoJogo = window.estadoJogo;
@@ -354,6 +542,7 @@ const Renderer = {
         const validStatus = ["responder", "aguardando_resposta"].includes(status);
 
         if (!validStatus) {
+            console.warn("[Renderer] Desafio UI Hidden: Invalid Status", status);
             const antigo = document.getElementById("opcoes-desafio");
             if (antigo) antigo.style.display = "none";
             return;
@@ -363,8 +552,11 @@ const Renderer = {
         // Se eu sou o desafiado, eu vejo.
         // O desafiante é 'desafio.jogador'.
         if (estadoJogo.desafio.jogador === window.nomeAtual) {
+            console.log("[Renderer] Desafio UI Hidden: I am the challenger", window.nomeAtual);
             return;
         }
+
+        console.log("[Renderer] Showing Challenge Options vs", estadoJogo.desafio.jogador);
 
         let container = document.getElementById("opcoes-desafio");
         if (!container) {
@@ -396,17 +588,23 @@ const Renderer = {
         linha.className = "linha-pedras";
 
         // Importante: PEDRAS_OFICIAIS deve estar disponível globalmente ou via Constants
-        const pedras = (window.PEDRAS_OFICIAIS) ? window.PEDRAS_OFICIAIS : [
-            { nome: "Coroa", url: "assets/img/Coroa.svg" },
-            { nome: "Espada", url: "assets/img/espada.svg" },
-            { nome: "Balança", url: "assets/img/Balança.svg" },
-            { nome: "Cavalo", url: "assets/img/cavalo.svg" },
-            { nome: "Escudo", url: "assets/img/escudo.svg" },
-            { nome: "Bandeira", url: "assets/img/bandeira.svg" },
-            { nome: "Martelo", url: "assets/img/martelo.svg" }
-        ];
+        let pedras = (window.PEDRAS_OFICIAIS && window.PEDRAS_OFICIAIS.length > 0) ? window.PEDRAS_OFICIAIS : null;
+
+        if (!pedras) {
+            console.warn("[Renderer] PEDRAS_OFICIAIS missing or empty. Using fallback.");
+            pedras = [
+                { nome: "Coroa", url: "assets/img/Coroa.svg" },
+                { nome: "Espada", url: "assets/img/espada.svg" },
+                { nome: "Balança", url: "assets/img/Balança.svg" },
+                { nome: "Cavalo", url: "assets/img/cavalo.svg" },
+                { nome: "Escudo", url: "assets/img/escudo.svg" },
+                { nome: "Bandeira", url: "assets/img/bandeira.svg" },
+                { nome: "Martelo", url: "assets/img/martelo.svg" }
+            ];
+        }
 
         pedras.forEach((p, idx) => {
+            console.log("[Renderer] Creating Challenge Option:", p.nome);
             const btn = document.createElement("button");
             btn.className = "pedra-reserva pedra-opcao";
             // Ensure visual interactivity overrides any default class state

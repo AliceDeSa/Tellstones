@@ -10,7 +10,12 @@
   <meta name="mobile-web-app-capable" content="yes">
   <title>TellStones</title>
   <link rel="stylesheet" href="style.css?v=3.00">
-  <link rel="icon" type="image/png" href="assets/img/Coroa.png">
+  <link rel="icon" type="image/webp" href="assets/img/logo.webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap"
+    rel="stylesheet">
 </head>
 
 <body>
@@ -41,15 +46,14 @@
   <div id="start-screen" class="active">
     <!-- Título e slogan -->
     <h1>TellStones</h1>
-    <div style="font-size:1.2em;color:#8ecfff;margin-bottom:18px;">Memorize. Blefe. Desafie.</div>
-    <div style="font-size:0.8em;color:#555;margin-bottom:4px;">v3.7 (Persistence & Scoring)</div>
-  
+    <h2 id="slogan-main">Memorize. Blefe. Desafie.</h2>
+    <div id="version-info">v4.1 (Visual Polish)</div>
+    <div id="sub-info">Latest: New Cursor & UI Effects</div>
     <!-- Botões principais -->
-    <div id="main-menu-btns" style="display:flex; flex-direction:column; gap:10px; align-items:center;">
-      <button id="tutorial-btn" style="background:#4caf50; width: 220px;">Tutorial</button>
-      <button id="bot-pve-btn" style="background:#ff9800; width: 220px; opacity: 0.6; cursor: not-allowed;"
-        disabled>Jogo PvE (Bot)<br><small style="font-size:0.7em;">(Em desenvolvimento)</small></button>
-      <button id="online-menu-btn" style="background:#2d8cff; width: 220px;">Jogo Online</button>
+    <div id="main-menu-btns" style="display:flex; flex-direction:column; gap:-5px; align-items:center;">
+      <button id="tutorial-btn">Tutorial</button>
+      <button id="bot-pve-btn">Jogo PvE (Bot)</button>
+      <button id="online-menu-btn">Jogo Online</button>
     </div>
 
     <!-- Menu Online -->
@@ -247,6 +251,7 @@
   <script src="bot.js?v=multiplayer_final_56"></script>
   <script src="src/core/constants.js"></script>
   <script src="src/utils/utils.js"></script>
+  <script src="src/config/firebase-config.js"></script>
   <script src="src/services/network.js"></script>
   <script src="src/core/GameRules.js"></script>
   <script src="src/config/GameConfig.js"></script>
@@ -254,19 +259,87 @@
   <script src="src/ui/Renderer.js"></script>
   <script src="src/core/InputHandler.js"></script>
   <script src="src/core/GameController.js"></script>
+  <script src="src/ui/MouseTrail.js"></script>
+
+  <!-- AI -->
+  <script src="src/ai/BotBrain.js"></script>
 
   <!-- Game Modes -->
-  <script src="src/modes/GameMode.js?v=multiplayer_final_57"></script>
-  <script src="src/modes/MultiplayerMode.js?v=multiplayer_final_57"></script>
-  <script src="src/modes/PvEMode.js?v=multiplayer_final_57"></script>
-  <script src="src/modes/TutorialMode.js?v=multiplayer_final_57"></script>
+  <script src="src/modes/GameMode.js?v=v4_alpha_1"></script>
+  <script src="src/modes/MultiplayerMode.js?v=v4_alpha_1"></script>
+  <script src="src/modes/PvEMode.js?v=v4_alpha_1"></script>
+  <script src="src/modes/TutorialMode.js?v=v4_alpha_1"></script>
 
-  <script src="script.js?v=multiplayer_final_57"></script>
+  <script src="script.js?v=v4_alpha_1"></script>
+
+  <!-- Debug / Automation -->
+  <script src="src/debug/TutorialAutomator.js"></script>
+  <script src="src/debug/PvEAutomator.js"></script>
   <!-- Som de fundo para tela inicial e lobby -->
   <audio id="som-fundo" src="assets/audio/ambient.mp3" loop style="display:none" preload="auto"></audio>
   <audio id="som-click" src="assets/audio/click.wav" preload="auto"></audio>
   <audio id="som-press" src="assets/audio/click.wav" preload="auto"></audio>
   <audio id="som-desafio" src="assets/audio/som%20teste.wav" preload="auto"></audio>
+  <audio id="som-sucesso" src="assets/audio/success%20minimalistic.wav" preload="auto"></audio>
+  <audio id="som-falha" src="assets/audio/failure.wav" preload="auto"></audio>
+
+  <!-- Dev Tools (Restricted) -->
+  <div id="dev-tools-container" style="display:none;">
+    <button id="btn-dev-automator" onclick="if(window.TutorialAutomator) window.TutorialAutomator.run()"
+      style="position:fixed; bottom:10px; right:120px; z-index:999999; background:#4caf50; color:white; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer; opacity:0.7;">
+      🐞 Test Tutorial
+    </button>
+    <button id="btn-dev-pve" onclick="if(window.PvEAutomator) window.PvEAutomator.run()"
+      style="position:fixed; bottom:10px; right:10px; z-index:999999; background:#ff9800; color:white; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer; opacity:0.7;">
+      🤖 Test PvE Link
+    </button>
+    <button id="btn-dev-bot-profile"
+      style="position:fixed; bottom:50px; right:10px; z-index:999999; background:#9c27b0; color:white; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer; opacity:0.7;">
+      🧠 Bot: Random
+    </button>
+  </div>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      // Ativa se tiver ?dev=true na URL ou se já estiver salvo no LocalStorage
+      if (params.has('dev')) {
+        localStorage.setItem('tellstones_dev_mode', 'true');
+      }
+      if (params.has('nodev')) {
+        localStorage.removeItem('tellstones_dev_mode');
+      }
+
+      if (localStorage.getItem('tellstones_dev_mode') === 'true') {
+        const devContainer = document.getElementById('dev-tools-container');
+        if (devContainer) devContainer.style.display = 'block';
+
+        // Bot Profile cycler
+        const profiles = ['logical', 'trickster', 'aggressive', 'random'];
+        let currentIdx = 3; // Start at random
+        const btn = document.getElementById('btn-dev-bot-profile');
+        btn.onclick = function () {
+          currentIdx = (currentIdx + 1) % profiles.length;
+          const next = profiles[currentIdx];
+          btn.innerText = `🧠 Bot: ${next.charAt(0).toUpperCase() + next.slice(1)}`;
+
+          // Apply if game is running
+          if (window.currentGameMode && window.currentGameMode.setBotProfile) {
+            // If random, pick one real profile to set
+            if (next === 'random') {
+              const realProfiles = ['logical', 'trickster', 'aggressive'];
+              const rand = realProfiles[Math.floor(Math.random() * realProfiles.length)];
+              window.currentGameMode.setBotProfile(rand);
+              // Toast handled by setBotProfile
+            } else {
+              window.currentGameMode.setBotProfile(next);
+            }
+          } else {
+            console.warn("PvEMode active? Cannot set profile.");
+          }
+        };
+      }
+    })();
+  </script>
 
   <!-- ================= KO-FI WIDGET ================= -->
   <script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>

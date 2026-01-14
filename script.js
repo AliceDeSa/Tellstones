@@ -1,6 +1,6 @@
-// Tellstones Client v3.8
+// Tellstones Client v4.1
 // =========================
-// console.log("Tellstones v3.8 Initialized");
+// console.log("Tellstones v4.1 Initialized");
 
 // (Código movido para src/services/network.js)
 
@@ -56,11 +56,37 @@ function entrarSala(codigo, nome, tipo) {
 
   if (window.currentGameMode) {
     window.currentGameMode.cleanup();
+    window.currentGameMode = null;
   }
 
-  // Clean UI
+  // FORCE CLEAR UI & GLOBALS
+  window.animacaoAlinhamentoEmAndamento = false;
+  window.animouReservaCircular = false;
+  window.ultimoCaraCoroaData = null;
+
+  // Cleanup Tutorial
+  if (window.tellstonesTutorial) {
+    if (window.tellstonesTutorial.cleanup) window.tellstonesTutorial.cleanup();
+    window.tellstonesTutorial = null;
+  }
   const tutorialUI = document.getElementById("tutorial-ui");
   if (tutorialUI) tutorialUI.remove();
+
+  const circle = document.getElementById("circle-pedras");
+  if (circle) {
+    circle.innerHTML = "";
+    circle.style = ""; // Reset inline styles
+  }
+  const tabCenter = document.getElementById("tabuleiro-center");
+  if (tabCenter) {
+    // Remove pedras apenas (manter estrutura se houver)
+    const pedras = tabCenter.querySelectorAll(".pedra-mesa");
+    pedras.forEach(p => p.remove());
+  }
+
+
+  // Clean UI
+
 
   // Instancia Modo Multijogador
   window.currentGameMode = new MultiplayerMode();
@@ -165,6 +191,25 @@ function sairPartida() {
   if (tutorialUI) tutorialUI.remove();
 
   mostrarTela("start-screen");
+
+  // [v4.0] UX Fixes:
+  // 1. Limpar código da sala (Input e Display Visual aka 'codigo-sala-criada')
+  const roomInput = document.getElementById("room-code");
+  if (roomInput) roomInput.value = "";
+
+  const roomDisplayCreated = document.getElementById("codigo-sala-criada");
+  if (roomDisplayCreated) roomDisplayCreated.innerText = "";
+
+  // 2. Expandir Ko-fi automaticamente (Experiência pós-jogo)
+  setTimeout(() => {
+    // Tenta seletores diferentes para o botão do Ko-fi
+    // .floatingchat-donate-button é o seletor padrão do widget
+    // Também tentamos acessar o iframe se possível (CORS bloqueia, mas a div wrapper pode responder)
+    const kofiElements = document.querySelectorAll('.floatingchat-donate-button, [id*="kofi-widget-overlay"]');
+    kofiElements.forEach(el => {
+      if (el && el.click) el.click();
+    });
+  }, 1200);
 }
 
 
@@ -497,7 +542,8 @@ let animacaoAlinhamentoEmAndamento = false;
 // calcularSlotsValidos movido para src/core/GameRules.js
 // Wrapper para compatibilidade
 function calcularSlotsValidos(mesa) {
-  return GameRules.calcularSlotsValidos(mesa);
+  if (window.GameRules) return GameRules.calcularSlotsValidos(mesa);
+  return [];
 }
 
 // getSlotPositions movido para Renderer.js
@@ -1625,6 +1671,21 @@ function avancarTurno() {
     }
   }
 
+  // No modo PvE/Local, atualizamos imediatamente sem depender do Firebase
+  if (window.isLocalMode || window.salaAtual === "MODO_PVE") {
+    estadoJogo.vez = novoVez;
+    window.estadoJogo = { ...estadoJogo };
+    GameController.persistirEstado(); // Garante persistência
+    Renderer.atualizarInfoSala(salaAtual, ultimosEspectadores);
+    if (window.Renderer) window.Renderer.renderizarMesa();
+
+    // Forçar verificação do Bot imediatamente
+    if (window.currentGameMode && window.currentGameMode.checkTurn) {
+      setTimeout(() => window.currentGameMode.checkTurn(), 100);
+    }
+    return;
+  }
+
   estadoJogo.vez = novoVez;
   getDBRef("salas/" + salaAtual + "/estadoJogo/vez").once(
     "value",
@@ -1686,8 +1747,16 @@ function renderizarPedrasMesa(pedras) {
             const desafioAtual = estadoJogo.desafio || {};
             desafioAtual.idxPedra = i;
             desafioAtual.status = "aguardando_resposta";
-            getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").set(desafioAtual);
-            getDBRef("salas/" + salaAtual + "/estadoJogo/mesaEspiada").set(null);
+
+            if (window.isLocalMode) {
+              window.estadoJogo.desafio = desafioAtual;
+              window.estadoJogo.mesaEspiada = null;
+              window.selecionandoDesafio = false;
+              GameController.persistirEstado();
+            } else {
+              getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").set(desafioAtual);
+              getDBRef("salas/" + salaAtual + "/estadoJogo/mesaEspiada").set(null);
+            }
 
             // TUTORIAL TRIGGER
             if (salaAtual === 'MODO_TUTORIAL' && window.tellstonesTutorial) {
@@ -2382,26 +2451,29 @@ function renderizarMarcadoresPonto() {
   }
 
   // Lógica de Perspectiva: Topo (Esquerda) vs Baixo (Direita)
-  // Requisito: "marcador de baixo sempre sendo do jogador ... exceção espectador"
-  // Assumindo: Esq = Topo, Dir = Baixo (ordem DOM padrão)
 
   let pontosTopo = ptsP1;
   let pontosBaixo = ptsP2;
 
-  const nomeP1 = estadoJogo.jogadores[0]?.nome;
-  const nomeP2 = estadoJogo.jogadores[1]?.nome;
+  // FIX: Safe access to players array
+  if (estadoJogo.jogadores && estadoJogo.jogadores.length >= 2) {
+    const nomeP1 = estadoJogo.jogadores[0]?.nome;
+    const nomeP2 = estadoJogo.jogadores[1]?.nome;
 
-  // Se sou P1, eu quero estar em Baixo. (Inverte, pois padrão é P1 Topo)
-  if (window.nomeAtual === nomeP1) {
-    pontosTopo = ptsP2; // Oponente
-    pontosBaixo = ptsP1; // Eu
+    // Se sou P1, eu quero estar em Baixo. (Inverte, pois padrão é P1 Topo)
+    if (window.nomeAtual === nomeP1) {
+      pontosTopo = ptsP2; // Oponente
+      pontosBaixo = ptsP1; // Eu
+    }
+    // Se sou P2, eu quero estar em Baixo. (Padrão já é P2 Baixo, mantém)
+    else if (window.nomeAtual === nomeP2) {
+      pontosTopo = ptsP1; // Oponente
+      pontosBaixo = ptsP2; // Eu
+    }
   }
-  // Se sou P2, eu quero estar em Baixo. (Padrão já é P2 Baixo, mantém)
-  else if (window.nomeAtual === nomeP2) {
-    pontosTopo = ptsP1; // Oponente
-    pontosBaixo = ptsP2; // Eu
-  }
-  // Se sou Espectador, mantém padrão (P1 Topo, P2 Baixo)
+  // Se sou Espectador ou jogo não começou, mantém padrão (P1 Topo, P2 Baixo) -> ptsP1, ptsP2 já definidos acima
+
+  // Renderiza Topo (Esquerda)
 
   // Renderiza Topo (Esquerda)
   marcadoresEsq.forEach((el, i) => {
@@ -3114,6 +3186,38 @@ function monitorarTrocas() {
 
 function finalizarTrocaServer(troca) {
   // ATOMIC SWAP: Use transaction to ensure we are swapping based on LATEST server data
+
+  // --- PATCH PVE / LOCAL MODE / TUTORIAL ---
+  if (window.isLocalMode || salaAtual === 'MODO_TUTORIAL') {
+    const estado = window.estadoJogo;
+    if (!estado || !estado.mesa) return;
+
+    const temp = estado.mesa[troca.from];
+    estado.mesa[troca.from] = estado.mesa[troca.to];
+    estado.mesa[troca.to] = temp;
+
+    estado.trocaAnimacao = null; // Clear flag
+
+    // Advance Turn Logic (Simple for PvE usually handled by BotBrain/GameController, but Swap is an action)
+    // If Player swapped, Turn -> Bot.
+    // If Bot swapped, Turn -> Player.
+    if (estado.vez === 0 && troca.jogador !== "Bot") {
+      estado.vez = 1;
+    } else if (estado.vez === 1 && troca.jogador === "Bot") {
+      estado.vez = 0;
+    }
+
+    // UNBLOCK TUTORIAL STEP (Local Mode Patch)
+    if (salaAtual === 'MODO_TUTORIAL' && window.tellstonesTutorial) {
+      console.log("[TUTORIAL] Swap detected in Local Logic. Triggering next step.");
+      setTimeout(() => window.tellstonesTutorial.registrarAcaoConcluida(), 500);
+    }
+
+    GameController.persistirEstado();
+    return;
+  }
+
+  // --- ONLINE MODE (Transaction) ---
   getDBRef("salas/" + salaAtual + "/estadoJogo").transaction(function (estado) {
     if (!estado) return estado; // Abort if null
 
