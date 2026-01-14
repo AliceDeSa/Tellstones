@@ -2694,3 +2694,149 @@ body {
     padding: 0;
   }
 }
+
+/* =====================================================
+   ATMOSPHERIC EFFECTS
+   ===================================================== */
+#atmosphere-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* --- Fog Layers --- */
+.fog-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background: url("assets/img/fog_texture.png") repeat-x;
+  background-size: 50% 100%;
+  opacity: 0.4;
+  /* Increased from 0.15 */
+  animation: fogScroll 60s linear infinite;
+}
+
+.fog-2 {
+  animation-duration: 45s;
+  animation-direction: reverse;
+  opacity: 0.25;
+  /* Increased from 0.1 */
+}
+
+@keyframes fogScroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* --- God Rays --- */
+.light-ray-container {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.4;
+  /* Increased from 0.2 */
+}
+
+.light-ray {
+  position: absolute;
+  width: 100px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 215, 0, 0.3) 50%, transparent 100%);
+  /* Stronger color */
+  transform-origin: center;
+  animation: rayRotate 20s ease-in-out infinite alternate;
+}
+
+.ray-2 {
+  animation-duration: 25s;
+  animation-delay: -5s;
+  width: 150px;
+  opacity: 0.6;
+  /* Increased from 0.5 */
+}
+
+@keyframes rayRotate {
+  from {
+    transform: rotate(-15deg);
+  }
+
+  to {
+    transform: rotate(15deg);
+  }
+}
+
+/* --- Ambient Flicker (Candle) --- */
+.ambient-light-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, rgba(255, 200, 100, 0.05), transparent 80%);
+  mix-blend-mode: overlay;
+  animation: candleFlicker 4s infinite alternate;
+}
+
+@keyframes candleFlicker {
+  0% {
+    opacity: 0.3;
+  }
+
+  25% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 0.35;
+  }
+
+  75% {
+    opacity: 0.6;
+  }
+
+  100% {
+    opacity: 0.4;
+  }
+}
+
+/* --- Vignette --- */
+.vignette-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+/* --- Cloth Animation --- */
+#pano-mesa {
+  animation: clothSway 8s ease-in-out infinite alternate;
+}
+
+@keyframes clothSway {
+  0% {
+    transform: translateY(0) skewX(0deg);
+  }
+
+  100% {
+    transform: translateY(-2px) skewX(0.5deg);
+  }
+}
