@@ -2718,16 +2718,14 @@ body {
   height: 100%;
   background: url("assets/img/fog_texture.png") repeat-x;
   background-size: 50% 100%;
-  opacity: 0.4;
-  /* Increased from 0.15 */
+  opacity: 0.15;
   animation: fogScroll 60s linear infinite;
 }
 
 .fog-2 {
   animation-duration: 45s;
   animation-direction: reverse;
-  opacity: 0.25;
-  /* Increased from 0.1 */
+  opacity: 0.1;
 }
 
 @keyframes fogScroll {
@@ -2750,16 +2748,14 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  opacity: 0.4;
-  /* Increased from 0.2 */
+  opacity: 0.2;
 }
 
 .light-ray {
   position: absolute;
   width: 100px;
   height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 215, 0, 0.3) 50%, transparent 100%);
-  /* Stronger color */
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 215, 0, 0.2) 50%, transparent 100%);
   transform-origin: center;
   animation: rayRotate 20s ease-in-out infinite alternate;
 }
@@ -2768,8 +2764,7 @@ body {
   animation-duration: 25s;
   animation-delay: -5s;
   width: 150px;
-  opacity: 0.6;
-  /* Increased from 0.5 */
+  opacity: 0.5;
 }
 
 @keyframes rayRotate {
