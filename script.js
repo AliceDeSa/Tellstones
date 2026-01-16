@@ -190,6 +190,12 @@ function sairPartida() {
   const tutorialUI = document.getElementById("tutorial-ui");
   if (tutorialUI) tutorialUI.remove();
 
+  // Limpar toasts persistentes
+  const toast = document.getElementById("toast");
+  if (toast) { toast.style.display = "none"; toast.style.opacity = "0"; }
+  const toastInt = document.getElementById("toast-interno");
+  if (toastInt) { toastInt.classList.remove("mostrar"); toastInt.style.display = "none"; }
+
   mostrarTela("start-screen");
 
   // [v4.0] UX Fixes:
@@ -2549,7 +2555,7 @@ if (btnVoltarLobby) {
     window.resolvendoDesafio = false;
     // Limpa tutorial se existir
     if (window.tellstonesTutorial) {
-      window.tellstonesTutorial.finalizar();
+      // Apenas limpa a referência, a UI é removida abaixo
       window.tellstonesTutorial = null;
     }
     const tutorialUI = document.getElementById("tutorial-ui");
@@ -3270,4 +3276,49 @@ function finalizarTrocaServer(troca) {
     return estado;
   });
 }
+
+
+/* =========================================
+   FIX ONLINE MENU TABS (User Request)
+   ========================================= */
+document.addEventListener('DOMContentLoaded', function () {
+  // Helper to strip old listeners
+  function replaceWithClone(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      const newEl = el.cloneNode(true);
+      el.parentNode.replaceChild(newEl, el);
+      return newEl;
+    }
+    return null;
+  }
+
+  const btnCreate = replaceWithClone('create-room-btn');
+  const btnJoin = replaceWithClone('join-room-btn');
+  const sectionCreate = document.getElementById('room-options');
+  const sectionJoin = document.getElementById('join-room');
+
+  if (btnCreate && btnJoin) {
+    // Tab Logic
+    btnCreate.onclick = function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (sectionCreate) sectionCreate.style.display = 'flex';
+      if (sectionJoin) sectionJoin.style.display = 'none';
+    };
+
+    btnJoin.onclick = function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (sectionCreate) sectionCreate.style.display = 'none';
+      if (sectionJoin) sectionJoin.style.display = 'flex';
+    };
+
+    // Initialize: Show Create by default or none? 
+    // Let's show Create by default if neither is open, or just leave empty?
+    // Better UX: Show Create logic immediately if user was navigating?
+    // Let's defaulted to Create open to fill the empty space
+    if (sectionCreate) sectionCreate.style.display = 'flex';
+  }
+});
 

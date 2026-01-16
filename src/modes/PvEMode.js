@@ -31,12 +31,35 @@ class PvEMode extends GameMode {
         // Reset Bot Brain Memory explicitly
         if (this.botBrain) this.botBrain = null;
 
-        // Inicializa Brain com Perfil Aleatório (Padrão) ou Dev Override
-        const profiles = ['logical', 'trickster', 'aggressive'];
-        // Check legacy or dev config? For now, pure random as requested.
-        const selectedProfile = profiles[Math.floor(Math.random() * profiles.length)];
+        // Check if Profile exists in DB (Persistence)
+        const refProfile = getDBRef("salas/" + this.roomCode + "/botProfile");
 
-        this.botBrain = new BotBrain(selectedProfile);
+        // This is async in Firebase, but we need it now. 
+        // Sync approach for "Local Mode" relies on localData if available, 
+        // but typically we can just set it if we are the host (which we are).
+        // Issue: If we reload, we want to fetch it. Be we can't await here easily in current architecture.
+        // Workaround: We generate a random one, but if snapshot exists later, we override?
+        // Better: Check window.localData immediately if available.
+
+        let savedProfile = null;
+        if (window.localData && window.localData.salas && window.localData.salas[this.roomCode] && window.localData.salas[this.roomCode].botProfile) {
+            savedProfile = window.localData.salas[this.roomCode].botProfile;
+        }
+
+        const profiles = ['logical', 'trickster', 'aggressive'];
+
+        if (savedProfile && profiles.includes(savedProfile)) {
+            console.log(`[PvE] Restored Bot Personality: ${savedProfile}`);
+            this.botBrain = new BotBrain(savedProfile);
+        } else {
+            const selectedProfile = profiles[Math.floor(Math.random() * profiles.length)];
+            console.log(`[PvE] New Bot Personality: ${selectedProfile}`);
+            this.botBrain = new BotBrain(selectedProfile);
+
+            // Save to DB
+            if (refProfile) refProfile.set(selectedProfile);
+        }
+
         if (window.showToastInterno) window.showToastInterno(`Bot: ${this.botBrain.profile.name}`);
 
         // Configuração de Estado Inicial
@@ -46,12 +69,10 @@ class PvEMode extends GameMode {
         ];
 
         // Cria e Salva estado inicial via LocalDB
+        // Note: inicializarJogo saves to 'estadoJogo', avoiding overwritten profile if separate
         const estadoInicial = GameController.inicializarJogo(jogadores);
 
-        // Mock Local Data structure explicitly (só pra garantir, mas o inicializarJogo já deve ter salvo)
-        // Mas o GameController salva via getDBRef, que salva em localData.
-
-        // Inicia Listeners (Idêntico ao Multiplayer)
+        // Inicia Listeners
         this.listenToState();
         this.listenToCoinToss();
     }

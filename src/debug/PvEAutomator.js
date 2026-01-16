@@ -217,6 +217,15 @@ window.PvEAutomator = {
             actions.push('challenge'); // Weight it higher
         }
 
+        // Action: Boast (Se Gabar) - If many hidden or feeling lucky
+        // Rule: Usually requires knowledge, but random test just tries it.
+        // Valid if game allows (not blocked).
+        // Since we don't know rules deeply here, let's try it if > 2 hidden.
+        const hiddenCount = validSlots.filter(s => s.type === 'hidden').length;
+        if (hiddenCount >= 2) {
+            actions.push('boast');
+        }
+
         // Pick Random
         if (actions.length === 0) return;
         const choice = actions[Math.floor(Math.random() * actions.length)];
@@ -266,6 +275,17 @@ window.PvEAutomator = {
                         window.realizarTroca(i1, i2);
                     } else {
                         console.error("[PvEAutomator] realizarTroca function not found!");
+                    }
+                    break;
+
+                case 'boast':
+                    // Click Boast Button
+                    const btnBoast = document.getElementById('btn-segabar');
+                    if (btnBoast) {
+                        console.log("[PvEAutomator] Clicking Boast!");
+                        btnBoast.click();
+                    } else {
+                        console.warn("[PvEAutomator] Boast button not found.");
                     }
                     break;
 

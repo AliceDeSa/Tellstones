@@ -1,6 +1,11 @@
 # Histórico de Versões - Tellstones
 
-## V4.2 - Polish & Animation Fixes (Atual)
+## V4.2.1 - Changelog UI
+**Data:** 15/01/2026
+- **[UI]** Adição de widget de Changelog na tela inicial.
+- **[UI]** Padronização dos botões "Criar" e "Entrar" (256x80px).
+
+## V4.2 - Polish & Animation Fixes
 **Data:** 12/01/2026
 - **[FIX]** Correção crítica na animação de troca de peças (implementação via `AnimationManager` para paridade com Multiplayer).
 - **[FIX]** Resolução de erro 404 em `token_generico.png`.

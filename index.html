@@ -36,7 +36,7 @@
 
   <!-- ================= BOTÃO DE MUTE GLOBAL ================= -->
   <button id="btn-mute-global" title="Mutar/Desmutar Música"
-    style="position:fixed; top:20px; right:20px; z-index:100000; background:transparent; border:none; cursor:pointer; color:rgba(255,255,255,0.7); display:flex; align-items:center; justify-content:center; font-size:24px; transition: color 0.3s;"
+    style="position:fixed; top:10px; right: -7px; z-index:100000; background:transparent; border:none; cursor:pointer; color:rgba(255,255,255,0.7); display:flex; align-items:center; justify-content:center; font-size:24px; transition: color 0.3s;"
     onmouseover="this.style.color='rgba(255,255,255,1)'"
     onmouseout="this.style.color='window.isMuted ? \'rgba(255,255,255,0.5)\' : \'rgba(255,255,255,0.7)\''">
     🔊
@@ -47,53 +47,136 @@
     <!-- Título e slogan -->
     <h1>TellStones</h1>
     <h2 id="slogan-main">Memorize. Blefe. Desafie.</h2>
-    <div id="version-info">v4.2 (Visual Polish)</div>
-    <div id="sub-info">Latest: New Cursor & UI Effects</div>
+
     <!-- Botões principais -->
     <div id="main-menu-btns" style="display:flex; flex-direction:column; gap:-5px; align-items:center;">
       <button id="tutorial-btn">Tutorial</button>
-      <button id="bot-pve-btn">Jogo PvE (Bot)</button>
+      <button id="bot-pve-btn">Jogo PvE</button>
       <button id="online-menu-btn">Jogo Online</button>
     </div>
 
     <!-- Menu Online -->
-    <div id="online-menu" style="display:none; flex-direction:column; gap:10px; align-items:center;">
-      <button id="back-to-main-btn" title="Voltar"
-        style="position:absolute; top:10px; right:10px; background:transparent; border:none; cursor:pointer; color:#fff; font-size:24px; padding:0;">
-        &#8617;
-      </button>
-      <div style="display:flex; gap:10px;">
+    <!-- Menu Online (Tabbed Layout) -->
+    <div id="online-menu" style="display:none; flex-direction:column; gap:0px; align-items:center;">
+      <button id="back-to-main-btn">&#8617;</button>
+
+      <!-- Tabs (Buttons Fixed) -->
+      <div id="online-tabs-container" style="display:flex; gap:20px; margin-bottom: 20px;">
         <button id="create-room-btn">Criar Sala</button>
         <button id="join-room-btn">Entrar em Sala</button>
       </div>
+
+      <!-- Content Area -->
+      <div id="online-content-area"
+        style="width: 100%; display: flex; justify-content: center; height: 280px; align-items: flex-start;">
+
+        <!-- Opções para criar sala/lobby -->
+        <div id="room-options" style="display:none; flex-direction: column; align-items: center;">
+          <h3 style="color:#daa520; font-family:'Cinzel Decorative'; margin-bottom:15px; display:none;">Criar Nova Sala
+          </h3>
+          <div style="display:flex; gap:20px; margin-bottom:10px;">
+            <label>
+              <input type="radio" name="mode" value="1x1" checked> 1x1 (Duelo)
+            </label>
+            <label>
+              <input type="radio" name="mode" value="2x2"> 2x2 (Duplas)
+            </label>
+          </div>
+          <input type="text" id="nome-criar" placeholder="Seu apelido" maxlength="20" style="margin:10px 0;width:300px">
+          <button id="start-game-btn">Criar Lobby</button>
+          <div id="codigo-sala-criada" style="margin-top:10px;color:#8ecfff;font-weight:bold;"></div>
+        </div>
+
+        <!-- Opções para entrar em sala -->
+        <div id="join-room" style="display:none; flex-direction: column; align-items: center;">
+          <h3 style="color:#00ffff; font-family:'Cinzel Decorative'; margin-bottom:15px; display:none;">Entrar na Sala
+          </h3>
+          <input type="text" id="nome-entrar" placeholder="Seu apelido" maxlength="20"
+            style="margin-bottom:8px;width:300px">
+          <input type="text" id="room-code" placeholder="Código da sala" maxlength="8"
+            style="margin-bottom:8px;width:300px">
+          <div style="display:flex; gap:20px; margin: 5px 0 15px 0;">
+            <label style="color:#f1f1f1;">
+              <input type="radio" name="tipo-entrada" value="jogador" checked> Jogador
+            </label>
+            <label style="color:#f1f1f1;">
+              <input type="radio" name="tipo-entrada" value="espectador"> Espectador
+            </label>
+          </div>
+          <button id="enter-room-btn">Entrar</button>
+        </div>
+
+      </div>
     </div>
-    <!-- Opções para criar sala/lobby -->
-    <div id="room-options" style="display:none;">
-      <label>
-        <input type="radio" name="mode" value="1x1" checked> 1x1 (Duelo)
-      </label>
-      <label>
-        <input type="radio" name="mode" value="2x2"> 2x2 (Duplas)
-      </label>
-      <br>
-      <input type="text" id="nome-criar" placeholder="Seu nome" maxlength="20" style="margin:10px 0;width:300px"><br>
-      <button id="start-game-btn">Criar Lobby</button>
-      <div id="codigo-sala-criada" style="margin-top:10px;color:#8ecfff;font-weight:bold;"></div>
-    </div>
-    <!-- Opções para entrar em sala -->
-    <div id="join-room" style="display:none;">
-      <input type="text" id="nome-entrar" placeholder="Seu nome" maxlength="20"
-        style="margin-bottom:8px;width:300px"><br>
-      <input type="text" id="room-code" placeholder="Código da sala" maxlength="8"
-        style="margin-bottom:8px;width:300px"><br>
-      <label style="color:#f1f1f1;">
-        <input type="radio" name="tipo-entrada" value="jogador" checked> Jogador
-      </label>
-      <label style="color:#f1f1f1;">
-        <input type="radio" name="tipo-entrada" value="espectador"> Espectador
-      </label><br>
-      <button id="enter-room-btn">Entrar</button>
-    </div>
+
+  </div>
+
+  <div id="changelog-box">
+    <h3>Patch Notes</h3>
+    <ul>
+      <li><strong>v4.2.1 (Atual)</strong>
+        <ul>
+          <li>Widget de Changelog na tela inicial.</li>
+          <li>Padronização dos botões (256x80px).</li>
+        </ul>
+      </li>
+      <li><strong>v4.2</strong>
+        <ul>
+          <li>Correção na animação de troca de peças.</li>
+          <li>Ajustes visuais no feedback do Bot.</li>
+          <li>Novo cursor Animado (Flecha Mágica).</li>
+        </ul>
+      </li>
+      <li><strong>v4.1</strong>
+        <ul>
+          <li>Bot com Memória Inteligente.</li>
+          <li>Sistema de Observação de jogadas.</li>
+          <li>Suporte a Blefe do Bot.</li>
+        </ul>
+      </li>
+      <li><strong>v4.0</strong>
+        <ul>
+          <li>Lançamento do Modo PvE.</li>
+          <li>Persistência de estado local.</li>
+        </ul>
+      </li>
+      <li><strong>v3.2</strong>
+        <ul>
+          <li>Modularização do código (Core/UI/Modes).</li>
+          <li>Correção de erros de sintaxe.</li>
+        </ul>
+      </li>
+      <li><strong>v3.1</strong>
+        <ul>
+          <li>Layout polido para mobile.</li>
+          <li>Correção de cortes na UI.</li>
+        </ul>
+      </li>
+      <li><strong>v3.0</strong>
+        <ul>
+          <li>Modernização da Arquitetura.</li>
+          <li>Correção de erros assíncronos.</li>
+        </ul>
+      </li>
+      <li><strong>v2.1</strong>
+        <ul>
+          <li>Refinamento do Tutorial.</li>
+          <li>Melhorias na navegação.</li>
+        </ul>
+      </li>
+      <li><strong>v2.0</strong>
+        <ul>
+          <li>Lançamento do Modo Tutorial.</li>
+          <li>Sistema de etapas guiadas.</li>
+        </ul>
+      </li>
+      <li><strong>v1.0</strong>
+        <ul>
+          <li>Lançamento Inicial.</li>
+          <li>Multiplayer Local (Hotseat).</li>
+        </ul>
+      </li>
+    </ul>
   </div>
 
   <!-- ================= LOBBY ================= -->
@@ -248,8 +331,7 @@
   <!-- Script principal do jogo -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-  <script src="tutorial.js?v=multiplayer_final_56"></script>
-  <script src="bot.js?v=multiplayer_final_56"></script>
+
   <script src="src/core/constants.js"></script>
   <script src="src/utils/utils.js"></script>
   <script src="src/config/firebase-config.js"></script>
@@ -269,6 +351,7 @@
   <script src="src/modes/GameMode.js?v=v4_alpha_1"></script>
   <script src="src/modes/MultiplayerMode.js?v=v4_alpha_1"></script>
   <script src="src/modes/PvEMode.js?v=v4_alpha_1"></script>
+  <script src="src/modes/TellstonesTutorial.js"></script>
   <script src="src/modes/TutorialMode.js?v=v4_alpha_1"></script>
 
   <script src="script.js?v=v4_alpha_1"></script>
