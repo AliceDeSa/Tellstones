@@ -187,6 +187,9 @@ function sairPartida() {
   window.jaEntrouNoGame = false;
 
   // Cleanup UI
+  if (window.tellstonesTutorial) {
+    window.tellstonesTutorial = null;
+  }
   const tutorialUI = document.getElementById("tutorial-ui");
   if (tutorialUI) tutorialUI.remove();
 
