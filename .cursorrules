@@ -7,6 +7,7 @@
 ## Versioning & Documentation
 - **CHANGELOG**: Whenever there is a medium or large update, save a brief description in `CHANGELOG.md`.
 - **Version Info**: For *every* code update, update the version number in the `#version-info` element and provide a simple description in `#sub-info` (inside `index.html`).
+- **UI Sync**: Always update the `#changelog-box` in `index.html` when `CHANGELOG.md` is modified.
 
 ## Specific Components
 - **Buttons**: Main action buttons should usually be `320px x 80px` (or scaled proportionally) with the custom border backgrounds.

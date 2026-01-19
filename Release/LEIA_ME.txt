@@ -1,0 +1,10 @@
+# Estrutura de Distribuição
+
+Esta pasta contém as diferentes formas de executar o Tellstones:
+
+1. **Executavel/**: Contém o arquivo `.exe` portátil para Windows (não requer instalação).
+2. **Instalador/**: Contém o arquivo de instalação (`setup.exe`) para Windows.
+3. **Web_Link/**: Contém um atalho para jogar a versão web diretamente no navegador.
+4. **App_Mobile/**: Contém os arquivos de instalação para Android (`.apk`) e iOS (`.ipa`).
+
+> Nota: Como o projeto é HTML/JS puro no momento, você precisará usar ferramentas como 'Electron' para gerar os executáveis e 'Cordova/Capacitor' para os apps móveis.
