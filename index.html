@@ -9,7 +9,7 @@
   <meta name="viewport" content="width=1024, user-scalable=no">
   <meta name="mobile-web-app-capable" content="yes">
   <title>TellStones</title>
-  <link rel="stylesheet" href="style.css?v=3.00">
+  <link rel="stylesheet" href="style.css?v=4.30">
   <link rel="icon" type="image/webp" href="assets/img/logo.webp">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,6 +19,17 @@
 </head>
 
 <body>
+  <!-- ================= PARALLAX BACKGROUND (DISABLED) ================= -->
+  <!--
+  <div id="parallax-container">
+    <div class="parallax-layer layer-1" style="background-image: url('assets/img/bg_taverna.png');"></div>
+    <div class="parallax-layer layer-2" style="background-image: url('assets/img/bg_plateia.png');"></div>
+    <div class="parallax-layer layer-3" style="background-image: url('assets/img/bg_guereira.png');"></div>
+    <div class="parallax-layer layer-3b" style="background-image: url('assets/img/bg_genneral.png');"></div>
+    <div class="parallax-layer layer-4" style="background-image: url('assets/img/bg_mesa.png');"></div>
+    <div class="parallax-overlay"></div>
+  </div>
+  -->
   <!-- ================= OVERLAY GIRAR TELA ================= -->
   <div id="rotate-device-overlay"
     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#181c24; z-index:999999; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:20px;">
@@ -114,10 +125,11 @@
   <div id="changelog-box">
     <h3>Patch Notes</h3>
     <ul>
-      <li><strong>v4.2.1 (Atual)</strong>
+      <li><strong>v4.3.0 (Atual)</strong>
         <ul>
-          <li>Widget de Changelog na tela inicial.</li>
-          <li>Padronização dos botões (256x80px).</li>
+          <li>Correção crítica no fluxo do Tutorial.</li>
+          <li>Melhorias na UI Mobile (Drag & Posicionamento).</li>
+          <li>Novos visuais para dicas.</li>
         </ul>
       </li>
       <li><strong>v4.2</strong>
@@ -354,7 +366,7 @@
   <script src="src/modes/TellstonesTutorial.js"></script>
   <script src="src/modes/TutorialMode.js?v=v4_alpha_1"></script>
 
-  <script src="script.js?v=v4_alpha_1"></script>
+  <script src="script.js?v=4.30"></script>
 
   <!-- Debug / Automation -->
   <script src="src/debug/TutorialAutomator.js"></script>
@@ -405,22 +417,20 @@
           currentIdx = (currentIdx + 1) % profiles.length;
           const next = profiles[currentIdx];
           btn.innerText = `🧠 Bot: ${next.charAt(0).toUpperCase() + next.slice(1)}`;
+          localStorage.setItem('tellstones_dev_bot_profile', next);
 
           // Apply if game is running
           if (window.currentGameMode && window.currentGameMode.setBotProfile) {
-            // If random, pick one real profile to set
-            if (next === 'random') {
-              const realProfiles = ['logical', 'trickster', 'aggressive'];
-              const rand = realProfiles[Math.floor(Math.random() * realProfiles.length)];
-              window.currentGameMode.setBotProfile(rand);
-              // Toast handled by setBotProfile
-            } else {
-              window.currentGameMode.setBotProfile(next);
-            }
-          } else {
-            console.warn("PvEMode active? Cannot set profile.");
+            window.currentGameMode.setBotProfile(next);
           }
         };
+
+        // Initialize button text from LocalStorage
+        const saved = localStorage.getItem('tellstones_dev_bot_profile');
+        if (saved && profiles.includes(saved)) {
+          currentIdx = profiles.indexOf(saved);
+          btn.innerText = `🧠 Bot: ${saved.charAt(0).toUpperCase() + saved.slice(1)}`;
+        }
       }
     })();
   </script>

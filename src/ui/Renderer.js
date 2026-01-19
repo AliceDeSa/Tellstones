@@ -40,11 +40,17 @@ const Renderer = {
             // HIGHLIGHT CHALLENGED STONE
             // Se existe um desafio ativo e esta pedra é o alvo
             const desafio = window.estadoJogo.desafio;
-            if (desafio && !desafio.resolvido && (desafio.alvo === i || desafio.pedra === i || desafio.idxPedra === i)) {
-                div.style.boxShadow = "0 0 15px 5px yellow";
-                div.style.border = "2px solid yellow";
-                div.style.transform = "translate(-50%, -50%) scale(1.1)";
-                div.style.zIndex = "100";
+            if (desafio && i === 0) {
+                // DEBUG HIGHLIGHT
+                console.log("[Renderer DEBUG V2] Desafio:", JSON.stringify(desafio));
+            }
+
+            if (desafio && !desafio.resolvido && (desafio.alvo == i || desafio.pedra == i || desafio.idxPedra == i)) {
+                console.log(`[Renderer] Highlight Triggered for Stone ${i} (Alvo: ${desafio.alvo})`);
+                div.style.setProperty("box-shadow", "0 0 15px 5px yellow", "important");
+                div.style.setProperty("border", "3px solid yellow", "important");
+                div.style.setProperty("transform", "translate(-50%, -50%) scale(1.15)", "important");
+                div.style.setProperty("z-index", "1000", "important");
             } else {
                 div.style.boxShadow = "0 0 20px rgba(0,0,0,0.5)";
             }
@@ -200,6 +206,12 @@ const Renderer = {
         if (typeof renderizarMarcadoresPonto === 'function') renderizarMarcadoresPonto();
     },
 
+    // Compatibility method for GameController
+    atualizarPlacar: function (jogadores) {
+        // Reuses updated info logic, ignoring args as it pulls from global state usually
+        this.atualizarInfoSala(window.salaAtual || "Sala", window.ultimosEspectadores || []);
+    },
+
     // Renderiza as pedras da reserva
     renderizarPedrasReserva: function () {
         // Só bloqueia animação se o alinhamento ainda não foi feito
@@ -271,6 +283,7 @@ const Renderer = {
                 div.onmouseenter = function (e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
                 div.onmousemove = function (e) { showTooltip("Arraste para o tabuleiro", e.clientX, e.clientY); };
                 div.onmouseleave = hideTooltip;
+                div.onmouseout = hideTooltip;
                 circle.appendChild(div);
             }
         });
@@ -317,6 +330,7 @@ const Renderer = {
         circle.style.height = "auto";
         circle.style.pointerEvents = "auto";
         circle.style.paddingTop = "0";
+        circle.style.zIndex = "300"; // Ensure above info-sala (100) and buttons
         circle.innerHTML = "";
 
         pedras.forEach((p, i) => {
@@ -349,11 +363,21 @@ const Renderer = {
                 div.style.cursor = "pointer";
                 div.title = "";
             }
+
+            // Tooltip handler: ensure it hides on mouse out
+            if (!div.title) { // Only if native title is not set
+                div.onmouseenter = function (e) { showTooltip(p.nome, e.clientX, e.clientY); };
+                div.onmousemove = function (e) { showTooltip(p.nome, e.clientX, e.clientY); };
+                div.onmouseleave = hideTooltip;
+                div.onmouseout = hideTooltip; // Robutez extra
+            }
+
             circle.appendChild(div);
         });
     },
 
     getSlotPositions: function (wrapper, count, slotSize, gap) {
+        if (!wrapper) return [];
         const w = wrapper.clientWidth;
         const h = wrapper.clientHeight;
         const positions = [];
@@ -639,6 +663,95 @@ const Renderer = {
 
     },
 
+    // --- BOT FEATURES ---
+    mostrarFalaBot(msg) {
+        let bubble = document.getElementById("bot-dialogue-bubble");
+        if (!bubble) {
+            bubble = document.createElement("div");
+            bubble.id = "bot-dialogue-bubble";
+            document.body.appendChild(bubble);
+        }
+
+        bubble.innerText = msg;
+        bubble.classList.add("visible");
+
+        // Hide after 4 seconds
+        if (window.botSpeechTimeout) clearTimeout(window.botSpeechTimeout);
+        window.botSpeechTimeout = setTimeout(() => {
+            bubble.classList.remove("visible");
+        }, 4000);
+    },
+
+    animarBotColocar(pedra, origemIdx, destinoSlotIdx, callback) {
+        if (!pedra) {
+            if (callback) callback();
+            return;
+        }
+
+        const startX = -70; // Off-screen Left (Reserve)
+        const startY = window.innerHeight / 2 - 30; // Centered vertically
+
+        // ... (ghost creation) ...
+        const ghost = document.createElement("div");
+        ghost.className = "ghost-pedra";
+        ghost.innerHTML = `<img src="${pedra.url}" style="width:100%;height:100%;border-radius:50%">`;
+        ghost.style.position = "fixed";
+        ghost.style.left = startX + "px";
+        ghost.style.top = startY + "px";
+        ghost.style.width = "60px";
+        ghost.style.height = "60px";
+        ghost.style.zIndex = "9999";
+        // Slow down animation and change easing
+        ghost.style.transition = "all 1.5s cubic-bezier(0.25, 1, 0.5, 1)";
+        document.body.appendChild(ghost);
+
+        // Fallback: calcular baseado no centro
+        let destX = window.innerWidth / 2;
+        let destY = window.innerHeight / 2;
+
+        // Tentar via DOM (Mesa)
+        const mesaDiv = document.getElementById("pedras-mesa");
+        if (mesaDiv && mesaDiv.children[destinoSlotIdx]) {
+            const rect = mesaDiv.children[destinoSlotIdx].getBoundingClientRect();
+            destX = rect.left + rect.width / 2;
+            destY = rect.top + rect.height / 2;
+        } else {
+            // Fallback to getSlotPositions logic only if wrapper exists
+            const wrapper = document.getElementById("tabuleiro-wrapper");
+            if (wrapper && this.getSlotPositions) {
+                const slots = this.getSlotPositions(wrapper, 7, 80, 10); // Estimo params
+                if (slots[destinoSlotIdx]) {
+                    destX = slots[destinoSlotIdx].left; // Might need offset correction if getSlotPositions returns relative to wrapper?
+                    // getSlotPositions uses clientWidth which is absolute-ish but careful about offsetParent.
+                    // Actually getting rect of phantom slot is safer if they exist.
+                    // But usually slots dont exist safely 
+                }
+            }
+        }
+
+        // Trigger animation frame
+        requestAnimationFrame(() => {
+            ghost.style.left = (destX - 30) + "px"; // Center offset
+            ghost.style.top = (destY - 30) + "px";
+        });
+
+        // Cleanup and Callback
+        let finished = false;
+        const finish = () => {
+            if (finished) return;
+            finished = true;
+            ghost.remove();
+            if (callback) callback();
+        };
+
+        ghost.ontransitionend = finish;
+
+        // Safety timeout (animation duration 0.8s + buffer)
+        setTimeout(finish, 1000);
+    },
+
+    // --- END BOT FEATURES ---
+
     // Renderizar opções de resposta ao Se Gabar (Acreditar / Duvidar / Se Gabar Também)
     renderizarOpcoesSegabar: function () {
         const estadoJogo = window.estadoJogo;
@@ -767,12 +880,19 @@ const Renderer = {
         // Helper para destacar
         const pedrasMesa = document.querySelectorAll(".pedra-mesa");
         pedrasMesa.forEach((el) => {
-            // Assumindo que a ordem do DOM segue a ordem do array (o que é verdade no Renderer atual)
-            // Um data-idx seria mais seguro, mas vamos usar a ordem natural ou recalcular
-            const parent = el.parentElement; // tab-wrapper
-            // Melhor usar Renderer.getSlotPositions para marcar?
-            // Simplificação: vamos marcar TODAS visualmente que são viradas, e a ESPECIAl atual com outra cor?
-            // Por enquanto, manter simples.
+            el.style.boxShadow = "none"; // Limpa anteriores
+            el.style.border = "none";
+            const pIdx = parseInt(el.getAttribute("data-idx"));
+
+            // Se for a pedra alvo da pergunta
+            if (pIdx === pedrasViradas[idxAtual].idx) {
+                el.style.boxShadow = "0 0 20px 8px yellow"; // Brilho forte
+                el.style.border = "3px solid yellow";
+                el.style.zIndex = "200001"; // Acima do overlay
+                el.style.transform = "translate(-50%, -50%) scale(1.15)";
+            } else if (pIdx !== undefined) {
+                // Diminui opacity das outras? Opcional.
+            }
         });
 
         // Lista de pedras para escolha

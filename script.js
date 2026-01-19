@@ -130,6 +130,9 @@ function entrarSala(codigo, nome, tipo) {
 
 // Alterna entre as telas principais do app
 function mostrarTela(tela) {
+  // Limpar tooltips ao trocar de tela
+  if (typeof hideTooltip === "function") hideTooltip();
+
   document.getElementById("start-screen").classList.remove("active");
   document.getElementById("lobby").classList.remove("active");
   document.getElementById("game").classList.remove("active");
@@ -176,6 +179,9 @@ function mostrarTela(tela) {
 
 // ==== FUNÇÃO SAIR PARTIDA (GLOBAL) ====
 function sairPartida() {
+  // Limpar tooltips persistentes
+  if (typeof hideTooltip === "function") hideTooltip();
+
   if (window.currentGameMode) {
     window.currentGameMode.cleanup();
     window.currentGameMode = null;
@@ -188,6 +194,7 @@ function sairPartida() {
 
   // Cleanup UI
   if (window.tellstonesTutorial) {
+    if (window.tellstonesTutorial.cleanup) window.tellstonesTutorial.cleanup();
     window.tellstonesTutorial = null;
   }
   const tutorialUI = document.getElementById("tutorial-ui");
@@ -861,14 +868,20 @@ function mostrarNotificacaoMoeda(msg) {
     notif.style.left = "50%";
     notif.style.top = "40%";
     notif.style.transform = "translate(-50%, -50%)";
-    notif.style.background = "#2d8cff";
+    notif.style.background = "transparent url('assets/img/notification_icon.png') no-repeat center center";
+    notif.style.backgroundSize = "100% 100%";
     notif.style.color = "#fff";
-    notif.style.padding = "16px 32px";
-    notif.style.borderRadius = "12px";
-    notif.style.fontSize = "1.2em";
-    notif.style.boxShadow = "0 2px 16px #0007";
+    notif.style.padding = "100px 140px"; // Ajustado para ser levemente menor que o toast padrão se necessário, ou igual
+    notif.style.textAlign = "center";
+    notif.style.borderRadius = "0";
+    notif.style.fontSize = "1.3em";
+    notif.style.boxShadow = "none";
+    notif.style.border = "none";
     notif.style.zIndex = 1001;
     notif.style.display = "none";
+    notif.style.fontFamily = "'Cinzel', serif";
+    notif.style.textShadow = "0 2px 4px rgba(0,0,0,0.8)";
+    notif.style.pointerEvents = "none"; // Garante que não bloqueie cliques
     document.body.appendChild(notif);
   }
   if (msg && msg.trim() !== "") {
@@ -1382,7 +1395,7 @@ if (btnSairPartida) {
       isLocalMode = false;
       tellstonesBot = null;
       if (window.tellstonesTutorial) {
-        window.tellstonesTutorial.finalizar();
+        if (window.tellstonesTutorial.cleanup) window.tellstonesTutorial.cleanup();
         window.tellstonesTutorial = null;
       }
       // Remove tutorial UI if it exists
@@ -1845,6 +1858,16 @@ function renderizarPedrasMesa(pedras) {
         if (fundo) fundo.classList.add("borda-dourada-animada");
       }
 
+      // HIGHLIGHT CHALLENGED STONE (Fix for Bot Visuals)
+      const desafio = window.estadoJogo.desafio;
+      if (desafio && !desafio.resolvido && (desafio.alvo == i || desafio.pedra == i || desafio.idxPedra == i)) {
+        console.log(`[Script.js] Highlight Triggered for Stone ${i} (Alvo: ${desafio.alvo})`);
+        div.style.setProperty("box-shadow", "0 0 15px 5px yellow", "important");
+        div.style.setProperty("border", "3px solid yellow", "important");
+        div.style.setProperty("transform", "translate(-50%, -50%) scale(1.15)", "important");
+        div.style.setProperty("z-index", "1000", "important");
+      }
+
       const debugIdx = document.createElement("span");
       debugIdx.innerText = i;
       debugIdx.className = "debug-index";
@@ -2280,7 +2303,12 @@ function renderizarOpcoesDesafio() {
       desafioUpdate.status = "resolvido";
 
       // Salvar via update para evitar sobrescrever tudo
-      getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").set(desafioUpdate)
+      const updates = {};
+      updates["salas/" + salaAtual + "/estadoJogo/desafio/escolhaOponente"] = idx;
+      updates["salas/" + salaAtual + "/estadoJogo/desafio/resposta"] = p.nome;
+      updates["salas/" + salaAtual + "/estadoJogo/desafio/status"] = "resolvido";
+
+      getDBRef().update(updates)
         .then(() => {
           console.log("[DEBUG] Desafio resposta salva no Firebase.");
           renderizarMesa();
@@ -2734,88 +2762,13 @@ function hideTooltip() {
 // 9. Modo PvE e Tutorial
 
 async function iniciarModoBot() {
-  isLocalMode = true;
-  localData = {};
-  nomeAtual = "Você";
-  salaAtual = "MODO_PVE";
-  souCriador = true;
+  if (window.currentGameMode) window.currentGameMode.cleanup();
 
-  const jogadores = [
-    { nome: "Você", id: "p1", pontos: 0 },
-    { nome: "Bot", id: "p2", pontos: 0 }
-  ];
-
-  inicializarJogo(jogadores);
-  console.log("DEBUG estadoJogo após init:", window.estadoJogo || estadoJogo);
-
-  // Garantir que estadoJogo esteja acessível
-  const estadoBase = window.estadoJogo || estadoJogo;
-  if (!estadoBase) {
-    console.error("ERRO CRÍTICO: estadoJogo não inicializado!");
-    return;
-  }
-
-  // Inicializa a estrutura no LocalData usando o estado criado em memória
-  localData = {
-    salas: {
-      MODO_PVE: {
-        status: "jogo",
-        jogadores: {
-          p1: { nome: "Você" },
-          p2: { nome: "Bot" }
-        },
-        estadoJogo: estadoBase,
-        caraCoroa: {
-          escolha: { nome: "Você", escolha: "cara" },
-          resultado: 0,
-          sorteioFinalizado: true,
-          feedbackLiberado: Date.now()
-        }
-      }
-    }
-  };
-
-  // Setup específico do PvE (Bypassa coin flip e coloca pedra central)
-  const estadoAtual = localData.salas.MODO_PVE.estadoJogo;
-  const pedraCentral = estadoAtual.pedraCentral;
-
-  // Atualiza Estado do Jogo (usando path seguro)
-  // Como acabamos de criar, podemos alterar direto no objeto antes de chamar updates se quisermos,
-  // mas vamos manter o padrão de usar getDBRef para consistência se houver listeners.
-  // Porem listeners só são anexados depois em ouvirEstadoJogo().
-
-  estadoAtual.centralAlinhada = true;
-  estadoAtual.alinhamentoFeito = true;
-  estadoAtual.vez = 0;
-  estadoAtual.mesa = [null, null, null, pedraCentral, null, null, null];
-  estadoAtual.pedraCentral = null;
-
-  // Atualiza global reference
-  estadoJogo = estadoAtual;
-  tellstonesBot = new TellstonesBot("Bot");
-
-  mostrarJogo("MODO_PVE", [{ nome: "Você", id: "p1", pontos: 0 }, { nome: "Bot", id: "p2", pontos: 0 }], []);
-  ouvirEstadoJogo();
-  salvarEstadoJogo(); // Isso vai disparar o 'set' inicial se usarmos LocalRef corretamente
-  try {
-    let acao = null;
-
-    if (estadoJogo.status === 'desafio') {
-      acao = await tellstonesBot.responderDesafio(estadoJogo, estadoJogo.desafio);
-    } else {
-      acao = await tellstonesBot.decidirAcao(estadoJogo);
-    }
-
-    console.log("[BOT] Ação decidida:", acao);
-    if (acao) {
-      await executarAcaoBot(acao);
-    }
-  } catch (e) {
-    console.error("[BOT] Erro ao processar turno:", e);
-  } finally {
-    botProcessing = false;
-  }
+  // Use the new PvEMode Class
+  window.currentGameMode = new PvEMode();
+  window.currentGameMode.start(); // Handles setup, state, and bot init
 }
+
 
 async function executarAcaoBot(acao) {
   const salaRef = getDBRef("salas/" + salaAtual + "/estadoJogo");
@@ -3325,3 +3278,35 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
+
+/* --- DEBUG LAYOUT SCRIPT --- */
+(function () {
+  let dragged = null;
+  let offsetX = 0; let offsetY = 0;
+  document.addEventListener('mousedown', function (e) {
+    if (e.target.classList.contains('debug-layout-box')) {
+      dragged = e.target;
+      const rect = dragged.getBoundingClientRect();
+      const parentRect = dragged.parentElement.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      e.preventDefault();
+    }
+  });
+  document.addEventListener('mousemove', function (e) {
+    if (dragged) {
+      const parentRect = dragged.parentElement.getBoundingClientRect();
+      let newLeft = e.clientX - parentRect.left - offsetX;
+      let newTop = e.clientY - parentRect.top - offsetY;
+      dragged.style.left = newLeft + 'px';
+      dragged.style.top = newTop + 'px';
+      console.log(`[DEBUG LAYOUT] : Top = ${newTop}px Left = ${newLeft}px`);
+    }
+  });
+  document.addEventListener('mouseup', function () {
+    if (dragged) {
+      console.log(`[FINAL] : Drag ended`);
+      dragged = null;
+    }
+  });
+})();

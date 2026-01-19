@@ -12,6 +12,23 @@ window.PvEAutomator = {
     intervalId: null,
     actionDelay: 2500, // Time between actions
 
+    setPersonality: function (name) {
+        if (window.currentGameMode && window.currentGameMode.setBotProfile) {
+            window.currentGameMode.setBotProfile(name);
+            console.log(`[PvEAutomator] Bot set to: ${name}`);
+        } else {
+            console.warn("[PvEAutomator] Cannot set personality (GameMode not ready?)");
+        }
+    },
+
+    dumpLog: function () {
+        if (window.currentGameMode && window.currentGameMode.getMatchLog) {
+            console.log("\n====== MATCH LOG ======");
+            console.log(window.currentGameMode.getMatchLog());
+            console.log("=======================\n");
+        }
+    },
+
     run: function () {
         if (this.isRunning) return;
         this.isRunning = true;
@@ -40,7 +57,10 @@ window.PvEAutomator = {
     stop: function () {
         this.isRunning = false;
         clearInterval(this.intervalId);
+        this.isRunning = false;
+        clearInterval(this.intervalId);
         console.log("[PvEAutomator] Stopped.");
+        this.dumpLog(); // Auto dump on stop
     },
 
     loop: function () {

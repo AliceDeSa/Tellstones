@@ -11,11 +11,93 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  background: #181c24 url("assets/img/T.webp") no-repeat center center fixed;
+  /* background removed -> moved to #parallax-container */
+  background: #181c24 url("assets/img/Fundo.jpg") no-repeat center center fixed;
   background-size: cover;
   color: #f1f1f1;
   font-family: "Segoe UI", Arial, sans-serif;
   cursor: url("assets/img/cursor_opt.png") 0 0, auto;
+  overflow: hidden;
+  /* Prevent scrollbars from moving layers */
+}
+
+/* =====================================================
+           PARALLAX BACKGROUND (DISABLED)
+           ===================================================== */
+/*
+#parallax-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  overflow: hidden;
+  background: #0b0d12;
+}
+
+.parallax-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-position: center 33%;
+  -- Shift down slightly --
+background-size: cover;
+background-repeat: no-repeat;
+will-change: transform;
+}
+
+.parallax-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  -- Darken slightly --
+  pointer-events: none;
+  z-index: 5;
+}
+
+ -- Layer specific ordering and subtle animation --
+.layer-1 {
+  z-index: 1;
+}
+
+ -- Taverna (Fundo) --
+.layer-2 {
+  z-index: 2;
+}
+
+ -- Plateia --
+.layer-3 {
+  z-index: 3;
+}
+
+ -- Guerreira --
+.layer-3b {
+  z-index: 3;
+}
+
+ -- General --
+.layer-4 {
+  z-index: 4;
+}
+
+ -- Mesa (Frente) --
+*/
+
+/* Removed breathe animation */
+@keyframes breathe {
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.02);
+  }
 }
 
 button,
@@ -231,52 +313,84 @@ input[type="text"] {
 }
 
 #start-screen #tutorial-btn {
-  background: url("assets/img/Borda_Verde.webp") no-repeat center center;
+  background: url("assets/img/Borda_Verde.webp?v=4.4") no-repeat center center;
   background-size: 100% 100%;
-  width: 320px;
-  height: 80px;
+  width: 300px;
+  height: 75px;
   font-size: 1.25em;
   font-weight: bold;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 #start-screen #bot-pve-btn {
-  background: url("assets/img/Borda_Dourada.webp") no-repeat center center;
+  background: url("assets/img/Borda_Dourada.webp?v=4.4") no-repeat center center;
   background-size: 100% 100%;
-  width: 320px;
-  height: 80px;
+  width: 300px;
+  height: 75px;
   font-size: 1.25em;
   font-weight: bold;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 #start-screen #online-menu-btn {
-  background: url("assets/img/Borda_Preta.webp") no-repeat center center;
+  background: url("assets/img/Borda_Preta.webp?v=4.4") no-repeat center center;
   background-size: 100% 100%;
-  width: 320px;
-  height: 80px;
+  width: 300px;
+  height: 75px;
   font-size: 1.25em;
   font-weight: bold;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
-#start-screen #tutorial-btn:hover,
-#start-screen #bot-pve-btn:hover,
-#start-screen #online-menu-btn:hover {
-  filter: brightness(1.2);
-  box-shadow: none;
+/* Side by Side Buttons */
+#start-screen #create-room-btn {
+  background: url("assets/img/Laranja.webp?v=4.4") no-repeat center center;
+  background-size: 100% 100%;
+  width: 260px;
+  height: 65px;
+  font-size: 1.15em;
+  font-weight: bold;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+#start-screen #join-room-btn {
+  background: url("assets/img/Ciano.webp?v=4.4") no-repeat center center;
+  background-size: 100% 100%;
+  width: 260px;
+  height: 65px;
+  font-size: 1.15em;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Action Buttons */
+#start-screen #start-game-btn {
+  background: url("assets/img/Roxo.webp?v=4.4") no-repeat center center;
+  background-size: 100% 100%;
+  width: 300px;
+  height: 75px;
+  font-size: 1.25em;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  font-family: "Cinzel Decorative", serif;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  /* Ensure centering works like entered button */
+  align-items: center;
+  justify-content: center;
+  margin: 10px auto;
+  padding: 0;
 }
 
 #start-screen #enter-room-btn {
-  background: url("assets/img/83bc0eed-71e6-4882-8fde-210ddd69306e.png") no-repeat center center;
+  background: url("assets/img/Verde.webp?v=4.4") no-repeat center center;
   background-size: 100% 100%;
-  /* Revert to fill */
-  width: 300px !important;
-  height: 75px !important;
-  /* 80% of 100px */
-  font-size: 1.1em;
-  /* Slight font reduction */
+  width: 300px;
+  height: 75px;
+  font-size: 1.25em;
   font-weight: bold;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
   font-family: "Cinzel Decorative", serif;
@@ -288,40 +402,19 @@ input[type="text"] {
   align-items: center;
   justify-content: center;
   margin: 10px auto;
-  /* Center horizontally */
   padding: 0;
-  flex-shrink: 0;
 }
 
+#start-screen #tutorial-btn:hover,
+#start-screen #bot-pve-btn:hover,
+#start-screen #online-menu-btn:hover,
+#start-screen #create-room-btn:hover,
+#start-screen #join-room-btn:hover,
+#start-screen #start-game-btn:hover,
 #start-screen #enter-room-btn:hover {
   filter: brightness(1.2);
   transform: scale(1.02);
-}
-
-#start-screen #start-game-btn {
-  background: url("assets/img/83bc0eed-71e6-4882-8fde-210ddd69306e.png") no-repeat center center;
-  background-size: 100% 100%;
-  width: 256px;
-  height: 80px;
-  font-size: 1.1em;
-  font-weight: bold;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-  font-family: "Cinzel Decorative", serif;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 10px auto;
-  padding: 0;
-  flex-shrink: 0;
-}
-
-#start-screen #start-game-btn:hover {
-  filter: brightness(1.2);
-  transform: scale(1.02);
+  box-shadow: none;
 }
 
 #btn-mute-global {
@@ -457,6 +550,7 @@ input[type="text"] {
   pointer-events: none;
   font-family: "Segoe UI", Arial, sans-serif;
   text-shadow: 0 1px 4px #000a;
+  zoom: 0.8;
 }
 
 /* =====================================================
@@ -1903,13 +1997,57 @@ input[type="text"] {
   border: 2px solid #2d8cff;
   border-radius: 50%;
   box-shadow: 0 2px 8px #0003;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 80px;
-  height: 80px;
-  pointer-events: none;
 }
+
+/* ================= BOT DIALOGUE ================= */
+#bot-dialogue-bubble {
+  position: absolute;
+  top: 15%;
+  /* Adjust based on bot avatar position if any */
+  right: 20%;
+  /* Right side for P2/Bot */
+  background: #fff;
+  color: #333;
+  padding: 15px 20px;
+  border-radius: 20px;
+  border-bottom-left-radius: 0;
+  /* Callout shape */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  font-family: 'Cinzel', serif;
+  font-size: 1.1rem;
+  max-width: 250px;
+  z-index: 2000;
+  /* High enough but below some overlays */
+  opacity: 0;
+  transform: translateY(10px) scale(0.9);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  display: none;
+}
+
+#bot-dialogue-bubble.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  display: block;
+}
+
+#bot-dialogue-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 0px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 15px solid #fff;
+  /* Matches background */
+}
+
+/* Matches background */
+
+
+/* Orphaned block removed */
 
 .ghost-pedra img {
   width: 90%;
@@ -2015,7 +2153,7 @@ input[type="text"] {
   bottom: -55px;
   left: 50%;
   transform: translateX(-50%);
-  background: transparent url('assets/img/notificação.png') no-repeat center center !important;
+  background: transparent url('assets/img/notification_icon.png') no-repeat center center !important;
   background-size: 100% 100% !important;
   /* Fit image exactly */
   color: #fff;
@@ -2041,7 +2179,7 @@ input[type="text"] {
   /* Matched to #toast */
   left: 50%;
   transform: translateX(-50%);
-  background: transparent url('assets/img/notificação.png') no-repeat center center !important;
+  background: transparent url('assets/img/notification_icon.png') no-repeat center center !important;
   background-size: 100% 100% !important;
   color: #fff;
   padding: 120px 180px;
@@ -3077,9 +3215,13 @@ body {
 }
 
 #back-to-main-btn {
-  position: fixed !important;
-  top: 15px !important;
-  left: 20px !important;
+  position: absolute !important;
+  top: 18% !important;
+  /* Raised position */
+  left: calc(50% + 220px) !important;
+  /* To the right of the title */
+  right: auto !important;
+  transform: translateY(-50%);
   background: none !important;
   border: none !important;
   color: #daa520 !important;
@@ -3102,7 +3244,8 @@ body {
 
 #back-to-main-btn:hover {
   color: #fff !important;
-  transform: scale(1.05);
+  transform: translateY(-50%) !important;
+  /* Prevent movement/scaling */
   filter: brightness(1.2);
 }
 

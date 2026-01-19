@@ -1,5 +1,21 @@
 # Histórico de Versões - Tellstones
 
+## V4.4.0 - Bot Alive Update
+**Data:** 19/01/2026
+- **[FEAT]** **Bot Personality:** Adicionado sistema de diálogo e balões de fala para o Bot.
+- **[FEAT]** **Animações:** Implementada animação de colocação de peças (saindo da reserva) e visualização de "Espiar" (brilho dourado).
+- **[AI]** **Ajuste de Inteligência:** Bot Agressivo agora usa "Modelo Mental" para evitar desafios suicidas contra pedras que o jogador conhece.
+- **[AI]** **Pacing:** Aumento no tempo de "pensamento" do Bot para simular tomada de decisão humana.
+- **[FIX]** **Estabilidade:** Correção de travamentos na animação e erro crítico no movimento especial "Chaotic Chain".
+- **[FIX]** **CSS:** Correção de erros de sintaxe em `style.css` e posição da animação da reserva.
+
+## V4.3.0 - Tutorials & Mobile Polish
+**Data:** 16/01/2026
+- **[FIX]** **Tutorial Persistence:** Resolved issue where "Tutorial Finished" message appeared in other game modes.
+- **[UI]** **Mobile Experience:** Added drag support for Tutorial box and improved action button positioning.
+- **[UI]** **Visuals:** Custom background for Tutorial Hints (`notificação.png`).
+- **[UI]** **Polish:** Adjusted Online Menu title scaling and position for mobile devices.
+
 ## V4.2.1 - Changelog UI
 **Data:** 15/01/2026
 - **[UI]** Adição de widget de Changelog na tela inicial.

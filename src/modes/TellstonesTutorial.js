@@ -590,6 +590,9 @@ class TellstonesTutorial {
     }
 
     finalizar() {
+        // Guard: Prevent execution if not in Tutorial Mode (fixes persistence bug)
+        if (window.salaAtual && window.salaAtual !== 'MODO_TUTORIAL') return;
+
         if (!this.overlay) return;
 
         // Limpa o conteúdo do overlay e adiciona mensagem final com botão
@@ -612,6 +615,13 @@ class TellstonesTutorial {
         };
 
         showToast("Tutorial Finalizado! Parabéns!");
+    }
+    cleanup() {
+        if (this.overlay) {
+            this.overlay.remove();
+            this.overlay = null;
+        }
+        this.roteiro = null; // Help GC
     }
 }
 
