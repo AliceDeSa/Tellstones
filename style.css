@@ -2999,76 +2999,34 @@ body {
 }
 
 /* Mobile Responsive */
+/* Mobile Portrait / Narrow Screens */
 @media (max-width: 600px) {
   .game-title {
     font-size: 2.2em;
-    /* Reduced from 3em */
     margin-top: 60px;
-    /* Moved down */
   }
 
-  /* Move action buttons right on mobile */
   #botoes-acoes-laterais {
     right: -300px !important;
-    /* Was -230px, moved further to avoid table overlap */
   }
 
-  /* Fix Reserve Stones Z-Index vs Info Box */
   #info-sala {
     z-index: 5 !important;
-    /* Lower than board (10) so stones (5000) show on top */
-  }
-
-  /* MOBILE LANDSCAPE SPECIFIC FIXES */
-  @media (max-height: 500px) {
-
-    /* Hide changelog to prevent blocking buttons */
-    #changelog-box {
-      display: none !important;
-    }
-
-    /* Position back button safely top-left */
-    #back-to-main-btn {
-      top: 20px !important;
-      left: 20px !important;
-      right: auto !important;
-      transform: none !important;
-      font-size: 2rem !important;
-    }
-
-    /* Allow scrolling if content overflows */
-    #start-screen {
-      overflow-y: auto !important;
-      justify-content: flex-start !important;
-      padding-top: 20px;
-    }
-
-    /* Ensure online menu fits */
-    #online-menu {
-      margin-top: 40px;
-      padding-bottom: 40px;
-    }
   }
 
   #tabuleiro-center {
     pointer-events: none;
-    /* Allow clicks to pass through empty areas to info-sala */
   }
 
   #tabuleiro-wrapper {
     pointer-events: auto;
-    /* Re-enable clicks on the board itself */
   }
 
-  .menu-container {
-    width: 90%;
-  }
-
+  .menu-container,
   .premium-modal {
     width: 90%;
   }
 
-  /* FIX: Start Screen Mobile Layout */
   #start-screen {
     position: fixed;
     top: 0;
@@ -3079,16 +3037,45 @@ body {
     height: 100%;
     transform: none;
     display: flex;
-    /* Use flex instead of block */
     flex-direction: column;
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    /* Prevent dragging/scrolling */
     background: transparent;
-    /* Keep transparency */
     margin: 0;
     padding: 0;
+  }
+}
+
+/* Mobile Landscape / Short Screens (Global catch-all for phones in landscape) */
+@media (max-height: 500px) {
+
+  /* Hide changelog */
+  #changelog-box {
+    display: none !important;
+  }
+
+  /* Fixed Back Button z-index + position */
+  #back-to-main-btn {
+    top: 20px !important;
+    left: 20px !important;
+    right: auto !important;
+    transform: none !important;
+    font-size: 2rem !important;
+    z-index: 9500 !important;
+    /* Force on top */
+  }
+
+  /* Allow scrolling */
+  #start-screen {
+    overflow-y: auto !important;
+    justify-content: flex-start !important;
+    padding-top: 20px;
+  }
+
+  #online-menu {
+    margin-top: 40px;
+    padding-bottom: 40px;
   }
 }
 
