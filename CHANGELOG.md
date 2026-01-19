@@ -1,5 +1,11 @@
 # Histórico de Versões - Tellstones
 
+## V4.4.10 - Offline Asset Fix
+**Data:** 19/01/2026
+- **[FIX]** **Offline Assets:** Correção de carregamento de assets offline.
+    - Renomeado `Balança.svg` para `Balanca.svg` (evita erro de encoding).
+    - Adicionado asset faltante `Costas.png` (Verso da pedra).
+
 ## V4.4.9 - Mobile UI Force
 **Data:** 19/01/2026
 - **[UI]** **Critical Fix:** Uso de `!important` no posicionamento do `#info-sala` para garantir que ele fique colado na borda (corrigindo conflito com regra de celulares pequenos).
