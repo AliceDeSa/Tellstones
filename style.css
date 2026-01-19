@@ -1043,14 +1043,14 @@ input[type="text"] {
     background: rgba(0, 0, 0, 0.6);
     padding: 6px 12px;
     border-radius: 8px;
-    z-index: 1000;
+    z-index: 30;
     pointer-events: auto;
   }
 
   /* Botão Sair - logo abaixo do info sala */
   #info-sala-local {
-    top: auto !important;
-    bottom: 55px !important;
+    top: 60px !important;
+    bottom: auto !important;
     left: 10px !important;
     right: auto !important;
   }
@@ -1427,7 +1427,7 @@ input[type="text"] {
   transform: translateY(-50%);
   width: 260px;
   height: 260px;
-  z-index: 30;
+  z-index: 31;
   pointer-events: auto;
 }
 

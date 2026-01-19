@@ -1,5 +1,10 @@
 # Histórico de Versões - Tellstones
 
+## V4.4.6 - Mobile Z-Index Fix
+**Data:** 19/01/2026
+- **[UI]** **Stacking:** Correção definitiva da ordem de camadas. O container do tabuleiro agora fica acima da interface, permitindo que as pedras (e apenas elas) sobreponham o painel de informações.
+- **[UI]** **Revert:** Painel de info retornado ao canto superior esquerdo.
+
 ## V4.4.5 - Mobile Layout Reorg
 **Data:** 19/01/2026
 - **[UI]** **Layout:** Movido o painel de info (`#info-sala`) e botão de sair para o canto **inferior esquerdo** no mobile horizontal, evitando conflito físico com as pedras da reserva.
