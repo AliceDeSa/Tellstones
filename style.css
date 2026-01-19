@@ -2999,19 +2999,24 @@ body {
 }
 
 /* Mobile Responsive */
-/* Mobile Portrait / Narrow Screens */
+/* ================= MOBILE / RESPONSIVE ================= */
+
+/* 1. Global Safety Fixes (Apply to all) */
+#info-sala {
+  z-index: 5 !important;
+  /* Always keep lower than stones (5000) */
+}
+
+/* 2. Narrow Screens (Phones Portrait) */
 @media (max-width: 600px) {
   .game-title {
     font-size: 2.2em;
     margin-top: 60px;
   }
 
+  /* Push buttons further out to avoid overlap */
   #botoes-acoes-laterais {
     right: -300px !important;
-  }
-
-  #info-sala {
-    z-index: 5 !important;
   }
 
   #tabuleiro-center {
@@ -3047,35 +3052,61 @@ body {
   }
 }
 
-/* Mobile Landscape / Short Screens (Global catch-all for phones in landscape) */
-@media (max-height: 500px) {
+/* 3. Landscape / Short Screens (Phones Landscape + Tablets) */
+/* Increased height threshold to 600px to catch more devices */
+@media (max-height: 600px),
+(max-width: 900px) {
 
-  /* Hide changelog */
+  /* Always hide changelog on mobile/tablet to clear space */
   #changelog-box {
     display: none !important;
   }
 
-  /* Fixed Back Button z-index + position */
+  /* Move Back Button to Top-Left Safe Zone */
   #back-to-main-btn {
-    top: 20px !important;
-    left: 20px !important;
+    top: 15px !important;
+    left: 15px !important;
     right: auto !important;
     transform: none !important;
     font-size: 2rem !important;
     z-index: 9500 !important;
-    /* Force on top */
+    position: fixed !important;
   }
 
-  /* Allow scrolling */
+  /* Ensure Action Buttons don't overlap table in landscape */
+  #botoes-acoes-laterais {
+    right: -300px !important;
+  }
+}
+
+/* 4. Strict Landscape Layout Fixes */
+@media (max-height: 600px) {
   #start-screen {
     overflow-y: auto !important;
     justify-content: flex-start !important;
-    padding-top: 20px;
+    padding-top: 10px;
+    height: auto !important;
+    /* Allow expansion */
+    min-height: 100%;
   }
 
   #online-menu {
-    margin-top: 40px;
+    margin-top: 60px;
+    /* Space for top-left back button */
     padding-bottom: 40px;
+    margin-bottom: 40px;
+  }
+
+  /* Ensure title isn't huge */
+  .game-title {
+    font-size: 2em;
+    margin-top: 10px;
+  }
+
+  /* Adjust online tabs alignment */
+  #online-tabs-container {
+    margin-top: 10px;
+    margin-bottom: 10px;
   }
 }
 
