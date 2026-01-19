@@ -1,5 +1,10 @@
 # Histórico de Versões - Tellstones
 
+## V4.4.2 - Mobile Hotfix
+**Data:** 19/01/2026
+- **[UI]** **Mobile:** Redução no tamanho das pedras de reserva e ajuste de espaçamento.
+- **[FIX]** **Stacking Issue:** Correção de sobreposição onde pedras da reserva ficavam atrás do painel de informações.
+
 ## V4.4.0 - Bot Alive Update
 **Data:** 19/01/2026
 - **[FEAT]** **Bot Personality:** Adicionado sistema de diálogo e balões de fala para o Bot.

@@ -1007,16 +1007,16 @@ input[type="text"] {
 /* FIX: Target Mobile Landscape explicitly */
 @media (max-width: 1025px) and (orientation: landscape) {
 
-  /* Unset Desktop Zoom on Wrapper, set Mobile Zoom on Center Container */
+  /* Unset Desktop Zoom on Wrapper, set Mobile Zoom on Wrapper explicitly to avoid traping fixed children */
   #tabuleiro-wrapper {
-    transform: none;
-    /* Let parent handle or reset */
+    transform: scale(0.80);
+    /* Apply zoom here */
+    transform-origin: center center;
   }
 
   #tabuleiro-center {
-    transform: scale(0.80);
-    /* 80% Board Zoom */
-    transform-origin: center center;
+    transform: none;
+    /* Remove transform to allow fixed children to break out of stacking context */
     width: 100%;
     height: 100%;
     display: flex;
@@ -1089,6 +1089,8 @@ input[type="text"] {
     margin: 0 !important;
     background: none !important;
     pointer-events: auto !important;
+    z-index: 2000 !important;
+    /* Ensure it is above info-sala (1000) */
   }
 
   .pedra-reserva,
@@ -1096,7 +1098,7 @@ input[type="text"] {
     position: relative !important;
     left: auto !important;
     top: auto !important;
-    margin-bottom: 12px !important;
+    margin-bottom: 5px !important;
     transform: none !important;
   }
 }
@@ -1506,13 +1508,15 @@ input[type="text"] {
   }
 
   .pedra-reserva {
-    width: 48px;
-    height: 48px;
+    width: 38px;
+    height: 38px;
+    margin-bottom: 5px !important;
+    /* Reduced spacing */
   }
 
   .pedra-reserva img {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
   }
 }
 
@@ -2999,39 +3003,29 @@ body {
 }
 
 /* Mobile Responsive */
-/* ================= MOBILE / RESPONSIVE ================= */
-
-/* 1. Global Safety Fixes (Apply to all) */
-#info-sala {
-  z-index: 5 !important;
-  /* Always keep lower than stones (5000) */
-}
-
-/* 2. Narrow Screens (Phones Portrait) */
 @media (max-width: 600px) {
   .game-title {
     font-size: 2.2em;
+    /* Reduced from 3em */
     margin-top: 60px;
+    /* Moved down */
   }
 
-  /* Push buttons further out to avoid overlap */
+  /* Move action buttons right on mobile */
   #botoes-acoes-laterais {
-    right: -300px !important;
+    right: -230px !important;
+    /* Was -170px */
   }
 
-  #tabuleiro-center {
-    pointer-events: none;
+  .menu-container {
+    width: 90%;
   }
 
-  #tabuleiro-wrapper {
-    pointer-events: auto;
-  }
-
-  .menu-container,
   .premium-modal {
     width: 90%;
   }
 
+  /* FIX: Start Screen Mobile Layout */
   #start-screen {
     position: fixed;
     top: 0;
@@ -3042,71 +3036,16 @@ body {
     height: 100%;
     transform: none;
     display: flex;
+    /* Use flex instead of block */
     flex-direction: column;
     justify-content: center;
     align-items: center;
     overflow: hidden;
+    /* Prevent dragging/scrolling */
     background: transparent;
+    /* Keep transparency */
     margin: 0;
     padding: 0;
-  }
-}
-
-/* 3. Landscape / Short Screens (Phones Landscape + Tablets) */
-/* Increased height threshold to 600px to catch more devices */
-@media (max-height: 600px),
-(max-width: 900px) {
-
-  /* Always hide changelog on mobile/tablet to clear space */
-  #changelog-box {
-    display: none !important;
-  }
-
-  /* Move Back Button to Top-Left Safe Zone */
-  #back-to-main-btn {
-    top: 15px !important;
-    left: 15px !important;
-    right: auto !important;
-    transform: none !important;
-    font-size: 2rem !important;
-    z-index: 9500 !important;
-    position: fixed !important;
-  }
-
-  /* Ensure Action Buttons don't overlap table in landscape */
-  #botoes-acoes-laterais {
-    right: -300px !important;
-  }
-}
-
-/* 4. Strict Landscape Layout Fixes */
-@media (max-height: 600px) {
-  #start-screen {
-    overflow-y: auto !important;
-    justify-content: flex-start !important;
-    padding-top: 10px;
-    height: auto !important;
-    /* Allow expansion */
-    min-height: 100%;
-  }
-
-  #online-menu {
-    margin-top: 60px;
-    /* Space for top-left back button */
-    padding-bottom: 40px;
-    margin-bottom: 40px;
-  }
-
-  /* Ensure title isn't huge */
-  .game-title {
-    font-size: 2em;
-    margin-top: 10px;
-  }
-
-  /* Adjust online tabs alignment */
-  #online-tabs-container {
-    margin-top: 10px;
-    margin-bottom: 10px;
   }
 }
 
