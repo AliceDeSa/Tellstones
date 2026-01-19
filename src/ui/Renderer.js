@@ -34,7 +34,7 @@ const Renderer = {
 
             // Logic for image (Face Up or Down)
             // Se virada, mostra costas? Depende. Em Tellstones, virada = face down (escondida).
-            const imgUrl = p.virada ? "assets/img/Costas.png" : p.url;
+            const imgUrl = p.virada ? "assets/img/logo.webp" : p.url;
             div.innerHTML = `<img src="${imgUrl}" alt="${p.nome}" draggable="false" style="width:100%; height:100%; border-radius:50%; pointer-events:none;">`;
 
             // HIGHLIGHT CHALLENGED STONE

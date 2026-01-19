@@ -2181,7 +2181,7 @@ function garantirAudioFundoCarregado() {
   if (somFundo) {
     somFundo.onerror = function () {
       somFundo.src =
-        "https://raw.githubusercontent.com/AliceDeSa/Tellstones/main/ambient.mp3";
+        "assets/audio/ambient.mp3";
       somFundo.load();
       somFundo.play().catch(() => { });
     };
