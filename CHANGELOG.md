@@ -1,5 +1,9 @@
 # Histórico de Versões - Tellstones
 
+## V4.4.8 - Mobile UI Polish
+**Data:** 19/01/2026
+- **[UI]** **Layout:** Removido espaçamento do painel `#info-sala` em relação às bordas (top/left 0).
+
 ## V4.4.7 - Mobile Z-Index Final
 **Data:** 19/01/2026
 - **[UI]** **Stacking:** Correção de Z-Index: Container do tabuleiro (40) > Info Sala (30).

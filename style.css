@@ -1035,15 +1035,15 @@ input[type="text"] {
   /* 1. Código da sala no canto superior ESQUERDO (HUD - Safe outside wrapper) */
   #info-sala {
     position: fixed;
-    top: 5px;
+    top: 0;
     bottom: auto;
-    left: 5px;
+    left: 0;
     right: auto;
     width: auto;
     text-align: left;
     background: rgba(0, 0, 0, 0.6);
     padding: 6px 12px;
-    border-radius: 8px;
+    border-radius: 0 0 8px 0;
     z-index: 30;
     pointer-events: auto;
   }
