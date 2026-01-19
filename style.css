@@ -3009,8 +3009,55 @@ body {
 
   /* Move action buttons right on mobile */
   #botoes-acoes-laterais {
-    right: -230px !important;
-    /* Was -170px */
+    right: -300px !important;
+    /* Was -230px, moved further to avoid table overlap */
+  }
+
+  /* Fix Reserve Stones Z-Index vs Info Box */
+  #info-sala {
+    z-index: 5 !important;
+    /* Lower than board (10) so stones (5000) show on top */
+  }
+
+  /* MOBILE LANDSCAPE SPECIFIC FIXES */
+  @media (max-height: 500px) {
+
+    /* Hide changelog to prevent blocking buttons */
+    #changelog-box {
+      display: none !important;
+    }
+
+    /* Position back button safely top-left */
+    #back-to-main-btn {
+      top: 20px !important;
+      left: 20px !important;
+      right: auto !important;
+      transform: none !important;
+      font-size: 2rem !important;
+    }
+
+    /* Allow scrolling if content overflows */
+    #start-screen {
+      overflow-y: auto !important;
+      justify-content: flex-start !important;
+      padding-top: 20px;
+    }
+
+    /* Ensure online menu fits */
+    #online-menu {
+      margin-top: 40px;
+      padding-bottom: 40px;
+    }
+  }
+
+  #tabuleiro-center {
+    pointer-events: none;
+    /* Allow clicks to pass through empty areas to info-sala */
+  }
+
+  #tabuleiro-wrapper {
+    pointer-events: auto;
+    /* Re-enable clicks on the board itself */
   }
 
   .menu-container {
