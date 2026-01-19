@@ -1049,7 +1049,8 @@ input[type="text"] {
 
   /* Botão Sair - logo abaixo do info sala */
   #info-sala-local {
-    top: 60px !important;
+    top: auto !important;
+    bottom: 55px !important;
     left: 10px !important;
     right: auto !important;
   }
@@ -1518,15 +1519,15 @@ input[type="text"] {
   }
 
   .pedra-reserva {
-    width: 38px;
-    height: 38px;
-    margin-bottom: 5px !important;
+    width: 42px;
+    height: 42px;
+    margin-bottom: 4px !important;
     /* Reduced spacing */
   }
 
   .pedra-reserva img {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
   }
 }
 

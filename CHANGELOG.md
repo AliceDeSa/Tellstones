@@ -1,5 +1,9 @@
 # Histórico de Versões - Tellstones
 
+## V4.4.5 - Mobile Layout Reorg
+**Data:** 19/01/2026
+- **[UI]** **Layout:** Movido o painel de info (`#info-sala`) e botão de sair para o canto **inferior esquerdo** no mobile horizontal, evitando conflito físico com as pedras da reserva.
+
 ## V4.4.4 - Mobile Landscape Robustness
 **Data:** 19/01/2026
 - **[UI]** **Critical Fix:** Alteração na detecção de "Mobile Landscape" para incluir verificação de altura (`max-height: 600px`). Isso garante que os ajustes funcionem mesmo em dispositivos com alta resolução.
