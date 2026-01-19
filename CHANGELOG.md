@@ -1,5 +1,9 @@
 # Histórico de Versões - Tellstones
 
+## V4.4.3 - Mobile Landscape Fix
+**Data:** 19/01/2026
+- **[UI]** **Critical Fix:** Aplicação das regras de tamanho de pedra para TODOS os dispositivos móveis em paisagem (até 1025px), não apenas os pequenos.
+
 ## V4.4.2 - Mobile Hotfix
 **Data:** 19/01/2026
 - **[UI]** **Mobile:** Redução no tamanho das pedras de reserva e ajuste de espaçamento.

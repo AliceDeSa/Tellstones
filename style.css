@@ -1100,6 +1100,14 @@ input[type="text"] {
     top: auto !important;
     margin-bottom: 5px !important;
     transform: none !important;
+    width: 38px !important;
+    /* Force resize */
+    height: 38px !important;
+  }
+
+  .pedra-reserva img {
+    width: 32px !important;
+    height: 32px !important;
   }
 }
 
