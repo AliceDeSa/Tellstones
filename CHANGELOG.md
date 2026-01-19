@@ -1,5 +1,9 @@
 # Histórico de Versões - Tellstones
 
+## V4.4.9 - Mobile UI Force
+**Data:** 19/01/2026
+- **[UI]** **Critical Fix:** Uso de `!important` no posicionamento do `#info-sala` para garantir que ele fique colado na borda (corrigindo conflito com regra de celulares pequenos).
+
 ## V4.4.8 - Mobile UI Polish
 **Data:** 19/01/2026
 - **[UI]** **Layout:** Removido espaçamento do painel `#info-sala` em relação às bordas (top/left 0).
