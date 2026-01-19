@@ -1,5 +1,10 @@
 # Histórico de Versões - Tellstones
 
+## V4.4.7 - Mobile Z-Index Final
+**Data:** 19/01/2026
+- **[UI]** **Stacking:** Correção de Z-Index: Container do tabuleiro (40) > Info Sala (30).
+- **[UI]** **Interaction:** `pointer-events: none` aplicado ao container para permitir cliques na UI subjacente.
+
 ## V4.4.6 - Mobile Z-Index Fix
 **Data:** 19/01/2026
 - **[UI]** **Stacking:** Correção definitiva da ordem de camadas. O container do tabuleiro agora fica acima da interface, permitindo que as pedras (e apenas elas) sobreponham o painel de informações.

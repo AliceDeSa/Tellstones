@@ -1036,6 +1036,7 @@ input[type="text"] {
   #info-sala {
     position: fixed;
     top: 5px;
+    bottom: auto;
     left: 5px;
     right: auto;
     width: auto;
@@ -1541,7 +1542,10 @@ input[type="text"] {
   /* Stack UI above board */
   align-items: center;
   justify-content: center;
-  z-index: 10;
+  z-index: 40;
+  /* Higher than Info Sala (30) */
+  pointer-events: none;
+  /* Let clicks pass through empty areas */
 }
 
 #tabuleiro-wrapper {
