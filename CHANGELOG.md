@@ -1,5 +1,9 @@
 # Histórico de Versões - Tellstones
 
+## V4.4.11 - Asset Hardcode Cleanup
+**Data:** 19/01/2026
+- **[FIX]** **Assets:** Correção de 5 referências *hardcoded* antigas para `Balança.svg` em `script.js` e `Renderer.js` que causavam erro 404.
+
 ## V4.4.10 - Offline & Asset Fixes
 **Data:** 19/01/2026
 - **[FIX]** **Offline Mode:** Substituído link externo de `ambient.mp3` por arquivo local.
