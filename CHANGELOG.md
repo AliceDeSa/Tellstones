@@ -1,5 +1,9 @@
 # Histórico de Versões - Tellstones
 
+## V4.4.4 - Mobile Landscape Robustness
+**Data:** 19/01/2026
+- **[UI]** **Critical Fix:** Alteração na detecção de "Mobile Landscape" para incluir verificação de altura (`max-height: 600px`). Isso garante que os ajustes funcionem mesmo em dispositivos com alta resolução.
+
 ## V4.4.3 - Mobile Landscape Fix
 **Data:** 19/01/2026
 - **[UI]** **Critical Fix:** Aplicação das regras de tamanho de pedra para TODOS os dispositivos móveis em paisagem (até 1025px), não apenas os pequenos.

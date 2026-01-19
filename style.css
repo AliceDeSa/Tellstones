@@ -1005,7 +1005,9 @@ input[type="text"] {
 }
 
 /* FIX: Target Mobile Landscape explicitly */
-@media (max-width: 1025px) and (orientation: landscape) {
+/* FIX: Target Mobile Landscape explicitly (Width OR Height triggers) */
+@media (max-width: 1025px) and (orientation: landscape),
+(max-height: 600px) {
 
   /* Unset Desktop Zoom on Wrapper, set Mobile Zoom on Wrapper explicitly to avoid traping fixed children */
   #tabuleiro-wrapper {
