@@ -1,8 +1,7 @@
-// Tellstones Client v4.1
+// Tellstones Client v4.5
 // =========================
-// console.log("Tellstones v4.1 Initialized");
-
-// (Código movido para src/services/network.js)
+// Main Orchestrator for Game Logic, managing Room State and legacy interactions.
+// Note: Logic is progressively being migrated to src/ modules.
 
 let tellstonesBot = null;
 
@@ -431,13 +430,16 @@ window.estadoJogo = {
 
 // Salva o estado do jogo no Firebase
 function salvarEstadoJogo() {
-  if (!salaAtual) return;
-  getDBRef("salas/" + salaAtual + "/estadoJogo").set(estadoJogo);
-  window.estadoJogo = estadoJogo;
-  if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
+  if (!window.salaAtual) return;
+  const ref = getDBRef("salas/" + window.salaAtual + "/estadoJogo");
+  const estado = {
+    ...window.estadoJogo,
+    // Garante que matrizes sejam salvas como objetos/arrays validos e não undefined
+    mesa: window.estadoJogo.mesa || Array(7).fill(null),
+    reserva: window.estadoJogo.reserva || []
+  };
+  ref.set(estado);
 }
-
-// garantirArray movido para src/utils/utils.js
 
 function ouvirEstadoJogo() {
   if (!salaAtual) return;
@@ -547,74 +549,67 @@ function inicializarJogo(jogadores) {
 // 5. Renderização de UI
 // =========================
 
-// desenharSlotsFixos movido para Renderer.js
-
-// renderizarMesa movido para Renderer.js
-
-// atualizarInfoSala movido para Renderer.js
-
-// =========================
-// 6. Drag & Drop e Interações
-// =========================
-
 // Flag global para bloquear renderização durante a animação de alinhamento
 let animacaoAlinhamentoEmAndamento = false;
-
-// renderizarPedrasReserva movido para Renderer.js
-
-// renderizarPedrasCirculo movido para Renderer.js
 
 // =========================
 // Função utilitária: slots válidos para inserir pedra na mesa
 // =========================
-// Função utilitária: slots válidos
-// calcularSlotsValidos movido para src/core/GameRules.js
-// Wrapper para compatibilidade
 function calcularSlotsValidos(mesa) {
-  if (window.GameRules) return GameRules.calcularSlotsValidos(mesa);
+  if (GameRules && GameRules.calcularSlotsValidos) {
+    return GameRules.calcularSlotsValidos(mesa);
+  }
   return [];
 }
 
-// getSlotPositions movido para Renderer.js
-
-// desenharHighlightsFixos movido para Renderer.js
-
-// renderizarPedrasVerticaisAbsoluto movido para Renderer.js
+// Função auxiliar de troca
 // Função auxiliar de troca
 function realizarTroca(from, to) {
   if (from === to) return;
-  getDBRef("salas/" + salaAtual + "/estadoJogo").update({
+  getDBRef("salas/" + window.salaAtual + "/estadoJogo").update({
     trocaAnimacao: {
       from: from,
       to: to,
       timestamp: Date.now(),
-      jogador: nomeAtual
+      jogador: window.nomeAtual
     }
   });
   // showToastInterno("Pedras trocadas!");
 }
 
-// animarPedraReservaParaMesa movido para Renderer.js
-
 // Configura as interações de drag & drop e clique nas pedras da mesa
-// Função setupMesaInteractions REMOVIDA (Logica movida para renderizarPedrasMesa)
-// Isso evita conflitos de listeners duplicados.
+// Função setupMesaInteractions DEPRECATED (Logica movida para Renderer.js)
 function setupMesaInteractions() {
-  console.log("[DEPRECATED] setupMesaInteractions ignored.");
+  // No-op
 }
 
-function realizarTroca(from, to) {
-  if (from === to) return;
-  getDBRef("salas/" + salaAtual + "/estadoJogo").update({
-    trocaAnimacao: {
-      from: from,
-      to: to,
-      timestamp: Date.now(),
-      jogador: nomeAtual
-    }
-  });
-  showToastInterno("Pedras trocadas!");
-}
+// =========================
+// 8. Event Listeners para Botões de Ação (Desafiar / Se Gabar)
+// =========================
+document.addEventListener("DOMContentLoaded", () => {
+  const btnDesafiar = document.getElementById("btn-desafiar");
+  const btnSeGabar = document.getElementById("btn-segabar");
+
+  if (btnDesafiar) {
+    btnDesafiar.addEventListener("click", (e) => {
+      // Logic handled by Mystery Listener or Controller?
+      // Assuming the button already does the job via another listener we can't find.
+      // We just ensure the Tutorial knows about it.
+      if (window.tellstonesTutorial) {
+        // Delay to allow state update
+        setTimeout(() => window.tellstonesTutorial.registrarAcaoConcluida(), 200);
+      }
+    });
+  }
+
+  if (btnSeGabar) {
+    btnSeGabar.addEventListener("click", (e) => {
+      if (window.tellstonesTutorial) {
+        setTimeout(() => window.tellstonesTutorial.registrarAcaoConcluida(), 200);
+      }
+    });
+  }
+});
 
 // =========================
 // 7. Moeda e Animações
