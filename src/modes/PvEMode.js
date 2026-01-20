@@ -40,6 +40,7 @@ class PvEMode extends GameMode {
         window.isLocalMode = true;
         window.salaAtual = this.roomCode;
         window.nomeAtual = this.playerName;
+        window.souCriador = true; // FIX: Essential for coin toss logic
 
         // Reset Local State
         if (window.clearLocalData) {
@@ -143,8 +144,11 @@ class PvEMode extends GameMode {
             if ((!data || !data.sorteioFinalizado) && estado && !estado.centralAlinhada) {
                 if (typeof mostrarEscolhaCaraCoroa === "function") {
                     mostrarEscolhaCaraCoroa();
-                    // ouvirCaraCoroa is usually one-off, but here we trigger UI
-                    if (typeof ouvirCaraCoroa === "function") ouvirCaraCoroa();
+                    // Guard against duplicate listeners
+                    if (typeof ouvirCaraCoroa === "function" && !this.coinListenerAttached) {
+                        ouvirCaraCoroa();
+                        this.coinListenerAttached = true;
+                    }
                 }
             }
             else {

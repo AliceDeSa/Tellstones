@@ -426,7 +426,7 @@ input[type="text"] {
   border: none;
   font-size: 24px;
   cursor: pointer;
-  z-index: 9100;
+  z-index: 3000;
   transition: transform 0.2s;
 }
 
@@ -452,7 +452,7 @@ input[type="text"] {
   /* Medieval font */
   box-shadow: none;
   text-align: right;
-  z-index: 9000;
+  z-index: 3000;
   transition: opacity 0.3s;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 1);
   /* Scrollbar hiding for Firefox */
@@ -611,28 +611,28 @@ input[type="text"] {
 }
 
 .pedra-oficial {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
+  background-size: cover;
   border-radius: 50%;
   background: #fff;
+  /* FIX: Restore white background */
   border: 2px solid #2d8cff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px #0003;
-  user-select: none;
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  /* FIX: Restore border */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s, box-shadow 0.2s, top 0.3s, left 0.3s;
+  /* FIX: Ensure stones are above overlays */
+  z-index: 100 !important;
+  position: relative;
+  pointer-events: auto !important;
 }
 
 .pedra-oficial img,
 .pedra-oficial svg {
-  width: 90%;
-  height: 90%;
-  max-width: 90%;
-  max-height: 90%;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   display: block;
   margin: auto;
@@ -667,7 +667,7 @@ input[type="text"] {
   font-weight: bold;
   box-shadow: none;
   cursor: pointer;
-  z-index: 50;
+  z-index: 150;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -744,6 +744,10 @@ input[type="text"] {
 
 /* Botões de ação com identidade visual */
 .acao-btn {
+  /* FIX: Ensure buttons are clickable */
+  position: relative;
+  z-index: 1050 !important;
+  pointer-events: auto !important;
   background: linear-gradient(135deg, #2d8cff 70%, #1a5fb4 100%);
   color: #fff;
   border: none;
@@ -826,8 +830,8 @@ input[type="text"] {
   gap: 18px;
   gap: 18px;
   gap: 18px;
-  z-index: 3000;
-  /* FORCE ABOVE CARD (2000) */
+  z-index: 1050;
+  /* FORCE ABOVE CARD (1000) */
 }
 
 .icone-flutuante {
@@ -865,7 +869,7 @@ input[type="text"] {
   min-width: 320px;
   max-width: 420px;
   padding: 28px 32px 22px 32px;
-  z-index: 100;
+  z-index: 1000;
   display: none;
   animation: popupIn 0.2s;
   max-height: 80vh;
@@ -918,7 +922,7 @@ input[type="text"] {
   border-radius: 10px;
   font-size: 1.1em;
   box-shadow: 0 2px 16px #0007;
-  z-index: 200;
+  z-index: 2100;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s;
@@ -940,10 +944,17 @@ input[type="text"] {
 }
 
 .pedra-reserva {
-  position: absolute;
-  transition: top 0.7s cubic-bezier(0.77, 0, 0.175, 1),
-    left 0.7s cubic-bezier(0.77, 0, 0.175, 1);
-  max-width: 100%;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-size: cover;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: transform 0.2s;
+  /* FIX: Ensure reserve stones are clickable */
+  z-index: 100 !important;
+  position: relative;
+  pointer-events: auto !important;
 }
 
 .pedra-pos0 {
@@ -1044,7 +1055,7 @@ input[type="text"] {
     background: rgba(0, 0, 0, 0.6);
     padding: 6px 12px;
     border-radius: 0 0 8px 0;
-    z-index: 30;
+    z-index: 250;
     pointer-events: auto;
   }
 
@@ -1067,7 +1078,7 @@ input[type="text"] {
     flex-direction: column;
     display: flex;
     gap: 12px;
-    z-index: 1000;
+    z-index: 250;
   }
 
   #botoes-acoes-laterais button {
@@ -1093,7 +1104,7 @@ input[type="text"] {
     margin: 0 !important;
     background: none !important;
     pointer-events: auto !important;
-    z-index: 2000 !important;
+    z-index: 150 !important;
     /* Ensure it is above info-sala (1000) */
   }
 
@@ -1236,14 +1247,21 @@ input[type="text"] {
 
   /* Fix Right Side Buttons (Desafiar/Se Gabar) */
   #botoes-acoes-laterais {
-    right: -120px !important;
+    right: 40px !important;
     /* Pull aggressively inwards */
     top: 50% !important;
-    transform: translateY(-50%) scale(1.0) !important;
+    transform: translateY(-50%) scale(0.9) !important;
     /* Reduce scale */
     display: flex;
     flex-direction: column;
     gap: 10px;
+    /* FIX: Ensure container is above overlays */
+    z-index: 250 !important;
+    pointer-events: auto !important;
+    /* FIX: Ensure container is above overlays */
+    z-index: 250 !important;
+    pointer-events: auto !important;
+    position: absolute !important;
   }
 
   #tabuleiro-wrapper {
@@ -1288,7 +1306,7 @@ input[type="text"] {
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 2px 12px #0004;
-  z-index: 4000 !important;
+  z-index: 250 !important;
   transition: background 0.2s, box-shadow 0.2s;
   width: 60px !important;
   height: 60px !important;
@@ -1324,7 +1342,7 @@ input[type="text"] {
   min-width: 180px;
   max-width: 260px;
   padding: 24px 22px 18px 22px;
-  z-index: 100;
+  z-index: 1000;
   display: none;
 }
 
@@ -1362,7 +1380,7 @@ input[type="text"] {
   display: inline-block;
   width: 420px;
   height: 229px;
-  border: 2px dashed red !important;
+  /* Debug border removed */
   margin: 0 !important;
   padding: 0 !important;
   vertical-align: top;
@@ -1414,7 +1432,7 @@ input[type="text"] {
   box-shadow: none;
   cursor: pointer;
   transition: background 0.2s, opacity 0.5s;
-  z-index: 20;
+  z-index: 150;
 }
 
 #moeda-btn:hover {
@@ -1599,7 +1617,7 @@ input[type="text"] {
   transform: translateY(-50%);
   /* left é definido via JS */
   border: 2px solid #2d8cff;
-  z-index: 5000 !important;
+  z-index: 100 !important;
 }
 
 #pontos-centrais {
@@ -1623,7 +1641,7 @@ input[type="text"] {
   border-radius: 12px;
   font-size: 1.2em;
   box-shadow: 0 2px 16px #0007;
-  z-index: 1001;
+  z-index: 2100;
   display: none;
 }
 
@@ -1648,7 +1666,7 @@ input[type="text"] {
 
 .pedra-animada-mesa {
   position: absolute;
-  z-index: 1002;
+  z-index: 110;
   width: 80px;
   height: 80px;
   pointer-events: none;
@@ -1661,7 +1679,7 @@ input[type="text"] {
   top: 90px;
   left: auto;
   transform: none;
-  z-index: 2000;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1702,7 +1720,7 @@ input[type="text"] {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  border: 2px dashed red !important;
+  /* Debug border removed */
   font-family: "Georgia", "Times New Roman", Times, serif;
 }
 
@@ -1963,7 +1981,7 @@ input[type="text"] {
 .pedra-mesa,
 .pedra-oficial {
   border: 2px solid #2d8cff;
-  z-index: 5000 !important;
+  z-index: 100 !important;
 }
 
 .pedra-mesa>div,
@@ -2007,7 +2025,7 @@ input[type="text"] {
 .pedra-circulo.dragging,
 .pedra-reserva.dragging {
   position: fixed !important;
-  z-index: 99999 !important;
+  z-index: 110 !important;
   pointer-events: none;
 }
 
@@ -2115,7 +2133,7 @@ input[type="text"] {
 .pedra-circulo,
 .pedra-mesa {
   border: 2px solid #2d8cff;
-  z-index: 5000 !important;
+  z-index: 100 !important;
 }
 
 /* Ajustar espaçamento das pedras na reserva */
@@ -2182,7 +2200,7 @@ input[type="text"] {
   font-size: 1.2em;
   box-shadow: none !important;
   border: none !important;
-  z-index: 99999 !important;
+  z-index: 2100 !important;
   opacity: 1;
   pointer-events: none;
   transition: opacity 0.3s;
@@ -2208,7 +2226,7 @@ input[type="text"] {
   /* Matched to #toast */
   box-shadow: none !important;
   border: none !important;
-  z-index: 10002 !important;
+  z-index: 2100 !important;
   /* Slightly higher than #toast just in case */
   opacity: 0;
   pointer-events: none;
@@ -2235,7 +2253,7 @@ input[type="text"] {
   box-shadow: 0 0 16px 4px #ffd70088, 0 0 32px 8px #fff00033;
   opacity: 0.7;
   pointer-events: none;
-  z-index: 10001;
+  z-index: 150;
   animation: silhuetaFade 2.2s linear forwards;
   border: 3px solid #ffd700;
 }
@@ -2287,7 +2305,7 @@ input[type="text"] {
   font-size: 1.15em;
   border-radius: 10px;
   padding: 0;
-  z-index: 100;
+  z-index: 250;
   box-shadow: none;
   text-align: center;
   min-width: 0;
@@ -2295,14 +2313,16 @@ input[type="text"] {
 }
 
 #botoes-acoes-laterais {
-  position: absolute;
-  right: -170px;
+  position: absolute !important;
+  right: 60px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  z-index: 100;
+  gap: 16px;
+  /* FIX: Ensure side buttons are clickable and above overlays */
+  z-index: 250 !important;
+  pointer-events: auto !important;
 }
 
 #botoes-acoes-laterais button {
@@ -2499,7 +2519,7 @@ body {
   box-shadow: 0 0 0 4px #ffd700cc, 0 0 16px 6px #fff00055 !important;
   border: 3px solid #ffd700 !important;
   animation: bordaDouradaSlotVolta 2.2s linear forwards;
-  z-index: 10001 !important;
+  z-index: 150 !important;
 }
 
 @media (max-width: 800px) {
@@ -2539,7 +2559,7 @@ body {
 }
 
 #opcoes-segabar {
-  z-index: 50000 !important;
+  z-index: 1100 !important;
   position: relative !important;
   pointer-events: auto !important;
 }
@@ -2557,7 +2577,7 @@ body {
   background: #222;
   border: 3px solid #8ecfff;
   box-shadow: 0 2px 8px #0007;
-  z-index: 50;
+  z-index: 250;
   transition: background 0.3s, border 0.3s;
 }
 
@@ -2605,7 +2625,7 @@ body {
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.85);
-  z-index: 99999;
+  z-index: 2100;
   align-items: center;
   justify-content: center;
   flex-direction: column;
@@ -2666,7 +2686,7 @@ body>.floatingchat-donate-button {
   overflow: hidden !important;
   box-shadow: 0 2px 12px #794bc488 !important;
   background: #794bc4 !important;
-  z-index: 99999 !important;
+  z-index: 2500 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -2690,7 +2710,7 @@ body>.floatingchat-donate-button {
   position: fixed !important;
   top: 20px;
   right: 20px;
-  z-index: 2000;
+  z-index: 250;
 }
 
 body>.floatingchat-donate-button img {
@@ -2756,7 +2776,7 @@ body>.floatingchat-donate-button span {
     right: 10px !important;
     /* Top right corner */
     left: auto !important;
-    z-index: 200000 !important;
+    z-index: 250 !important;
     /* NUCLEAR OPTION: FORCE ABOVE EVERYTHING */
     background: transparent !important;
     border: none !important;
@@ -2980,7 +3000,7 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 100;
+  z-index: 1000;
   min-width: 320px;
 }
 
@@ -3431,18 +3451,7 @@ body {
   cursor: default;
 }
 
-/* --- Game Action Buttons Container --- */
-#botoes-acoes-laterais {
-  position: absolute;
-  right: -240px;
-  /* Move to the right of the board */
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  z-index: 100;
-}
+
 
 /* --- Game Action Buttons --- */
 #btn-desafiar,

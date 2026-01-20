@@ -168,12 +168,25 @@ function mostrarTela(tela) {
     }
   }
 
-  // CLEANUP UI SEGABAR: Se sair da tela de jogo, remove o container de escolha de pedras
+
+
+
+  // FIX: Force Cleanup of In-Game UI when leaving 'game' screen
   if (tela !== "game") {
+    // Cleanup Segabar
     const segabarContainer = document.getElementById("opcoes-resposta-segabar");
-    if (segabarContainer) {
-      segabarContainer.remove();
-    }
+    if (segabarContainer) segabarContainer.remove();
+
+    // Cleanup Global Overlays
+    const idsToHide = ["box-acoes", "carta-acoes", "icone-acoes", "tutorial-ui", "escolha-cara-coroa"];
+    idsToHide.forEach(uiId => {
+      const el = document.getElementById(uiId);
+      if (el) el.style.display = "none";
+    });
+
+    // Hide tooltip global
+    const tooltip = document.getElementById("tooltip");
+    if (tooltip) tooltip.style.display = "none";
   }
 }
 
@@ -1363,6 +1376,9 @@ if (btnEntrar) {
     document.getElementById("join-room").style.display = "block";
   };
 }
+
+
+
 const btnDesafiar = document.getElementById("btn-desafiar");
 
 // Novos botões: Tutorial e Bot
@@ -1399,8 +1415,17 @@ if (btnSairPartida) {
         window.tellstonesTutorial = null;
       }
       // Remove tutorial UI if it exists
+      // Remove tutorial UI if it exists
       const tutorialUI = document.getElementById("tutorial-ui");
       if (tutorialUI) tutorialUI.remove();
+
+      // FIX: Force hide Actions Card and Icon to prevent overlap in Menu
+      const boxAcoes = document.getElementById("box-acoes");
+      if (boxAcoes) boxAcoes.style.display = "none";
+      const cartaAcoes = document.getElementById("carta-acoes");
+      if (cartaAcoes) cartaAcoes.style.display = "none";
+      const iconeAcoes = document.getElementById("icone-acoes");
+      if (iconeAcoes) iconeAcoes.style.display = "none";
     }
   };
   // Move o botão para dentro do container de info da sala
@@ -1868,11 +1893,7 @@ function renderizarPedrasMesa(pedras) {
         div.style.setProperty("z-index", "1000", "important");
       }
 
-      const debugIdx = document.createElement("span");
-      debugIdx.innerText = i;
-      debugIdx.className = "debug-index";
-      debugIdx.style.cssText = "position:absolute;top:-20px;left:50%;transform:translateX(-50%);color:black;font-weight:bold;font-size:14px;pointer-events:none;background:rgba(255,255,255,0.7);padding:2px;border-radius:4px;z-index:9999;";
-      div.appendChild(debugIdx);
+      // Debug numbering removed
 
 
       // 3. Lógica de Drag & Drop / Touch (UNIFICADA)
@@ -2082,7 +2103,7 @@ function mostrarEscolhaCaraCoroa() {
     escolha.style.display = "flex";
     escolha.style.alignItems = "center";
     escolha.style.justifyContent = "center";
-    escolha.style.zIndex = 4000;
+    escolha.style.zIndex = 1050;
     escolha.style.visibility = "visible";
     escolha.style.opacity = "1";
   }
@@ -2237,7 +2258,8 @@ function renderizarOpcoesDesafio() {
     }
 
     // Aplicar estilos: Absolute para não empurrar, Width 740px (igual mesa)
-    container.style.cssText = "display: flex; justify-content: center; top: 7%; left: 50%; transform: translateX(-50%); padding: 0px; background: transparent; border: none; box-shadow: none; position: absolute; z-index: 99999; width: 740px; flex-direction: column; align-items: center;";
+    // FIX: pointer-events: none para o container PRINCIPAL para não bloquear a mesa abaixo
+    container.style.cssText = "display: flex; justify-content: center; top: 7%; left: 50%; transform: translateX(-50%); padding: 0px; background: transparent; border: none; box-shadow: none; position: absolute; z-index: 1000; width: 740px; flex-direction: column; align-items: center; pointer-events: none;";
 
   } else {
     container.innerHTML = "";
@@ -2247,7 +2269,7 @@ function renderizarOpcoesDesafio() {
   const box = document.createElement("div");
   box.className = "box-desafio";
   // Force high Z-index and interaction
-  box.style.zIndex = "10001";
+  box.style.zIndex = "1100";
   box.style.pointerEvents = "auto";
   box.style.position = "relative"; // Ensure z-index works
   // Adiciona o título acima das pedras
@@ -2343,15 +2365,15 @@ function renderizarOpcoesDesafio() {
         el.classList.remove("desafio-alvo");
       }
     });
+
+    // Chamar renderizarOpcoesDesafio sempre que o estado do jogo mudar
+    // Wrapper ouvirEstadoJogo removido (renderizarOpcoesSegabar global deletada)
+
+
+    // Função para resolver o desafio após a escolha do oponente
+    // resolverDesafioSeNecessario e wrapper removidos
   }
 }
-
-// Chamar renderizarOpcoesDesafio sempre que o estado do jogo mudar
-// Wrapper ouvirEstadoJogo removido (renderizarOpcoesSegabar global deletada)
-
-
-// Função para resolver o desafio após a escolha do oponente
-// resolverDesafioSeNecessario e wrapper removidos
 
 
 // Bloquear interações durante desafio
@@ -2591,6 +2613,9 @@ if (btnVoltarLobby) {
     }
     const tutorialUI = document.getElementById("tutorial-ui");
     if (tutorialUI) tutorialUI.remove();
+    // Limpa Moeda (Persistence Fix)
+    const coinBtn = document.getElementById("moeda-btn");
+    if (coinBtn) coinBtn.remove();
     // Limpa UI
     document.getElementById("game").classList.remove("active");
     document.getElementById("lobby").classList.remove("active");
@@ -2714,16 +2739,29 @@ function garantirMoedaBtnNoDOM() {
     btn.style.left = "50%";
     btn.style.top = "50%";
     btn.style.transform = "translate(-50%,-50%)";
-    btn.style.zIndex = "20";
-    btn.style.width = "auto";
-    btn.style.height = "auto";
+    btn.style.zIndex = "150";
+    btn.style.width = "80px";
+    btn.style.height = "80px";
     btn.innerHTML = `
-      <span id="moeda-animada" style="display:inline-block;width:80px;height:80px;position:relative;perspective:300px;">
-        <img id="moeda-frente" src="assets/img/Cara.png" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
-        <img id="moeda-verso" src="assets/img/Coroa.png" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transform:rotateY(180deg);transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
+      <span id="moeda-animada" style="display:inline-block;width:80px;height:80px;position:relative;perspective:300px;pointer-events:none;">
+        <img id="moeda-frente" src="assets/img/Cara.png" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;pointer-events:none;" />
+        <img id="moeda-verso" src="assets/img/Coroa.png" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transform:rotateY(180deg);transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;pointer-events:none;" />
       </span>
     `;
-    wrapper.appendChild(btn);
+    // Append to BODY to escape stacking contexts
+    document.body.appendChild(btn);
+    // Fixed positioning relative to viewport
+    btn.style.position = "fixed";
+    btn.style.left = "50%";
+    btn.style.top = "50%";
+    btn.style.transform = "translate(-50%, -50%)";
+    btn.style.zIndex = "150"; // Standard Game Piece Level
+    btn.style.cursor = "pointer";
+    btn.style.zIndex = "150"; // Redundant safety
+    btn.style.cursor = "pointer";
+    btn.style.pointerEvents = "auto";
+    btn.style.pointerEvents = "auto";
+    // Debug border removed
   }
 }
 
@@ -2737,6 +2775,31 @@ function animarTrocaCircular(idxA, idxB, callback) {
     if (callback) callback();
   }
 }
+
+// FIX: HITBOX HACK logic for Coin Button
+// Ensures clicks are registered even if layout/z-index issues persist
+window.addEventListener("click", (e) => {
+  const btn = document.getElementById("moeda-btn");
+  if (!btn || btn.style.display === 'none') return;
+
+  const originalTarget = e.target;
+  // If native click worked (id match), do nothing
+  if (originalTarget.id === 'moeda-btn' || originalTarget.closest('#moeda-btn')) return;
+
+  // Check collision with coin rect for "missed" clicks (overlay issue)
+  const rect = btn.getBoundingClientRect();
+  const x = e.clientX;
+  const y = e.clientY;
+
+  if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+    // Force click
+    e.stopPropagation();
+    e.preventDefault();
+    if (btn.onclick) btn.onclick(e);
+    else btn.click();
+  }
+}, { capture: true });
+
 
 // 1. Adicione uma variável global para controlar a última animação executada
 let ultimoTrocaAnimacao = null;

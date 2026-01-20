@@ -1,5 +1,19 @@
 # Histórico de Versões - Tellstones
 
+## V4.5.1 - Action Buttons Fix & Final Polish
+**Data:** 19/01/2026
+- **[UI]** **Action Buttons:** Correção definitiva dos botões "Desafiar" e "Se Gabar". Agora estão ancorados corretamente no container do jogo (`position: absolute`) e visíveis. Removido código legado que os empurrava para fora da tela.
+- **[UI]** **Visibility:** Lógica de visibilidade dos botões simplificada: agora obedecem nativamente a visibilidade do container do jogo.
+- **[UI]** **Debug:** Remoção de bordas vermelhas e estilos de depuração.
+- **[DOCS]** Atualização de `.cursorrules` com novas políticas de Z-Index.
+
+## V4.5.0 - Z-Index Polish & UI Cleanup
+**Data:** 19/01/2026
+- **[UI]** **Z-Index System:** Implementação de sistema de camadas padronizado (100-2100). Fim dos botões "memória fantasma" e overlays bloqueantes.
+- **[UI]** **Cleanup:** Correção definitiva da persistência de UI (Card de Ações, Ícones) ao sair da partida.
+- **[FIX]** **Coin Button:** Botão da moeda agora é clicável e removido corretamente ao sair.
+- **[FEAT]** **Local Fonts:** Fontes do Google (Cinzel, MedievalSharp) agora salvas localmente para suporte offline.
+
 ## V4.4.8 - Mobile UI Polish
 **Data:** 19/01/2026
 - **[UI]** **Layout:** Removido espaçamento do painel `#info-sala` em relação às bordas (top/left 0).

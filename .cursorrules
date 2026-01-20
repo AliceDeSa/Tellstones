@@ -12,3 +12,12 @@
 ## Specific Components
 - **Buttons**: Main action buttons should usually be `320px x 80px` (or scaled proportionally) with the custom border backgrounds.
 - **Mobile**: Ensure `#start-screen` does not scroll on mobile (`position: fixed`, `overflow: hidden`).
+
+## Z-Index Policy (Standardized Layers)
+- **Base (100)**: Game Board, Stones (z-index: 100).
+- **Active (150)**: Draggable items, Coin Button (z-index: 150).
+- **UI (250)**: HUD, Score markers, Side Buttons (z-index: 250).
+- **Modals (1000)**: Action Card, Rules Popup (z-index: 1000).
+- **Overlay (1050)**: Floating Icons, Close Buttons (z-index: 1050).
+- **Critical (2100)**: Toasts, Victory/Defeat Screens (z-index: 2100).
+- **Avoid**: Do NOT use magic numbers like `99999` or `10005`. Stick to the tier system.

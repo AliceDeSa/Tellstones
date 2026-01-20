@@ -11,11 +11,7 @@
   <title>TellStones</title>
   <link rel="stylesheet" href="style.css?v=4.30">
   <link rel="icon" type="image/webp" href="assets/img/logo.webp">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap"
-    rel="stylesheet">
+  <link rel="stylesheet" href="assets/fonts/fonts.css">
 </head>
 
 <body>
@@ -35,6 +31,8 @@
     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#181c24; z-index:999999; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:20px;">
     <div style="font-size:4em; color:#ffd700; margin-bottom:20px;">↻</div>
     <h2 style="color:#fff;">Por favor, gire seu dispositivo</h2>
+    <p style="font-size: 0.9em; margin: 6px 0;">Última Atualização: 19/01/2026</p>
+    <p style="font-size: 0.8em; opacity: 0.8;">v4.5.1 - Action Buttons Fix</p>
     <p style="color:#baecff;">Tellstones foi feito para ser jogado na horizontal.</p>
     <button id="btn-fullscreen-rotate"
       style="margin-top:20px; padding:12px 24px; font-size:1.1em; background:#2d8cff; color:white; border:none; border-radius:8px; cursor:pointer;">
@@ -125,11 +123,17 @@
   <div id="changelog-box">
     <h3>Patch Notes</h3>
     <ul>
-      <li><strong>v4.4.4 (Atual)</strong>
+      <li><strong>v4.5.0 (Atual)</strong>
         <ul>
-          <li>Bot com Personalidade (Balões de Fala).</li>
-          <li>Novas Animações (Reserva, Espiar).</li>
-          <li>Bot Agressivo mais inteligente.</li>
+          <li>Z-Index Polish (UI Fixes).</li>
+          <li>System de Camadas (Sem Sobreposição).</li>
+          <li>Limpeza de UI ao Sair.</li>
+        </ul>
+      </li>
+      <li><strong>v4.4.8</strong>
+        <ul>
+          <li>Bot com Personalidade.</li>
+          <li>Animações novas.</li>
         </ul>
       </li>
       <li><strong>v4.3.0</strong>
@@ -224,6 +228,11 @@
       <div id="codigo-sala">Código: <span id="codigo-sala-valor"></span></div>
       <div id="espectadores">Espectadores: <span id="lista-espectadores"></span></div>
     </div>
+    <!-- ======= BOTÕES DE AÇÕES LATERAIS RESTORED TO GAME ======= -->
+    <div id="botoes-acoes-laterais">
+      <button id="btn-desafiar">Desafiar</button>
+      <button id="btn-segabar">Se Gabar</button>
+    </div>
     <!-- ======= ÍCONE DE AÇÕES ======= -->
     <!-- Ícone de ações removido daqui e movido para o body para corrigir z-index -->
     <!-- ======= CARD DE AÇÕES ======= -->
@@ -284,10 +293,7 @@
           </span>
         </button>
         <audio id="som-moeda" src="assets/audio/moeda.mp3" preload="auto"></audio>
-        <div id="botoes-acoes-laterais">
-          <button id="btn-desafiar">Desafiar</button>
-          <button id="btn-segabar">Se Gabar</button>
-        </div>
+        <!-- Botões laterais removidos daqui -->
       </div>
       <div id="pedra-central-animada" style="display:none;"></div>
     </div>
@@ -373,7 +379,7 @@
   <script src="src/modes/TellstonesTutorial.js"></script>
   <script src="src/modes/TutorialMode.js?v=v4_alpha_1"></script>
 
-  <script src="script.js?v=4.30"></script>
+  <script src="script.js?v=4.5.1"></script>
 
   <!-- Debug / Automation -->
   <script src="src/debug/TutorialAutomator.js"></script>
@@ -454,6 +460,8 @@
       });
     }
   </script>
+
+  <!-- ================= BOTÕES DE AÇÕES LATERAIS REMOVED FROM BODY ================= -->
 
   <!-- ================= TOOLTIP GLOBAL ================= -->
   <div id="tooltip"
