@@ -1,4 +1,4 @@
-// Tellstones Client v4.5
+// Tellstones Client v5.0
 // =========================
 // Main Orchestrator for Game Logic, managing Room State and legacy interactions.
 // Note: Logic is progressively being migrated to src/ modules.

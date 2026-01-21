@@ -1,5 +1,15 @@
 # Histórico de Versões - Tellstones
 
+## V5.0.0 - The Modular Era
+**Data:** 21/01/2026
+- **[ARCH]** **Modularization:** Refatoração completa do gerenciamento de estado (`GameController.js`) e salas (`RoomManager.js`), removendo dependências do `script.js` monolítico.
+- **[ARCH]** **Input Handling:** Centralização de listeners de eventos no `InputHandler.js`.
+- **[SEC]** **Security:** Proteção da Chave de API e políticas de `.gitignore`.
+- **[ANALYTICS]** **GA4:** Integração completa com Google Analytics 4.
+- **[FIX]** **Multiplayer:** Correções críticas no início do jogo, progressão de turnos e sincronização do cara ou coroa.
+- **[UI]** **Polish:** Limpeza de UI, correções de alinhamento mobile e remoção de mensagens persistentes.
+
+
 ## V4.5.1 - Action Buttons Fix & Final Polish
 **Data:** 19/01/2026
 - **[UI]** **Action Buttons:** Correção definitiva dos botões "Desafiar" e "Se Gabar". Agora estão ancorados corretamente no container do jogo (`position: absolute`) e visíveis. Removido código legado que os empurrava para fora da tela.
