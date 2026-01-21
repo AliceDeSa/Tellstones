@@ -9,120 +9,52 @@ let tellstonesBot = null;
 // 2. Utilidades Gerais
 // =========================
 
-// gerarCodigoSala movido para src/utils/utils.js
+// =========================
+// 2. Utilidades Gerais & Shims Legados
+// =========================
 
-// if (window.notificationManager) window.notificationManager.showGlobal movido para src/utils/utils.js
+// Shims para manter compatibilidade com chamadas antigas
+window.tocarSomPress = function () {
+  if (window.audioManager) window.audioManager.playPress();
+};
+window.tocarSomClick = function () {
+  if (window.audioManager) window.audioManager.playClick();
+};
+window.showToastInterno = function (msg) {
+  if (window.notificationManager) window.notificationManager.showInternal(msg);
+};
+window.showToast = function (msg) {
+  if (window.notificationManager) window.notificationManager.showGlobal(msg);
+};
 
-// tocarSomClick movido para src/utils/utils.js
-
-// if (window.notificationManager) window.notificationManager.showInternal movido para src/utils/utils.js
+// gerarCodigoSala movido para src/utils/utils.js (e é Global)
 
 // =========================
 // 3. Lógica de Lobby e Salas
 // =========================
 
 // Cria uma nova sala no Firebase com o modo selecionado
+// Cria uma nova sala via RoomManager
 function criarSala(modo) {
-  const codigo = gerarCodigoSala();
-  const salaRef = getDBRef("salas/" + codigo);
-  salaRef.set({
-    modo: modo,
-    jogadores: {},
-    espectadores: {},
-    status: "lobby",
-    criadaEm: Date.now()
-  });
-  return codigo;
+  if (window.RoomManager) {
+    return window.RoomManager.criarSala(modo);
+  } else {
+    console.error("RoomManager não carregado!");
+    return null;
+  }
 }
 
 window.currentGameMode = null;
 
 // Entra em uma sala como jogador ou espectador
+// Entra em uma sala via RoomManager
 function entrarSala(codigo, nome, tipo) {
-  // Clear previous game state to prevent UI ghosts
-  window.estadoJogo = {
-    jogadores: [],
-    mesa: [],
-    reserva: [],
-    pedraCentral: null,
-    vez: 0,
-    alinhamentoFeito: false,
-    centralAlinhada: false,
-    mesaEspiada: null,
-    vencedor: null,
-    trocaAnimacao: null
-  };
-
-  if (window.currentGameMode) {
-    window.currentGameMode.cleanup();
-    window.currentGameMode = null;
+  if (window.RoomManager) {
+    window.RoomManager.entrarSala(codigo, nome, tipo);
+  } else {
+    console.error("RoomManager não carregado!");
   }
-
-  // FORCE CLEAR UI & GLOBALS
-  window.animacaoAlinhamentoEmAndamento = false;
-  window.animouReservaCircular = false;
-  window.ultimoCaraCoroaData = null;
-
-  // Cleanup Tutorial
-  if (window.tellstonesTutorial) {
-    if (window.tellstonesTutorial.cleanup) window.tellstonesTutorial.cleanup();
-    window.tellstonesTutorial = null;
-  }
-  const tutorialUI = document.getElementById("tutorial-ui");
-  if (tutorialUI) tutorialUI.remove();
-
-  const circle = document.getElementById("circle-pedras");
-  if (circle) {
-    circle.innerHTML = "";
-    circle.style = ""; // Reset inline styles
-  }
-  const tabCenter = document.getElementById("tabuleiro-center");
-  if (tabCenter) {
-    // Remove pedras apenas (manter estrutura se houver)
-    const pedras = tabCenter.querySelectorAll(".pedra-mesa");
-    pedras.forEach(p => p.remove());
-  }
-
-
-  // Clean UI
-
-
-  // Instancia Modo Multijogador
-  window.currentGameMode = new MultiplayerMode();
-  window.currentGameMode.start({
-    roomCode: codigo,
-    playerName: nome,
-    role: tipo
-  });
-
-  // Legado: Interface agora gerenciada pelo mostrarLobby e listener de status
-  // mostrarJogo removido para evitar flash da tela de jogo antes do lobby
-
-
-  // Add presence logic here or inside Mode? Mode handles listeners, but initial push might be here.
-  // Actually, Mode should handle it. But to minimize diff, let's keep the push here OR move to Mode.start.
-  // MultiplayerMode.js currently doesn't push presence in start(), only listens.
-  // Let's add presence push to MultiplayerMode or keep it here.
-  // keeping purely strictly, Mode should handle it. 
-  // Let's rely on MultiplayerMode listening.
-  // WAIT: The previous logic pushed to "jogadores" list.
-  // MultiplayerMode needs to handle that.
-
-  const salaRef = getDBRef(
-    "salas/" +
-    codigo +
-    "/" +
-    (tipo === "espectador" ? "espectadores" : "jogadores")
-  );
-  // Ainda fazemos isso para registrar presença no DB.
-  // Idealmente o MultiplayerMode faria isso no 'start'.
-  // Por enquanto, mantemos essa escrita para garantir compatibilidade.
-  const novoRef = salaRef.push();
-  novoRef.onDisconnect().remove();
-  novoRef.set({ nome: nome, timestamp: Date.now() });
-
-  // Persist Name
-  safeStorage.setItem("tellstones_playerName", nome);
+  // Legacy Fallback for direct usage in script if needed immediately (mostly handled inside Manager now)
 }
 
 // tocarSomPress movido para src/utils/utils.js
@@ -186,215 +118,31 @@ function mostrarTela(tela) {
 }
 
 // ==== FUNÇÃO SAIR PARTIDA (GLOBAL) ====
+// Sai da partida atual via RoomManager
 function sairPartida() {
-  // Limpar tooltips persistentes
-  if (typeof hideTooltip === "function") hideTooltip();
-
-  if (window.currentGameMode) {
-    window.currentGameMode.cleanup();
-    window.currentGameMode = null;
+  if (window.RoomManager) {
+    window.RoomManager.sairPartida();
+  } else {
+    // Fallback básico se RoomManager falhar
+    mostrarTela("start-screen");
+    window.location.reload(); // Hard Reset
   }
-
-  // Limpa globais legadas por precaução
-  window.salaAtual = null;
-  window.isLocalMode = false;
-  window.jaEntrouNoGame = false;
-
-  // Cleanup UI
-  if (window.tellstonesTutorial) {
-    if (window.tellstonesTutorial.cleanup) window.tellstonesTutorial.cleanup();
-    window.tellstonesTutorial = null;
-  }
-  const tutorialUI = document.getElementById("tutorial-ui");
-  if (tutorialUI) tutorialUI.remove();
-
-  // Limpar toasts persistentes
-  const toast = document.getElementById("toast");
-  if (toast) { toast.style.display = "none"; toast.style.opacity = "0"; }
-  const toastInt = document.getElementById("toast-interno");
-  if (toastInt) { toastInt.classList.remove("mostrar"); toastInt.style.display = "none"; }
-
-  mostrarTela("start-screen");
-
-  // [v4.0] UX Fixes:
-  // 1. Limpar código da sala (Input e Display Visual aka 'codigo-sala-criada')
-  const roomInput = document.getElementById("room-code");
-  if (roomInput) roomInput.value = "";
-
-  const roomDisplayCreated = document.getElementById("codigo-sala-criada");
-  if (roomDisplayCreated) roomDisplayCreated.innerText = "";
-
-  // 2. Expandir Ko-fi automaticamente (Experiência pós-jogo)
-  setTimeout(() => {
-    // Tenta seletores diferentes para o botão do Ko-fi
-    // .floatingchat-donate-button é o seletor padrão do widget
-    // Também tentamos acessar o iframe se possível (CORS bloqueia, mas a div wrapper pode responder)
-    const kofiElements = document.querySelectorAll('.floatingchat-donate-button, [id*="kofi-widget-overlay"]');
-    kofiElements.forEach(el => {
-      if (el && el.click) el.click();
-    });
-  }, 1200);
 }
 
 
 // Função para adicionar listener de notificações globais por sala
-function adicionarListenerNotificacoes() {
-  if (
-    window.notificacaoListener &&
-    window.notificacaoListener.sala === salaAtual
-  ) {
-    return;
-  }
-  if (window.notificacaoListener) {
-    window.notificacaoListener.off();
-  }
-  window.notificacaoListener = getDBRef("salas/" + salaAtual + "/notificacoes");
-  window.notificacaoListener.sala = salaAtual;
-  window.notificacaoListener.on("child_added", function (snap) {
-    const val = snap.val();
-    let msg = val;
-    if (typeof val === "object" && val !== null) {
-      if (val.skip && val.skip === nomeAtual) {
-        snap.ref.remove();
-        return;
-      }
-      msg = val.msg;
-    }
-    if (msg) {
-      if (window.notificationManager) window.notificationManager.showGlobal(msg);
-      snap.ref.remove();
-    }
-  });
-}
+// adicionarListenerNotificacoes movido e gerenciado pelo RoomManager
+// A função original foi removida para usar window.RoomManager.adicionarListenerNotificacoes se necessário,
+// mas o próprio RoomManager.mostrarLobby já cuida disso.
 
 // Mostra o lobby da sala e atualiza lista de jogadores/espectadores em tempo real
+// Mostra o lobby via RoomManager
 function mostrarLobby(codigo, nome, criador = false) {
-  salaAtual = codigo;
-  nomeAtual = nome;
-  souCriador = criador;
-  adicionarListenerNotificacoes();
-  getDBRef("salas/" + codigo + "/estadoJogo").once("value", function (snapshot) {
-    if (snapshot.exists()) {
-      mesaAnterior = garantirArray(snapshot.val().mesa);
-    } else {
-      mesaAnterior = Array(7).fill(null);
-    }
-  });
-  mostrarTela("lobby");
-  document.getElementById("lobby-codigo").innerText =
-    "Código da sala: " + codigo;
-  document.getElementById("lobby-iniciar").style.display = criador
-    ? "inline-block"
-    : "none";
-
-  // Adiciona o evento do botão de iniciar jogo SEMPRE que mostrar o lobby
-  const btnIniciar = document.getElementById("lobby-iniciar");
-  if (btnIniciar) {
-    btnIniciar.onclick = function () {
-      if (window.audioManager) window.audioManager.playPress();
-      // Buscar o modo da sala
-      getDBRef("salas/" + codigo).once("value", function (snapshot) {
-        const sala = snapshot.val();
-        const jogadores =
-          sala && sala.jogadores ? Object.values(sala.jogadores) : [];
-        const modo = sala && sala.modo ? sala.modo : "1x1";
-        if (
-          (modo === "1x1" && jogadores.length !== 2) ||
-          (modo === "2x2" && jogadores.length !== 4)
-        ) {
-          if (window.notificationManager) window.notificationManager.showGlobal("Número de jogadores incorreto para o modo selecionado!");
-          return;
-        }
-        // Limpa campos de vencedor e sorteio da moeda antes de iniciar novo jogo
-        getDBRef("salas/" + codigo + "/estadoJogo/vencedor").remove();
-        getDBRef("salas/" + codigo + "/caraCoroa").remove();
-        getDBRef("salas/" + codigo + "/estadoJogo/centralAlinhada").remove();
-        getDBRef("salas/" + codigo + "/estadoJogo/alinhamentoFeito").remove();
-        getDBRef("salas/" + codigo + "/estadoJogo/mesaEspiada").remove();
-        getDBRef("salas/" + codigo + "/estadoJogo/desafio").remove();
-        // Garante que o botão da moeda será exibido ao iniciar o jogo
-        const moedaBtn = document.getElementById("moeda-btn");
-        if (moedaBtn) {
-          moedaBtn.style.display = "block";
-          moedaBtn.disabled = false;
-        }
-        getDBRef("salas/" + codigo + "/notificacao").set(
-          "A partida irá começar!"
-        );
-        setTimeout(() => {
-          // Restore Name
-          document.addEventListener("DOMContentLoaded", () => {
-            const nameInput = document.getElementById("player-name");
-            if (nameInput) {
-              const savedName = safeStorage.getItem("tellstones_playerName");
-              if (savedName) nameInput.value = savedName;
-            }
-          });
-
-          // Inicialização de áudio do jogo ANTES de mudar o status para 'jogo'
-          getDBRef("salas/" + codigo).once("value", function (snapshot) {
-            const sala = snapshot.val();
-            const jogadores =
-              sala && sala.jogadores ? Object.values(sala.jogadores) : [];
-            inicializarJogo(jogadores);
-            salvarEstadoJogo();
-            getDBRef("salas/" + codigo + "/status").set("jogo");
-            if (window.notificationManager) window.notificationManager.showGlobal("Jogo iniciado!");
-          });
-        }, 600);
-      });
-    };
+  if (window.RoomManager) {
+    window.RoomManager.mostrarLobby(codigo, nome, criador);
+  } else {
+    console.error("RoomManager não encotrado!");
   }
-
-  // Remove listener antigo se existir
-  if (window.lobbyListener) {
-    window.lobbyListener.off();
-  }
-  window.lobbyListener = getDBRef("salas/" + codigo);
-  window.lobbyListener.on("value", function (snapshot) {
-    const sala = snapshot.val();
-    // Jogadores
-    const jogadores =
-      sala && sala.jogadores ? Object.values(sala.jogadores) : [];
-    document.getElementById("lobby-jogadores").innerHTML = jogadores
-      .map((j) => `<li>${j.nome}</li>`)
-      .join("");
-    // Espectadores
-    const espectadores =
-      sala && sala.espectadores ? Object.values(sala.espectadores) : [];
-    document.getElementById("lobby-espectadores").innerHTML = espectadores
-      .map((e) => `<li>${e.nome}</li>`)
-      .join("");
-    // Notificação de novo jogador
-    jogadores.forEach((j) => {
-      if (
-        !ultimosJogadores.some((u) => u.nome === j.nome) &&
-        j.nome !== nomeAtual
-      ) {
-        if (window.notificationManager) window.notificationManager.showGlobal(`${j.nome} entrou como jogador!`);
-      }
-    });
-    ultimosJogadores = jogadores;
-    // Notificação de novo espectador
-    espectadores.forEach((e) => {
-      if (
-        !ultimosEspectadores.some((u) => u.nome === e.nome) &&
-        e.nome !== nomeAtual
-      ) {
-        if (window.notificationManager) window.notificationManager.showGlobal(`${e.nome} entrou como espectador!`);
-      }
-    });
-    ultimosEspectadores = espectadores;
-    // Notificação de início de partida
-    if (sala && sala.notificacao) {
-      if (window.notificationManager) window.notificationManager.showGlobal(sala.notificacao);
-      getDBRef("salas/" + codigo + "/notificacao").remove();
-    }
-    // Se status mudar para jogo, mostrar tela do jogo
-    if (sala && sala.status === "jogo") {
-      mostrarJogo(codigo, jogadores, espectadores);
-    }
-  });
 }
 
 // =========================
@@ -425,120 +173,32 @@ window.estadoJogo = {
 };
 
 // Salva o estado do jogo no Firebase
+// Wrapper para salvarEstadoJogo -> GameController.persistirEstado
 function salvarEstadoJogo() {
-  if (!window.salaAtual) return;
-  const ref = getDBRef("salas/" + window.salaAtual + "/estadoJogo");
-  const estado = {
-    ...window.estadoJogo,
-    // Garante que matrizes sejam salvas como objetos/arrays validos e não undefined
-    mesa: window.estadoJogo.mesa || Array(7).fill(null),
-    reserva: window.estadoJogo.reserva || []
-  };
-  ref.set(estado);
+  if (window.GameController) {
+    window.GameController.persistirEstado();
+  } else {
+    // console.warn("GameController não disponível para salvarEstadoJogo.");
+  }
 }
 
+// Wrapper para ouvirEstadoJogo -> GameController.iniciarListenerEstado
 function ouvirEstadoJogo() {
-  if (!salaAtual) return;
-  getDBRef("salas/" + salaAtual + "/estadoJogo").on("value", function (snapshot) {
-    if (!snapshot.exists()) {
-      return;
-    }
-    const novaMesa = garantirArray(snapshot.val().mesa);
-    estadoJogo = snapshot.val();
-    estadoJogo.mesa = garantirArray(estadoJogo.mesa);
-    estadoJogo.reserva = garantirArray(estadoJogo.reserva);
-    if (
-      typeof estadoJogo.mesaEspiada !== "undefined" &&
-      estadoJogo.mesaEspiada !== null
-    ) {
-      adicionarSilhuetaEspiada(estadoJogo.mesaEspiada);
-    }
-    Renderer.renderizarMesa();
-    // Garante alinhamento vertical para todos após alinhamento
-    if (estadoJogo.alinhamentoFeito) {
-      window.animouReservaCircular = false;
-    }
-    Renderer.renderizarPedrasReserva();
-
-    // Renderiza interfaces de desafio e segabar
-    if (Renderer.renderizarOpcoesDesafio) Renderer.renderizarOpcoesDesafio();
-    if (Renderer.renderizarOpcoesSegabar) Renderer.renderizarOpcoesSegabar();
-    if (Renderer.renderizarRespostaSegabar) Renderer.renderizarRespostaSegabar();
-
-    // Processar resoluções de estado (GameController)
-    if (window.GameController && window.GameController.processarResolucaoDesafio) {
-      window.GameController.processarResolucaoDesafio();
-    }
-
-    Renderer.atualizarInfoSala(salaAtual, ultimosEspectadores);
-    getDBRef("salas/" + salaAtual + "/caraCoroa").once(
-      "value",
-      function (snapRes) {
-        const data = snapRes.val();
-        if (!estadoJogo.centralAlinhada && data && data.sorteioFinalizado) {
-          sincronizarPedraCentralEAlinhamento();
-        }
-      }
-    );
-    mesaAnterior = [...novaMesa];
-    // NOVO: Garante animação de alinhamento para todos
-    if (estadoJogo.centralAlinhada && !window.alinhamentoAnimado) {
-      window.alinhamentoAnimado = true;
-      sincronizarPedraCentralEAlinhamento();
-    }
-    // Se resetar a sala, reseta o flag
-    if (!estadoJogo.centralAlinhada) {
-      window.alinhamentoAnimado = false;
-    }
-    // SWAP LOGIC REMOVED (Handled by monitorarTrocas transaction)
-
-    // Garante layout vertical para todos após alinhamento, mesmo se não animou
-    if (estadoJogo.centralAlinhada && estadoJogo.alinhamentoFeito) {
-      window.animouReservaCircular = false;
-      Renderer.renderizarPedrasReserva();
-    }
-
-    window.estadoJogo = estadoJogo;
-
-    // HOOK DO BOT PvE
-    if (window.tellstonesBot && window.salaAtual === "MODO_PVE") {
-      // 1. Observar Troca (se houve animação de troca e não foi o bot que fez - se bem que se bot fez ele já sabe, mas reforçar não custa)
-      // A animação de troca acontece no bloco acima.
-      // Se quisermos observar troca:
-      if (troca && (!ultimoTrocaBot || ultimoTrocaBot.timestamp !== troca.timestamp)) {
-        // (Need to define ultimoTrocaBot globally or similar check)
-        // Simplificação: O bot reage a todas as trocas visuais
-        window.tellstonesBot.observarAcao({ tipo: "trocar", origem: troca.from, destino: troca.to }, estadoJogo);
-      }
-
-      // 2. Processar Turno
-      processarTurnoBot();
-    }
-
-    if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
-  });
-  getDBRef("salas/" + salaAtual + "/caraCoroa/sorteioFinalizado").once(
-    "value",
-    function (snap) {
-      // Guard: Do not show Coin Toss if in Lobby
-      if (document.getElementById("lobby").classList.contains("active")) return;
-
-      if ((!snap.exists() || !snap.val()) && !estadoJogo.centralAlinhada) {
-        mostrarEscolhaCaraCoroa();
-        ouvirCaraCoroa();
-      } else {
-        const escolhaDiv = document.getElementById("escolha-cara-coroa");
-        if (escolhaDiv) escolhaDiv.style.display = "none";
-      }
-    }
-  );
+  // Ignora se não houver sala ou GameController
+  if (window.GameController && window.salaAtual) {
+    window.GameController.iniciarListenerEstado(window.salaAtual);
+  }
 }
 
 // Corrigir inicializarJogo para NÃO colocar a pedra central na mesa antes do sorteio
+// Wrapper para inicializarJogo -> GameController.inicializarJogo
 function inicializarJogo(jogadores) {
-  window.animouReservaCircular = false;
-  // Inicializar estado customizado usando GameRules
-  estadoJogo = GameRules.createInitialState(jogadores, PEDRAS_OFICIAIS);
+  if (window.GameController) {
+    return window.GameController.inicializarJogo(jogadores);
+  } else {
+    // console.error("GameController não disponível para inicializarJogo.");
+    return null;
+  }
 }
 
 // =========================
@@ -1551,7 +1211,10 @@ function mostrarJogo(codigo, jogadores, espectadores) {
     window.animouReservaCircular = false;
     window.jaEntrouNoGame = true;
   }
-  adicionarListenerNotificacoes();
+  // adicionarListenerNotificacoes() removido; gerenciado pelo RoomManager
+  if (window.RoomManager && window.RoomManager.adicionarListenerNotificacoes) {
+    if (codigo) window.RoomManager.adicionarListenerNotificacoes(codigo);
+  }
   mostrarTela("game");
   Renderer.atualizarInfoSala(codigo, espectadores);
 
@@ -1593,7 +1256,11 @@ function mostrarJogo(codigo, jogadores, espectadores) {
       mesaAnterior = Array(7).fill(null);
     }
   });
-  ouvirEstadoJogo();
+  if (window.GameController) {
+    window.GameController.iniciarListenerEstado(codigo);
+  } else {
+    console.error("GameController não encontrado para iniciar listener.");
+  }
   if (typeof monitorarTrocas === 'function') monitorarTrocas();
   Renderer.renderizarMesa();
   Renderer.renderizarPedrasReserva();
@@ -1717,55 +1384,13 @@ function ehMinhaVez() {
 }
 
 // Função para avançar o turno
+// Função para avançar o turno (Delegada para GameController)
 function avancarTurno() {
-  if (!estadoJogo.jogadores || estadoJogo.jogadores.length === 0) return;
-  let novoVez = estadoJogo.vez;
-  if (estadoJogo.jogadores.length === 2) {
-    novoVez = (estadoJogo.vez + 1) % 2;
-  } else if (estadoJogo.jogadores.length === 4) {
-    novoVez = (estadoJogo.vez + 1) % 2;
+  if (window.GameController && window.GameController.avancarTurno) {
+    window.GameController.avancarTurno();
+  } else {
+    console.error("GameController.avancarTurno não encontrado.");
   }
-
-  // No modo Tutorial, não queremos que o turno mude automaticamente para o Bot
-  if (salaAtual === "MODO_TUTORIAL") {
-    const tutorial = window.tellstonesTutorial;
-    // Permite trocar turno apenas nos passos onde há interação de jogo real (5, 6, 7, 8)
-    // 5: Desafiar Bot, 6: Responder Bot, 7: Se Gabar, 8: Defender Se Gabar
-    const passosPermitidos = [5, 6, 7, 8];
-
-    if (!tutorial || !passosPermitidos.includes(tutorial.passo)) {
-
-      window.estadoJogo = { ...estadoJogo };
-      if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
-      if (window.Renderer) window.Renderer.renderizarMesa();
-      return;
-    }
-  }
-
-  // No modo PvE/Local, atualizamos imediatamente sem depender do Firebase
-  if (window.isLocalMode || window.salaAtual === "MODO_PVE") {
-    estadoJogo.vez = novoVez;
-    window.estadoJogo = { ...estadoJogo };
-    GameController.persistirEstado(); // Garante persistência
-    Renderer.atualizarInfoSala(salaAtual, ultimosEspectadores);
-    if (window.Renderer) window.Renderer.renderizarMesa();
-
-    // Forçar verificação do Bot imediatamente
-    if (window.currentGameMode && window.currentGameMode.checkTurn) {
-      setTimeout(() => window.currentGameMode.checkTurn(), 100);
-    }
-    return;
-  }
-
-  estadoJogo.vez = novoVez;
-  getDBRef("salas/" + salaAtual + "/estadoJogo/vez").once(
-    "value",
-    function (snap) {
-      getDBRef("salas/" + salaAtual + "/estadoJogo").update({ vez: novoVez });
-      Renderer.atualizarInfoSala(salaAtual, ultimosEspectadores);
-      if (window.Renderer) window.Renderer.renderizarMesa();
-    }
-  );
 }
 
 // Adicionar função renderizarPedrasMesa de volta
@@ -2747,23 +2372,8 @@ function salvarVencedor(nomes, motivo) {
   getDBRef("salas/" + salaAtual + "/estadoJogo/vencedor").set({ nomes, motivo });
 }
 
-// Exibir tela de vitória/derrota para todos ao detectar estadoJogo.vencedor
-function checarTelaVitoriaGlobal() {
-  if (window.salaAtual === "MODO_TUTORIAL") return; // Guard for Tutorial
-  if (!estadoJogo.vencedor || !estadoJogo.vencedor.nomes) return;
-  const nomesVencedores = estadoJogo.vencedor.nomes;
-  if (nomesVencedores.includes(nomeAtual)) {
-    mostrarTelaVitoria("Parabéns, você venceu!", "Vitória!");
-  } else {
-    mostrarTelaVitoria("O adversário venceu o jogo!", "Derrota");
-  }
-}
-// Chamar checarTelaVitoriaGlobal sempre que o estado do jogo mudar
-const oldOuvirEstadoJogoVitoria = ouvirEstadoJogo;
-ouvirEstadoJogo = function () {
-  oldOuvirEstadoJogoVitoria.apply(this, arguments);
-  setTimeout(checarTelaVitoriaGlobal, 300);
-};
+// checarTelaVitoriaGlobal e override de ouvirEstadoJogo removidos
+// Lógica agora está em GameController.verificarSincronizacao
 
 function garantirMoedaBtnNoDOM() {
   if (!document.getElementById("moeda-btn")) {

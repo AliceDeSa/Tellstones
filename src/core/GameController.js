@@ -6,13 +6,13 @@ const GameController = {
 
     // Inicializa o jogo
     inicializarJogo: function (jogadores) {
-        if (!GameRules) {
+        if (!window.GameRules) {
             console.error("GameRules não carregado!");
             return;
         }
 
         // Cria estado inicial puro
-        const novoEstado = GameRules.createInitialState(jogadores, PEDRAS_OFICIAIS);
+        const novoEstado = window.GameRules.createInitialState(jogadores, window.PEDRAS_OFICIAIS || []);
         this.atualizarEstado(novoEstado);
 
         // IMPORTANT: Persist state immediately so listeners pick it up
@@ -324,6 +324,146 @@ const GameController = {
                 if (window.audioManager) {
                     if (isMe) window.audioManager.playSuccess();
                     else window.audioManager.playFailure();
+                }
+            }
+        }
+    },
+
+    // Avançar Turno
+    avancarTurno: function () {
+        const estado = window.estadoJogo;
+        if (!estado || !estado.jogadores || estado.jogadores.length === 0) return;
+
+        let novoVez = estado.vez;
+        if (estado.jogadores.length === 2) {
+            novoVez = (estado.vez + 1) % 2;
+        } else if (estado.jogadores.length === 4) {
+            novoVez = (estado.vez + 1) % 2;
+        }
+
+        const salaAtual = window.salaAtual;
+
+        // --- MODO TUTORIAL ---
+        if (salaAtual === "MODO_TUTORIAL") {
+            const tutorial = window.tellstonesTutorial;
+            const passosPermitidos = [5, 6, 7, 8];
+            if (!tutorial || !passosPermitidos.includes(tutorial.passo)) {
+                window.estadoJogo = { ...estado };
+                if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
+                if (window.Renderer) window.Renderer.renderizarMesa();
+                return;
+            }
+        }
+
+        // --- MODO LOCAL / PVE ---
+        if (window.isLocalMode || salaAtual === "MODO_PVE") {
+            estado.vez = novoVez;
+            window.estadoJogo = { ...estado };
+            this.persistirEstado();
+
+            if (typeof Renderer !== 'undefined' && Renderer.atualizarInfoSala) {
+                const espect = window.ultimosEspectadores || [];
+                Renderer.atualizarInfoSala(salaAtual, espect);
+            }
+            if (window.Renderer) window.Renderer.renderizarMesa();
+
+            if (window.currentGameMode && window.currentGameMode.checkTurn) {
+                setTimeout(() => window.currentGameMode.checkTurn(), 100);
+            }
+            return;
+        }
+
+        // --- MODO MULTIPLAYER ---
+        estado.vez = novoVez;
+        getDBRef("salas/" + salaAtual + "/estadoJogo/vez").transaction((currentVez) => {
+            return novoVez;
+        }, (error, committed, snapshot) => {
+            if (committed) {
+                if (window.Renderer) window.Renderer.renderizarMesa();
+            }
+        });
+    },
+
+    // Listener de Estado (Substitui ouvirEstadoJogo)
+    iniciarListenerEstado: function (codigo) {
+        if (this.stateListener) this.stateListener.off();
+
+        this.stateListener = getDBRef("salas/" + codigo + "/estadoJogo");
+        this.stateListener.on("value", (snapshot) => {
+            const estado = snapshot.val();
+            if (!estado) return;
+
+            window.estadoJogo = estado;
+
+            if (!window.estadoJogo.mesa) window.estadoJogo.mesa = Array(7).fill(null);
+            if (!window.estadoJogo.reserva) window.estadoJogo.reserva = [];
+
+            if (window.Renderer) {
+                window.Renderer.renderizarMesa();
+                window.Renderer.renderizarPedrasReserva();
+                window.Renderer.atualizarPlacar(estado.jogadores);
+
+                const espect = window.ultimosEspectadores || [];
+                window.Renderer.atualizarInfoSala(codigo, espect);
+            }
+
+            this.verificarSincronizacao(estado);
+
+            // Restore Coin Toss logic (Start of Game)
+            getDBRef("salas/" + codigo + "/caraCoroa/sorteioFinalizado").once("value", (snap) => {
+                const gameView = document.getElementById("game");
+                // Only if looking at game or about to
+                if (!gameView) return;
+
+                // Check if Coin Toss is needed
+                if ((!snap.exists() || !snap.val()) && !estado.centralAlinhada) {
+                    if (typeof window.mostrarEscolhaCaraCoroa === 'function') {
+                        // Ensure UI is visible
+                        window.mostrarEscolhaCaraCoroa();
+                        if (typeof window.ouvirCaraCoroa === 'function') window.ouvirCaraCoroa();
+                    }
+                } else {
+                    const escolhaDiv = document.getElementById("escolha-cara-coroa");
+                    if (escolhaDiv) escolhaDiv.style.display = "none";
+                }
+            });
+
+            // Sync: Stone Alignment Logic
+            // 1. If state says aligned but we haven't animated locally yet
+            if (estado.centralAlinhada && !window.alinhamentoAnimado) {
+                window.alinhamentoAnimado = true;
+                if (typeof window.sincronizarPedraCentralEAlinhamento === 'function') {
+                    window.sincronizarPedraCentralEAlinhamento();
+                }
+            }
+            // 2. If Coin Toss finished but not yet aligned (Trigger the alignment process)
+            getDBRef("salas/" + codigo + "/caraCoroa").once("value", (snapRes) => {
+                const data = snapRes.val();
+                if (!estado.centralAlinhada && data && data.sorteioFinalizado) {
+                    if (typeof window.sincronizarPedraCentralEAlinhamento === 'function') {
+                        window.sincronizarPedraCentralEAlinhamento();
+                    }
+                }
+            });
+        });
+    },
+
+    verificarSincronizacao: function (estado) {
+        if (estado.vencedor) {
+            const telaVitoria = document.getElementById("tela-vitoria");
+            const msg = document.getElementById("tela-vitoria-msg");
+            const titulo = document.getElementById("tela-vitoria-titulo");
+
+            if (telaVitoria && msg && titulo) {
+                telaVitoria.style.display = "flex";
+                if (estado.vencedor === window.nomeAtual) {
+                    titulo.innerText = "Vitória!";
+                    msg.innerText = "Parabéns, você venceu!";
+                    if (window.audioManager) window.audioManager.playSuccess();
+                } else {
+                    titulo.innerText = "Derrota";
+                    msg.innerText = `${estado.vencedor} venceu!`;
+                    if (window.audioManager) window.audioManager.playFailure();
                 }
             }
         }
