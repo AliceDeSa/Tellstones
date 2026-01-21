@@ -34,7 +34,7 @@ const Renderer = {
 
             // Logic for image (Face Up or Down)
             // Se virada, mostra costas? Depende. Em Tellstones, virada = face down (escondida).
-            const imgUrl = p.virada ? "assets/img/Costas.png" : p.url;
+            const imgUrl = p.virada ? "assets/img/logo.webp" : p.url;
             div.innerHTML = `<img src="${imgUrl}" alt="${p.nome}" draggable="false" style="width:100%; height:100%; border-radius:50%; pointer-events:none;">`;
 
             // HIGHLIGHT CHALLENGED STONE
@@ -619,7 +619,7 @@ const Renderer = {
             pedras = [
                 { nome: "Coroa", url: "assets/img/Coroa.svg" },
                 { nome: "Espada", url: "assets/img/espada.svg" },
-                { nome: "Balança", url: "assets/img/Balança.svg" },
+                { nome: "Balança", url: "assets/img/Balanca.svg" },
                 { nome: "Cavalo", url: "assets/img/cavalo.svg" },
                 { nome: "Escudo", url: "assets/img/escudo.svg" },
                 { nome: "Bandeira", url: "assets/img/bandeira.svg" },
@@ -903,7 +903,7 @@ const Renderer = {
         const pedras = window.PEDRAS_OFICIAIS || [
             { nome: "Coroa", url: "assets/img/Coroa.svg" },
             { nome: "Espada", url: "assets/img/espada.svg" },
-            { nome: "Balança", url: "assets/img/Balança.svg" },
+            { nome: "Balança", url: "assets/img/Balanca.svg" },
             { nome: "Cavalo", url: "assets/img/cavalo.svg" },
             { nome: "Escudo", url: "assets/img/escudo.svg" },
             { nome: "Bandeira", url: "assets/img/bandeira.svg" },

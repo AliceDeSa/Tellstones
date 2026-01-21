@@ -2197,7 +2197,7 @@ function garantirAudioFundoCarregado() {
   if (somFundo) {
     somFundo.onerror = function () {
       somFundo.src =
-        "https://raw.githubusercontent.com/AliceDeSa/Tellstones/main/ambient.mp3";
+        "assets/audio/ambient.mp3";
       somFundo.load();
       somFundo.play().catch(() => { });
     };
@@ -2287,7 +2287,7 @@ function renderizarOpcoesDesafio() {
     },
     {
       nome: "Balança",
-      url: "assets/img/Balança.svg"
+      url: "assets/img/Balanca.svg"
     },
     {
       nome: "Cavalo",
@@ -3048,7 +3048,7 @@ function abrirSeletorPedra(idxMesa) {
   const pedrasOficiais = [
     { nome: "Coroa", url: "assets/img/Coroa.svg" },
     { nome: "Espada", url: "assets/img/espada.svg" },
-    { nome: "Balança", url: "assets/img/Balança.svg" },
+    { nome: "Balança", url: "assets/img/Balanca.svg" },
     { nome: "Cavalo", url: "assets/img/cavalo.svg" },
     { nome: "Escudo", url: "assets/img/escudo.svg" },
     { nome: "Martelo", url: "assets/img/martelo.svg" },

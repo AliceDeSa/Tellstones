@@ -974,10 +974,10 @@ input[type="text"] {
   /* 1. Código da sala no canto superior ESQUERDO (HUD - Safe outside wrapper) */
   #info-sala {
     position: fixed;
-    top: 0;
-    bottom: auto;
-    left: 0;
-    right: auto;
+    top: 0 !important;
+    bottom: auto !important;
+    left: 0 !important;
+    right: auto !important;
     width: auto;
     text-align: left;
     background: rgba(0, 0, 0, 0.6);
@@ -1090,8 +1090,8 @@ input[type="text"] {
 
   /* UI ADJUSTMENTS */
   #info-sala {
-    top: 10px;
-    left: 10px;
+    top: 0px;
+    left: 0px;
     padding: 6px 10px;
     font-size: 0.85em;
     max-width: 140px;

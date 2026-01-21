@@ -463,7 +463,7 @@ class TellstonesTutorial {
             { nome: "Cavalo", url: "assets/img/cavalo.svg" },
             { nome: "Bandeira", url: "assets/img/bandeira.svg" },
             { nome: "Martelo", url: "assets/img/martelo.svg" },
-            { nome: "Balança", url: "assets/img/Balança.svg" }
+            { nome: "Balança", url: "assets/img/Balanca.svg" }
         ];
         // Conjunto completo de pedras
         window.estadoJogo.vez = 1;
