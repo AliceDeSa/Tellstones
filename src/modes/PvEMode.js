@@ -839,19 +839,30 @@ class PvEMode extends GameMode {
         // Se Bot conhece < 3 pedras, Acredita (medo de perder ponto de imediato).
         // Se Bot conhece >= 3 pedras, Duvida (tenta ganhar ponto).
 
-        const visibleCount = estado.mesa.filter(p => p !== null).length;
-        // Se tem poucas pedras (<= 2), é suicídio duvidar (Player provavelmente sabe).
-        // Se Bot conhece < 3 pedras mas tem muitas na mesa, Acredita (medo).
-        // Se Bot conhece >= 3 pedras, Duvida (tenta ganhar ponto).
+        const hiddenCount = estado.mesa.filter(p => p && p.virada).length;
+
+        // Get Player Score to prevent losing immediately
+        const playersList = Array.isArray(estado.jogadores) ? estado.jogadores : Object.values(estado.jogadores);
+        const player = playersList.find(j => j.id === 'p1' || j.nome !== 'Bot');
+        const playerScore = player ? (player.pontos || 0) : 0;
 
         let decision = "acreditar";
-        if (visibleCount <= 2) {
-            decision = "acreditar";
-        } else if (knownCount >= 3 || (visibleCount > 4 && Math.random() > 0.5)) {
-            decision = "duvidar";
+
+        // 1. CRITICAL: If Player has 2 points (Match Point), NEVER accept. 
+        // We must Doubt (try to catch a bluff) because if we Accept, they win instantly.
+        if (playerScore >= 2) {
+            console.log("[PvE] Player at Match Point (2). Bot refuses to accept Boast.");
+            decision = "duvidar"; // Always doubt to force them to prove it.
+        }
+        // 2. Delegate to BotBrain for standard logic
+        else {
+            decision = this.botBrain.decideBoastResponse(estado);
         }
 
-        console.log(`[PvE] Bot response to Boast: ${decision} (Known: ${knownCount})`);
+        console.log(`[PvE] Bot response to Boast: ${decision} (Hidden: ${hiddenCount}, P.Score: ${playerScore})`);
+
+        // CRITICAL FIX: Unlock Bot Brain BEFORE triggering state changes (which might trigger checkTurn synchronously)
+        this.botThinking = false;
 
         if (decision === "duvidar") {
             // showToastInterno("Bot diz: Eu duvido!");
@@ -866,9 +877,6 @@ class PvEMode extends GameMode {
             estado.desafio = null;
             GameController.persistirEstado();
         }
-
-        // CRITICAL FIX: Unlock Bot Brain
-        this.botThinking = false;
     }
 
     performBotBoast(estado) {
@@ -920,12 +928,19 @@ class PvEMode extends GameMode {
             let i = 0;
             const revealNext = () => {
                 if (i >= answers.length) {
-                    this.botThinking = false;
-                    return; // Done, GameController will handle 'finalizar' when count reached
+                    // Previously cleared here, but we clear on the last item now to be safe against sync triggers
+                    if (this.botThinking) this.botThinking = false;
+                    return;
                 }
 
                 const ans = answers[i];
                 if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot(`Aposto que a ${ans.idx + 1} é... ${ans.name}!`);
+
+                // CRITICAL FIX: If this is the last one, unlock Bot Brain BEFORE calling Controller
+                // because Controller might end the Boast and switch turns immediately.
+                if (i === answers.length - 1) {
+                    this.botThinking = false;
+                }
 
                 // Using GameController method directly? 
                 if (window.GameController && window.GameController.verificarRespostaSegabar) {
@@ -933,7 +948,9 @@ class PvEMode extends GameMode {
                 }
 
                 i++;
-                setTimeout(revealNext, 2000); // Recursive call
+                if (i < answers.length) { // Only schedule if more remains
+                    setTimeout(revealNext, 2000);
+                }
             };
             revealNext();
 

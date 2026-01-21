@@ -56,12 +56,17 @@ const RoomManager = {
             "/" +
             (tipo === "espectador" ? "espectadores" : "jogadores")
         );
-        const novoRef = salaRef.push();
+        // FIX: Usa o nome como chave para evitar duplicatas ao reconectar
+        // const novoRef = salaRef.push(); 
+        const novoRef = salaRef.child(nome);
         novoRef.onDisconnect().remove();
         novoRef.set({ nome: nome, timestamp: Date.now() });
 
         // Persistência local do nome
         safeStorage.setItem("tellstones_playerName", nome);
+
+        // RECONNECTION: Salva sessão atual para recuperação em caso de refresh
+        this.salvarSessaoLocal(codigo, nome);
 
         // Define globais (Legado, removeremos gradualmente)
         window.salaAtual = codigo;
@@ -141,8 +146,14 @@ const RoomManager = {
         // UX Cleanups
         const roomInput = document.getElementById("room-code");
         if (roomInput) roomInput.value = "";
+
         const roomDisplayCreated = document.getElementById("codigo-sala-criada");
         if (roomDisplayCreated) roomDisplayCreated.innerText = "";
+
+        // RECONNECTION: Limpa sessão salva pois o usuário saiu intencionalmente
+        if (typeof safeStorage !== 'undefined') {
+            safeStorage.removeItem("tellstones_active_session");
+        }
 
         // Expandir Ko-fi automaticamente
         setTimeout(() => {
@@ -345,6 +356,71 @@ const RoomManager = {
             return arr;
         }
         return [];
+    }
+    ,
+
+    // --- RECONNECTION LOGIC ---
+
+    salvarSessaoLocal: function (codigo, nome) {
+        if (typeof safeStorage === 'undefined') return;
+        const session = {
+            roomId: codigo,
+            playerName: nome,
+            timestamp: Date.now()
+        };
+        safeStorage.setItem("tellstones_active_session", JSON.stringify(session));
+        console.log("[RoomManager] Sessão SALVA localmente:", session);
+        if (window.Logger) window.Logger.debug("RoomManager", "Sessão salva para reconexão:", session);
+    },
+
+    verificarSessaoAtiva: function () {
+        if (typeof safeStorage === 'undefined') return null;
+        const raw = safeStorage.getItem("tellstones_active_session");
+        if (!raw) return null;
+        try {
+            const session = JSON.parse(raw);
+            // Expira em 1 hora (3600000 ms) para evitar stale state muito antigo
+            if (Date.now() - session.timestamp > 3600000) {
+                console.log("[RoomManager] Sessão expirada.");
+                safeStorage.removeItem("tellstones_active_session");
+                return null;
+            }
+            return session;
+        } catch (e) {
+            console.error("[RoomManager] Erro ao ler sessão:", e);
+            return null;
+        }
+    },
+
+    tentarReconexao: function () {
+        console.log("[RoomManager] tentarReconexao chamado.");
+        const session = this.verificarSessaoAtiva();
+        if (session) {
+            console.log("[RoomManager] Sessão válida encontrada:", session);
+            if (window.Logger) window.Logger.info("RoomManager", "Tentando reconectar...", session);
+
+            // Verifica se a sala ainda existe antes de conectar cegamente
+            if (typeof getDBRef !== 'function') {
+                console.error("[RoomManager] getDBRef indefinido!");
+                return false;
+            }
+
+            getDBRef("salas/" + session.roomId).once("value", (snap) => {
+                if (snap.exists()) {
+                    console.log("[RoomManager] Sala verificada no Firebase. Reconectando...");
+                    if (window.notificationManager) window.notificationManager.showGlobal("Reconectando à sessão anterior...");
+                    this.entrarSala(session.roomId, session.playerName, "jogador"); // Assume jogador por padrão
+                    this.mostrarLobby(session.roomId, session.playerName, false); // Não sabemos se é criador, assume false, firebase ajusta permissões se necessário
+                } else {
+                    console.log("[RoomManager] Sala não existe. Sessão descartada.");
+                    // Sala morreu, limpa sessão
+                    safeStorage.removeItem("tellstones_active_session");
+                }
+            });
+            return true;
+        } else {
+            console.log("[RoomManager] Nenhuma sessão ativa.");
+        }
     }
 };
 

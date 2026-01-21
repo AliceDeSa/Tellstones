@@ -9,9 +9,21 @@
   <meta name="viewport" content="width=1024, user-scalable=no">
   <meta name="mobile-web-app-capable" content="yes">
   <title>TellStones</title>
-  <link rel="stylesheet" href="assets/css/main.css?v=5.0.0">
+  <link rel="stylesheet" href="assets/css/main.css?v=5.2.0">
   <link rel="icon" type="image/webp" href="assets/img/logo.webp">
   <link rel="stylesheet" href="assets/fonts/fonts.css">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+          .then(req => console.log('Service Worker Registrado!', req))
+          .catch(err => console.log('Service Worker Falhou', err));
+      });
+    }
+  </script>
   <!-- Google Analytics (GA4) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-QK5X0YDD54"></script>
   <script>
@@ -283,12 +295,12 @@
 
   <!-- ================= SCRIPTS E ÁUDIO ================= -->
   <div id="audio-container" style="display:none;">
-    <audio id="som-fundo" src="assets/audio/ambient.mp3" loop></audio>
-    <audio id="som-click" src="assets/audio/click.wav"></audio>
-    <audio id="som-press" src="assets/audio/press.mp3"></audio>
-    <audio id="som-desafio" src="assets/audio/som teste.wav"></audio>
-    <audio id="som-sucesso" src="assets/audio/success minimalistic.wav"></audio>
-    <audio id="som-falha" src="assets/audio/failure.wav"></audio>
+    <audio id="som-fundo" src="assets/audio/ambient.mp3" loop preload="auto"></audio>
+    <audio id="som-click" src="assets/audio/click.wav" preload="auto"></audio>
+    <audio id="som-press" src="assets/audio/press.mp3" preload="auto"></audio>
+    <audio id="som-desafio" src="assets/audio/som%20teste.wav" preload="auto"></audio>
+    <audio id="som-sucesso" src="assets/audio/success%20minimalistic.wav" preload="auto"></audio>
+    <audio id="som-falha" src="assets/audio/failure.wav" preload="auto"></audio>
   </div>
   <!-- Script principal do jogo -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -302,14 +314,15 @@
   <script src="src/core/GameRules.js"></script>
   <script src="src/config/GameConfig.js"></script>
   <script src="src/ui/AnimationManager.js"></script>
+  <script src="src/ui/effects/Confetti.js?v=5.0.1"></script>
   <script src="src/ui/Renderer.js"></script>
   <script src="src/ui/ChangelogManager.js"></script>
   <script src="src/core/InputHandler.js"></script>
   <script src="src/core/AnalyticsManager.js"></script>
-  <script src="src/core/RoomManager.js"></script>
+  <script src="src/core/RoomManager.js?v=5.0.1"></script>
   <script src="src/core/GameController.js"></script>
   <script src="src/ui/MouseTrail.js"></script>
-  <script src="src/utils/AudioManager.js"></script>
+  <script src="src/utils/AudioManager.js?v=5.0.1"></script>
   <script src="src/ui/NotificationManager.js"></script>
 
   <!-- AI -->
@@ -322,19 +335,11 @@
   <script src="src/modes/TellstonesTutorial.js"></script>
   <script src="src/modes/TutorialMode.js?v=v4_alpha_1"></script>
 
-  <script src="src/main.js?v=5.0.0"></script>
+  <script src="src/main.js?v=5.0.1"></script>
 
   <!-- Debug / Automation -->
   <script src="src/debug/TutorialAutomator.js"></script>
   <script src="src/debug/PvEAutomator.js"></script>
-  <!-- Som de fundo para tela inicial e lobby -->
-  <audio id="som-fundo" src="assets/audio/ambient.mp3" loop style="display:none" preload="auto"></audio>
-  <audio id="som-click" src="assets/audio/click.wav" preload="auto"></audio>
-  <audio id="som-press" src="assets/audio/click.wav" preload="auto"></audio>
-  <audio id="som-desafio" src="assets/audio/som%20teste.wav" preload="auto"></audio>
-  <audio id="som-sucesso" src="assets/audio/success%20minimalistic.wav" preload="auto"></audio>
-  <audio id="som-falha" src="assets/audio/failure.wav" preload="auto"></audio>
-
   <!-- Dev Tools (Restricted) -->
   <div id="dev-tools-container" style="display:none;">
     <button id="btn-dev-automator" onclick="if(window.TutorialAutomator) window.TutorialAutomator.run()"

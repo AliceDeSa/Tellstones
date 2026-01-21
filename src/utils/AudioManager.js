@@ -47,6 +47,12 @@ class AudioManager {
 
     playClick() { this.play('click'); }
     playPress() { this.play('press'); }
+
+    // Game Action Sounds
+    playPlace() { this.play('press'); }
+    playFlip() { this.play('click'); }
+    playMove() { this.play('click'); }
+
     playChallenge() { this.play('challenge'); }
     playSuccess() { this.play('success'); }
     playFailure() { this.play('failure'); }

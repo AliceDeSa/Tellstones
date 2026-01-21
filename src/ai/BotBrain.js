@@ -103,6 +103,8 @@ class BotBrain {
 
     // --- MEMORY SYSTEM ---
 
+    // --- MEMORY SYSTEM ---
+
     observe(action, state) {
         // Track Own Actions
         const isBotTurn = state && state.vez === 1;
@@ -119,8 +121,8 @@ class BotBrain {
         }
 
         if (action.tipo === 'turn_end') {
-            this.decayMemory();
-            this.applyInference(state); // NEW: Elimination Logic at end of turn
+            this.decayMemory(state); // Pass state for context
+            this.applyInference(state);
             if (state && state.mesa) {
                 state.mesa.forEach((p, i) => {
                     if (p && !p.virada) {
@@ -138,13 +140,8 @@ class BotBrain {
                 stoneName = state.mesa[slot].nome;
             }
             if (stoneName && slot !== undefined) {
-                // If it's revealed/placed face up, confidence is 1.0
-                // 'virar' usually means Hide (Face Down) -> Verify state.mesa[slot].virada
-                // Actually 'observe' receives the action, but state might be post-action.
-                // If 'revelar', it is definitely KNOWN.
                 this.updateMemory(slot, stoneName, 1.0);
 
-                // If revealed, Player also knows it
                 if (action.tipo === 'revelar' || (action.tipo === 'colocar' && state.mesa[slot] && !state.mesa[slot].virada)) {
                     if (this.mentalModel) {
                         this.mentalModel.playerKnowledge[slot] = { confidence: 1.0, time: Date.now() };
@@ -163,11 +160,51 @@ class BotBrain {
             if (memB) this.memory[idxA] = memB;
             else delete this.memory[idxA];
 
-            // Penalty relies on Personality
-            const drop = 1.0 - this.profile.memory.swapPenalty;
+            // Penalty Logic
+            let drop = 1.0 - this.profile.memory.swapPenalty;
+
+            // Extra Penalty if swapping Hidden Stones (Confusion)
+            const isHiddenA = state && state.mesa[idxA] && state.mesa[idxA].virada;
+            const isHiddenB = state && state.mesa[idxB] && state.mesa[idxB].virada;
+
+            if (isHiddenA && isHiddenB) {
+                drop *= 0.6; // Heavy confusion penalty
+            }
+
             if (this.memory[idxA]) this.memory[idxA].confidence *= drop;
             if (this.memory[idxB]) this.memory[idxB].confidence *= drop;
         }
+    }
+
+    decayMemory(state) {
+        let retention = this.profile.memory.retention;
+
+        // Contextual Decay: More hidden stones = faster decay
+        // Count hidden from state if possible, else estimation
+        let hiddenCount = 0;
+        if (state && state.mesa) {
+            hiddenCount = state.mesa.filter(p => p && p.virada).length;
+        } else {
+            hiddenCount = Object.keys(this.memory).length; // Fallback
+        }
+
+        // Dynamic Decay: -2% per hidden stone
+        retention -= (hiddenCount * 0.02);
+        if (retention < 0.5) retention = 0.5; // Floor
+
+        Object.keys(this.memory).forEach(slot => {
+            const mem = this.memory[slot];
+            if (!mem) return;
+
+            const age = Date.now() - mem.lastSeen;
+            const agePenalty = age > 30000 ? 0.9 : 1.0;
+
+            mem.confidence *= (retention * agePenalty);
+
+            if (mem.confidence <= 0.1) {
+                delete this.memory[slot];
+            }
+        });
     }
 
     // --- INFERENCE ENGINE ---
@@ -201,30 +238,6 @@ class BotBrain {
             console.log(`[BotBrain] Inference: Slot ${slot} MUST be ${stone}`);
             this.updateMemory(slot, stone, 0.95); // High confidence deduction
         }
-    }
-
-    decayMemory() {
-        // Retention factor applied per turn
-        let retention = this.profile.memory.retention;
-
-        // Contextual Decay: If many stones are hidden, memory struggles more
-        const hiddenCount = Object.keys(this.memory).length;
-        if (hiddenCount > 3) retention -= 0.05; // Overloaded
-
-        Object.keys(this.memory).forEach(slot => {
-            const mem = this.memory[slot];
-            if (!mem) return;
-
-            // Age based decay: Older memories fade faster
-            const age = Date.now() - mem.lastSeen;
-            const agePenalty = age > 30000 ? 0.9 : 1.0; // Punishment for > 30s old
-
-            mem.confidence *= (retention * agePenalty);
-
-            if (mem.confidence <= 0.1) { // Threshold de esquecimento completo
-                delete this.memory[slot];
-            }
-        });
     }
 
     updateMemory(slot, name, confidence) {
@@ -288,141 +301,82 @@ class BotBrain {
         return null;
     }
 
-    // --- DECISION MAKING ---
-
     decideMove(state) {
         if (!state || !state.mesa) {
             console.error("[BotBrain] Invalid state passed to decideMove");
             return { type: 'pass' };
         }
 
-        // --- CONTEXT ANALYSIS ---
         const hiddenStones = state.mesa.filter(p => p && p.virada).length;
         const visibleStones = state.mesa.filter(p => p && !p.virada).length;
-        const totalStones = state.mesa.filter(p => p).length;
         const handStones = state.reserva && state.reserva.some(p => p !== null);
 
-        // Dynamic Difficulty: Check Score Variance
-        const myScore = state.jogadores.find(j => j.id === 'p2')?.pontos || 0; // Bot
-        const oppScore = state.jogadores.find(j => j.id === 'p1')?.pontos || 0; // Human
-        const isLosing = (oppScore > myScore);
-        const isDesperate = (oppScore >= 2); // Opponent match point
+        // Score Context
+        const myScore = state.jogadores.find(j => j.id === 'p2')?.pontos || 0;
+        const oppScore = state.jogadores.find(j => j.id === 'p1')?.pontos || 0;
+        const isDesperate = (oppScore >= 2);
 
         const actions = {
-            place: 0,
-            swap: 0,
-            flip: 0,
-            challenge: 0,
-            peek: 0,
-            boast: 0,
-            pass: 0
+            place: 0, swap: 0, flip: 0, challenge: 0, peek: 0, boast: 0, pass: 0
         };
 
-        // 1. Assign Base Weights from Profile
         Object.assign(actions, this.profile.weights);
 
-        // 0. SIGNATURE MOVES (High Priority Overrides)
+        // Signature Check
         const signatureMove = this.checkSignatureMove(state);
-        if (signatureMove) {
-            console.log(`[BotBrain] Executing Signature Move: ${signatureMove.signature}`);
-            return signatureMove;
-        }
+        if (signatureMove) return signatureMove;
 
-        // 2. Modifiers based on Game State
+        // State Constraints
         if (!handStones) actions.place = 0;
         if (visibleStones === 0) actions.flip = 0;
 
-        // Rules Check
-        if (hiddenStones < 1) {
-            actions.peek = 0;
-            actions.swap = 0; // Can't swap hidden with visible effectively if none hidden? No, swap is valid if 2 total.
-            // But usually you swap hidden. If 0 hidden, swap might be allowed but maybe useless for Bot logic?
-            // Bot logic 'chooseSwapTargets' expects visible/hidden pairs often.
-            // Let's leave swap alone unless < 2 total.
+        // --- NEW LOGIC: CONSTRAINT ON LOW HIDDEN COUNT ---
+        if (hiddenStones <= 2) {
+            // User Request: "bot nao deve desafiar se ouver 2 pedras ou menos viradas"
             actions.challenge = 0;
             actions.boast = 0;
-        }
-        if (hiddenStones < 2) {
-            actions.swap *= 0.1; // Reduce swap chance if few hidden
-        }
 
-        // --- ADVANCED STRATEGY MODIFIERS ---
-
-        // A. Desperation Mode (If Player is about to win)
-        if (isDesperate) {
-            actions.challenge += 0.4; // Aggressively try to stop them
-            actions.boast += 0.2; // Risky play
-            if (this.profile.name === "Trapaceiro") actions.swap += 0.3; // Confuse them
+            // If few hidden, try to hide more (Flip) or Swap
+            if (visibleStones > 0) actions.flip += 0.3;
         }
 
-        // B. Winning Assurance (If Bot is winning)
-        if (myScore >= 2) {
-            actions.boast = 0; // Don't risk boasting if 1 point is enough via challenge
-            actions.peek += 0.2; // Play safe, verify info
+        // Desperation Override
+        if (isDesperate && hiddenStones > 2) {
+            actions.challenge += 0.4;
+            actions.boast += 0.2;
         }
 
-        // C. Profile Specifics
+        // Logic Profile: Peek more if unsure
         if (this.profile.name === "Lógico") {
             const unsure = this.findUnsureHiddenStone(state);
-            if (unsure !== -1) {
-                actions.peek += 0.5;
-            }
+            if (unsure !== -1) actions.peek += 0.5;
         }
 
-        if (this.profile.name === "Trapaceiro") {
-            if (visibleStones > 2) actions.flip += 0.4;
-            // Blind Bluff: If nothing to do, swap to annoy
-            if (actions.place === 0 && actions.challenge < 0.2) actions.swap += 0.3;
+        // Peek Recovery Strategy
+        // "quanto mais pedras viradas que o bot nao tem memoria sobre ele busca espiar"
+        let unknownHidden = 0;
+        state.mesa.forEach((p, i) => {
+            if (p && p.virada) {
+                const mem = this.memory[i];
+                if (!mem || mem.confidence < 0.4) unknownHidden++;
+            }
+        });
+
+        if (unknownHidden > 1) {
+            actions.peek += (unknownHidden * 0.2); // Significant boost to recover memory
         }
 
-        if (this.profile.name === "Agressivo") {
-            // Se poucas pedras ocultas, não seja suicida
-            if (hiddenStones < 3 && !isDesperate) {
-                actions.challenge -= 0.5; // Drastic reduction (0.6 -> 0.1)
-                if (actions.challenge < 0) actions.challenge = 0.05;
-            }
-
-            // SMART CHECK: Don't challenge if Player likely knows everything
-            const hiddenIndices = state.mesa.map((p, i) => (p && p.virada) ? i : -1).filter(i => i !== -1);
-            let vulnerableTargets = 0;
-            hiddenIndices.forEach(idx => {
-                // If Player doesn't know it (not in playerKnowledge), it's a target
-                if (!this.mentalModel.playerKnowledge[idx]) vulnerableTargets++;
-            });
-
-            if (vulnerableTargets === 0 && !isDesperate) {
-                actions.challenge = 0; // Don't suicide if player knows all
-            }
-        }
-
-        // D. Calculate Confidence for Boasting
-        const hiddenIndices = state.mesa.map((p, i) => (p && p.virada) ? i : -1).filter(i => i !== -1);
-        if (hiddenIndices.length >= 3) {
-            const avgConf = this.calculateAverageHiddenConfidence(state);
-            // Verify if we actually know majority
-            if (avgConf > 0.9) {
-                actions.boast += 0.5; // High confidence boast
-            } else if (this.profile.name === "Trapaceiro" && Math.random() < 0.3) {
-                actions.boast += 0.4; // Pure Bluff
-            }
-        }
-
-        // Select Action
+        // Selection
         const selectedType = this.weightedRandom(actions);
         const decision = { type: selectedType };
 
-        // Enrich decision with Specific Targets
-        if (selectedType === 'place') {
-            decision.target = this.choosePlaceTarget(state);
-        } else if (selectedType === 'swap') {
-            decision.targets = this.chooseSwapTargets(state);
-        } else if (selectedType === 'flip') {
-            decision.target = this.chooseFlipTarget(state);
-        } else if (selectedType === 'peek') {
-            decision.target = this.choosePeekTarget(state);
-        } else if (selectedType === 'challenge') {
-            decision.target = this.chooseChallengeTarget(state);
-        }
+        // Targets
+        if (selectedType === 'place') decision.target = this.choosePlaceTarget(state);
+        else if (selectedType === 'swap') decision.targets = this.chooseSwapTargets(state);
+        else if (selectedType === 'flip') decision.target = this.chooseFlipTarget(state);
+        else if (selectedType === 'peek') decision.target = this.choosePeekTarget(state);
+        else if (selectedType === 'challenge') decision.target = this.chooseChallengeTarget(state);
+        else if (selectedType === 'boast') { /* No target needed */ }
 
         return decision;
     }
@@ -438,22 +392,16 @@ class BotBrain {
 
         if (validSlots.length === 0) return -1;
 
-        // Strategy:
-        // Random is generally good to avoid patterns.
-        // Lógico might prefer filling sequentially or edges first?
-        // Let's stick to Random for now to avoid predictability.
+        // Strategy: Random for now
         return validSlots[Math.floor(Math.random() * validSlots.length)];
     }
 
     chooseSwapTargets(state) {
         // Default: Random valid swap
         const indices = state.mesa.map((p, i) => p ? i : -1).filter(i => i !== -1);
-        if (indices.length < 2) return null; // Should not happen if filtered before
+        if (indices.length < 2) return null;
 
         // Strategy: 
-        // Lógico/Defensivo: Hide a visible stone by swapping it with a hidden one? 
-        // Or swap two hidden ones to confuse memory?
-
         // Let's try to swap a "Known/Visible" stone with a "Hidden" one to confuse opponent.
         const visible = indices.filter(i => state.mesa[i] && !state.mesa[i].virada);
         const hidden = indices.filter(i => state.mesa[i] && state.mesa[i].virada);
@@ -476,25 +424,14 @@ class BotBrain {
     }
 
     chooseFlipTarget(state) {
-        // Pick a visible stone to flip face down? Or face up?
-        // Game rules: "Virar" usually means Flip Face Down (Hide) if it's up? 
-        // Or Flip Face Up (Show) if it's down?
-        // Wait, Tellstones standard action 'Place' puts it Face Up. 
-        // Then you turn it Face Down ('Virar').
-        // You can't turn it Face Up again unless challenged/peeked?
-        // Actually, usually you 'Hide' a stone. 
-        // Let's assume 'flip' means turning a visible stone to hidden (Face Down).
-
         const visibleIndices = state.mesa.map((p, i) => (p && !p.virada) ? i : -1).filter(i => i !== -1);
         if (visibleIndices.length === 0) return -1;
 
-        // Strategy: Hide the one I know best? Or the one I want to save?
-        // For now, random acts of hiding.
+        // Strategy: Random acts of hiding.
         return visibleIndices[Math.floor(Math.random() * visibleIndices.length)];
     }
 
     choosePeekTarget(state) {
-        // Logic already existed partially in 'findUnsureHiddenStone'
         // Prioritize stones with low confidence
         const unsureIdx = this.findUnsureHiddenStone(state);
         if (unsureIdx !== -1) return unsureIdx;
@@ -506,79 +443,46 @@ class BotBrain {
         return -1;
     }
 
-    // --- DECISION RESPONSE ---
-
-    decideBoastResponse(state) {
-        const avgConf = this.calculateAverageHiddenConfidence(state);
-
-        // 1. Agressivo: Duvida quase sempre (Pressiona para provar)
-        if (this.config.challengeStrategy === 'blind') { // Agressivo flag
-            return "duvidar";
-        }
-
-        // 2. Trapaceiro: Imprevisível
-        if (this.config.challengeStrategy === 'chaos') {
-            return Math.random() < 0.5 ? "duvidar" : "acreditar";
-        }
-
-        // 3. Lógico: Baseado na confiança
-        // Se eu não sei nada (< 40%), acredito (dou 1 ponto, evito perder o jogo se ele souber)
-        // Se eu sei muito (> 85%), eu me gabo também (roubo a vez/pontos)
-        // Se eu sei mais ou menos (> 50%), eu duvido
-        if (avgConf < 0.4) return "acreditar";
-        if (avgConf > 0.85) return "segabar_tambem";
-        return "duvidar";
-    }
-
-    // --- ACTION LOGIC ---
-
     chooseChallengeTarget(state) {
         const hiddenIndices = state.mesa.map((p, i) => (p && p.virada) ? i : -1).filter(i => i !== -1);
         if (hiddenIndices.length === 0) return -1;
 
-        // Strategy dependent
+        // Filter Recent (Don't challenge stones just flipped/interacted < 10s)
+        const candidates = hiddenIndices.filter(idx => {
+            // Look in memory or action history for recent interaction?
+            // Memory 'lastSeen' is updated on interaction.
+            const mem = this.memory[idx];
+            if (mem && (Date.now() - mem.lastSeen < 10000)) return false;
+            return true;
+        });
+
+        const pool = candidates.length > 0 ? candidates : hiddenIndices;
+
         if (this.config.challengeStrategy === "oldest_hidden") {
-            // Find stone with oldest 'lastSeen' timestamp (or unknown)
-            // Simulating "Player likely forgot this one"
-            return this.findOldestHidden(hiddenIndices, state);
+            return this.findOldestHidden(pool, state);
         }
 
-        if (this.config.challengeStrategy === "chaos") {
-            // Random is chaos enough? Or prefer recently manipulated?
-            // For now, random
-            return hiddenIndices[Math.floor(Math.random() * hiddenIndices.length)];
+        // Default Random from pool
+        return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    decideBoastResponse(state) {
+        const avgConf = this.calculateAverageHiddenConfidence(state);
+        const hiddenCount = state.mesa.filter(p => p && p.virada).length;
+
+        // User Request: "o bot nao deve aceitrar duvidar de desafio se tiver 2 ou menos pedras viradas."
+        // Meaning: If <= 2 hidden, do NOT Doubt (because Player likely knows).
+        // So, Acreditar.
+        if (hiddenCount <= 2) {
+            return "acreditar";
         }
 
-        if (this.config.challengeStrategy === "pressure_smart") {
-            // 1. Filter out stones Player likely knows (via Mental Model)
-            const smartCandidates = hiddenIndices.filter(idx => {
-                // If player knows this slot, avoid challenging it
-                if (this.mentalModel.playerKnowledge[idx]) return false;
+        if (this.config.challengeStrategy === 'blind') return "duvidar";
+        if (this.config.challengeStrategy === 'chaos') return Math.random() < 0.5 ? "duvidar" : "acreditar";
 
-                // Also verify my own memory so I don't challenge if *I* strictly know it? 
-                // No, Aggressive challenges what YOU don't know, doesn't matter if I know (I just need to know to verify).
-                // Actually, if I challenge, I need to know the answer to win the point immediately if they accept?
-                // Rules: Challenger asks "What is this?". Defender answers.
-                // If Defender is right, Challenger loses point.
-                // So I should only challenge if I think Defender is WRONG.
-                // Which means I assume they don't know.
-
-                return true;
-            });
-
-            // 2. If valid candidates exist, pick random.
-            if (smartCandidates.length > 0) {
-                return smartCandidates[Math.floor(Math.random() * smartCandidates.length)];
-            } else {
-                // All are known by player. 
-                // Fallback: If function called, I MUST return target.
-                // Pick oldest hidden from my perspective (maybe player forgot oldest?)
-                return this.findOldestHidden(hiddenIndices, state);
-            }
-        }
-
-        // Default / Blind
-        return hiddenIndices[Math.floor(Math.random() * hiddenIndices.length)];
+        if (avgConf < 0.4) return "acreditar";
+        if (avgConf > 0.85) return "segabar_tambem";
+        return "duvidar";
     }
 
     predictStone(slotIdx) {

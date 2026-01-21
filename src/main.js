@@ -717,14 +717,20 @@ if (document.getElementById("start-game-btn")) {
     if (!nome) return alert("Digite seu nome!");
     safeStorage.setItem("tellstones_playerName", nome);
     const codigo = criarSala(modo);
-    // entrarSala(codigo, nome, "jogador"); // SUBSTITUIÇÃO POR MODO
-    if (window.currentGameMode) window.currentGameMode.cleanup();
-    window.currentGameMode = new MultiplayerMode();
-    window.currentGameMode.start({ roomCode: codigo, playerName: nome });
+
+    // Configura sessão e jogo via Manager
+    if (window.RoomManager) {
+      window.RoomManager.entrarSala(codigo, nome, "jogador");
+      window.RoomManager.mostrarLobby(codigo, nome, true);
+    } else {
+      // Fallback
+      window.currentGameMode = new MultiplayerMode();
+      window.currentGameMode.start({ roomCode: codigo, playerName: nome });
+      mostrarLobby(codigo, nome, true);
+    }
 
     document.getElementById("codigo-sala-criada").innerText =
       "Código da sala: " + codigo;
-    mostrarLobby(codigo, nome, true);
   };
 }
 
@@ -742,34 +748,24 @@ if (document.getElementById("enter-room-btn")) {
     if (!codigo) return alert("Digite o código da sala!");
     if (!nome) return alert("Digite seu nome!");
     safeStorage.setItem("tellstones_playerName", nome);
-    // entrarSala(codigo, nome, tipo); // SUBSTITUIÇÃO POR MODO
-    if (window.currentGameMode) window.currentGameMode.cleanup();
-    window.currentGameMode = new MultiplayerMode();
-    window.currentGameMode.start({ roomCode: codigo, playerName: nome });
+    if (!codigo) return alert("Digite o código da sala!");
+    if (!nome) return alert("Digite seu nome!");
+    safeStorage.setItem("tellstones_playerName", nome);
 
-    mostrarLobby(codigo, nome, false);
+    // Configura sessão e jogo via Manager
+    if (window.RoomManager) {
+      window.RoomManager.entrarSala(codigo, nome, tipo);
+      window.RoomManager.mostrarLobby(codigo, nome, false);
+    } else {
+      window.currentGameMode = new MultiplayerMode();
+      window.currentGameMode.start({ roomCode: codigo, playerName: nome });
+      mostrarLobby(codigo, nome, false);
+    }
   };
 }
 
 // Evento para mostrar tela inicial ao carregar a página
-// Safe Storage Helper
-const safeStorage = {
-  getItem: function (key) {
-    try {
-      return localStorage.getItem(key);
-    } catch (e) {
-      console.warn("localStorage access denied:", e);
-      return null;
-    }
-  },
-  setItem: function (key, value) {
-    try {
-      localStorage.setItem(key, value);
-    } catch (e) {
-      console.warn("localStorage write failed:", e);
-    }
-  }
-};
+// Evento para mostrar tela inicial ao carregar a página
 
 // Evento para mostrar tela inicial ao carregar a página
 document.addEventListener("DOMContentLoaded", function () {
@@ -1060,10 +1056,12 @@ const btnSairPartida = document.getElementById("btn-sair-partida");
 if (btnSairPartida) {
   btnSairPartida.onclick = function () {
     if (window.audioManager) window.audioManager.playPress();
-    const btnVoltarLobbyManual = document.getElementById("btn-voltar-lobby");
-    if (btnVoltarLobbyManual) {
-      btnVoltarLobbyManual.click();
+
+    // Call centralized exit logic which handles session cleanup
+    if (window.RoomManager) {
+      window.RoomManager.sairPartida();
     } else {
+      // Fallback for non-RoomManager modes (Tutorial?)
       mostrarTela("start-screen");
       isLocalMode = false;
       tellstonesBot = null;
@@ -1071,18 +1069,15 @@ if (btnSairPartida) {
         if (window.tellstonesTutorial.cleanup) window.tellstonesTutorial.cleanup();
         window.tellstonesTutorial = null;
       }
-      // Remove tutorial UI if it exists
-      // Remove tutorial UI if it exists
       const tutorialUI = document.getElementById("tutorial-ui");
       if (tutorialUI) tutorialUI.remove();
 
-      // FIX: Force hide Actions Card and Icon to prevent overlap in Menu
-      const boxAcoes = document.getElementById("box-acoes");
-      if (boxAcoes) boxAcoes.style.display = "none";
-      const cartaAcoes = document.getElementById("carta-acoes");
-      if (cartaAcoes) cartaAcoes.style.display = "none";
-      const iconeAcoes = document.getElementById("icone-acoes");
-      if (iconeAcoes) iconeAcoes.style.display = "none";
+      // Hide UI
+      const idsToHide = ["box-acoes", "carta-acoes", "icone-acoes"];
+      idsToHide.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = "none";
+      });
     }
   };
   // Move o botão para dentro do container de info da sala
@@ -1449,7 +1444,7 @@ function renderizarPedrasMesa(pedras) {
           // Espiar
           div.ondblclick = function () {
             if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("ESPIAR_PEDRA")) return;
-            if (window.audioManager) window.audioManager.playClick();
+            if (window.audioManager) window.audioManager.playFlip();
             espiarPedra(i);
           };
           div.style.cursor = "pointer";
@@ -1499,7 +1494,7 @@ function renderizarPedrasMesa(pedras) {
             const idx = parseInt(div.getAttribute("data-idx"));
             if (estadoJogo.mesa[idx] && !estadoJogo.mesa[idx].virada) {
               if (window.currentGameMode && !window.currentGameMode.canPerformAction("VIRAR_PEDRA")) return;
-              if (window.audioManager) window.audioManager.playClick();
+              if (window.audioManager) window.audioManager.playFlip();
               // Estado update
               estadoJogo.mesa[idx].virada = true;
               salvarEstadoJogo();
@@ -3087,4 +3082,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Inicializa Changelog Module
   if (window.ChangelogManager) window.ChangelogManager.init();
+
+  // RECONNECTION TRIGGER: Check for active session
+  if (window.RoomManager && window.RoomManager.tentarReconexao) {
+    // Pequeno delay para garantir que o Firebase inicializou
+    setTimeout(() => {
+      window.RoomManager.tentarReconexao();
+    }, 800);
+  }
 });

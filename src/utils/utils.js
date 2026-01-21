@@ -2,6 +2,32 @@
 // Utilidades Gerais do Tellstones
 // =========================
 
+// Safe LocalStorage Wrapper
+window.safeStorage = {
+    getItem: function (key) {
+        try {
+            return localStorage.getItem(key);
+        } catch (e) {
+            console.warn("localStorage access denied:", e);
+            return null;
+        }
+    },
+    setItem: function (key, value) {
+        try {
+            localStorage.setItem(key, value);
+        } catch (e) {
+            console.warn("localStorage write failed:", e);
+        }
+    },
+    removeItem: function (key) {
+        try {
+            localStorage.removeItem(key);
+        } catch (e) {
+            console.warn("localStorage remove failed:", e);
+        }
+    }
+};
+
 // Gera um código aleatório para a sala (6 caracteres, letras e números)
 function gerarCodigoSala() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();

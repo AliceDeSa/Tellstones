@@ -1,5 +1,13 @@
 # Histórico de Versões - Tellstones
 
+## V5.2.0 - AI & UI Polish
+**Data:** 21/01/2026
+- **[AI]** **Smart Memory:** Implementado lógica de "Esquecimento Dinâmico" (Bot esquece mais rápido se houver muitas pedras ocultas) e "Confusão em Trocas" (trocar pedras ocultas reduz confiança).
+- **[AI]** **Safety Check:** Bot agora se recusa a Desafiar ou Duvidar se houver poucas informações na mesa (Safe Play).
+- **[UI]** **Z-Index Harmonization:** Reescrevemos TODO o sistema de camadas visuais seguindo a política do projeto (.cursorrules). Fim de elementos sobrepostos ou não clicáveis.
+- **[UI]** **Speech Bubble:** Balão de fala do Bot corrigido (agora flutua corretamente sobre a interface).
+- **[FIX]** **Actions Icon:** Ícone de ações agora 100% clicável em mobile (Z-Index 1050).
+
 ## V5.1.0 - The Quality Update
 **Data:** 21/01/2026
 - **[ARCH]** **Project Structure:** Migração do `script.js` para `src/main.js`, limpando a raiz do projeto.

@@ -4,67 +4,63 @@
 
 const Renderer = {
 
-    // Exibe balão de fala do Bot no topo do tabuleiro
+    // Exibe balão de fala do Bot no topo da tela (Global)
     mostrarFalaBot: function (texto) {
-        const wrapper = document.getElementById("tabuleiro-wrapper");
-        if (!wrapper) return;
+        // Remove previous bubble if exists to avoid stratification
+        let existing = document.getElementById("bot-speech-bubble");
+        if (existing) existing.remove();
 
-        let bubble = document.getElementById("bot-speech-bubble");
-        if (!bubble) {
-            bubble = document.createElement("div");
-            bubble.id = "bot-speech-bubble";
-            bubble.style.position = "absolute";
-            bubble.style.top = "-80px"; // Acima do tabuleiro
-            bubble.style.left = "10%"; // Esquerda
-            // bubble.style.transform = "translateX(-50%)"; // Removido centralização
-            bubble.style.transform = "translateX(0)";
-            bubble.style.backgroundColor = "#ffffff";
-            bubble.style.color = "#333";
-            bubble.style.padding = "12px 24px";
-            bubble.style.borderRadius = "10px";
-            bubble.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
-            bubble.style.fontFamily = "'Cinzel', serif";
-            bubble.style.fontSize = "16px";
-            bubble.style.fontWeight = "bold";
-            bubble.style.zIndex = "1000";
-            bubble.style.opacity = "0";
-            bubble.style.transition = "opacity 0.3s ease, transform 0.3s ease";
-            bubble.style.pointerEvents = "none";
-            bubble.style.textAlign = "center";
-            bubble.style.minWidth = "200px";
+        let bubble = document.createElement("div");
+        bubble.id = "bot-speech-bubble";
+        bubble.style.position = "fixed"; // Global positioning
+        bubble.style.top = "12%"; // Top center area
+        bubble.style.left = "50%";
+        bubble.style.transform = "translateX(-50%) scale(0.8)"; // Start slightly small
+        bubble.style.backgroundColor = "#ffffff";
+        bubble.style.color = "#333";
+        bubble.style.padding = "12px 24px";
+        bubble.style.borderRadius = "10px";
+        bubble.style.boxShadow = "0 8px 24px rgba(0,0,0,0.5)"; // Stronger shadow
+        bubble.style.fontFamily = "'Cinzel', serif";
+        bubble.style.fontSize = "18px";
+        bubble.style.fontWeight = "bold";
+        bubble.style.zIndex = "2100"; // Critical Priority
+        bubble.style.opacity = "0";
+        bubble.style.transition = "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)"; // Bouncy pop
+        bubble.style.pointerEvents = "none";
+        bubble.style.textAlign = "center";
+        bubble.style.minWidth = "220px";
+        bubble.style.maxWidth = "80vw";
 
-            // Triângulo do balão
-            const triangle = document.createElement("div");
-            triangle.style.content = "''";
-            triangle.style.position = "absolute";
-            triangle.style.bottom = "-10px";
-            triangle.style.bottom = "-10px";
-            triangle.style.left = "20px"; // Align with left bubble
-            triangle.style.marginLeft = "0";
-            triangle.style.borderWidth = "10px 10px 0";
-            triangle.style.borderStyle = "solid";
-            triangle.style.borderColor = "#ffffff transparent transparent transparent";
-            bubble.appendChild(triangle);
+        // Triangle (Pointer downwards)
+        const triangle = document.createElement("div");
+        triangle.style.content = "''";
+        triangle.style.position = "absolute";
+        triangle.style.bottom = "-10px";
+        triangle.style.left = "50%";
+        triangle.style.marginLeft = "-10px";
+        triangle.style.borderWidth = "10px 10px 0";
+        triangle.style.borderStyle = "solid";
+        triangle.style.borderColor = "#ffffff transparent transparent transparent";
+        bubble.appendChild(triangle);
 
-            wrapper.appendChild(bubble);
-        }
-
-        // Se já estiver visivel, pisca levemente
-        bubble.style.transform = "translateX(-50%) scale(0.95)";
-        setTimeout(() => {
-            bubble.style.transform = "translateX(-50%) scale(1)";
-        }, 50);
-
-        // Atualiza texto preservando o triângulo
-        const triangle = bubble.querySelector('div');
         bubble.innerText = texto;
-        if (triangle) bubble.appendChild(triangle);
+        bubble.appendChild(triangle); // Re-append triangle after text
 
-        bubble.style.opacity = "1";
+        document.body.appendChild(bubble);
 
+        // Animate In
+        requestAnimationFrame(() => {
+            bubble.style.opacity = "1";
+            bubble.style.transform = "translateX(-50%) scale(1)";
+        });
+
+        // Auto-Hide
         if (this.speechTimeout) clearTimeout(this.speechTimeout);
         this.speechTimeout = setTimeout(() => {
             bubble.style.opacity = "0";
+            bubble.style.transform = "translateX(-50%) scale(0.8)";
+            setTimeout(() => { if (bubble.parentNode) bubble.remove(); }, 300);
         }, 4000);
     },
 
@@ -787,24 +783,7 @@ const Renderer = {
 
     },
 
-    // --- BOT FEATURES ---
-    mostrarFalaBot(msg) {
-        let bubble = document.getElementById("bot-dialogue-bubble");
-        if (!bubble) {
-            bubble = document.createElement("div");
-            bubble.id = "bot-dialogue-bubble";
-            document.body.appendChild(bubble);
-        }
-
-        bubble.innerText = msg;
-        bubble.classList.add("visible");
-
-        // Hide after 4 seconds
-        if (window.botSpeechTimeout) clearTimeout(window.botSpeechTimeout);
-        window.botSpeechTimeout = setTimeout(() => {
-            bubble.classList.remove("visible");
-        }, 4000);
-    },
+    // [Duplicate methods removed]
 
     animarBotColocar(pedra, origemIdx, destinoSlotIdx, callback) {
         if (!pedra) {
@@ -1075,23 +1054,7 @@ const Renderer = {
         container.appendChild(box);
     },
 
-    mostrarFalaBot: function (texto) {
-        let bubble = document.getElementById("bot-speech-bubble");
-        if (!bubble) {
-            bubble = document.createElement("div");
-            bubble.id = "bot-speech-bubble";
-            document.body.appendChild(bubble); // Body or Wrapper? Body is safer for absolute positioning.
-        }
-
-        bubble.innerText = texto;
-        bubble.classList.add("visible");
-
-        // Auto-hide after 3.5s
-        if (this.botSpeechTimeout) clearTimeout(this.botSpeechTimeout);
-        this.botSpeechTimeout = setTimeout(() => {
-            bubble.classList.remove("visible");
-        }, 3500);
-    },
+    // [Second Duplicate removed]
 
     // Helper UTILS
     criarBotaoAcao: function (texto, onClick) {

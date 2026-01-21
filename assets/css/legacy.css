@@ -137,7 +137,8 @@ input[type="text"] {
   text-align: center;
   box-shadow: 0 2px 16px #0008;
   position: relative;
-  z-index: 2;
+  z-index: 100;
+  /* Base Layer */
   display: none;
 }
 
@@ -150,7 +151,8 @@ input[type="text"] {
   text-align: center;
   box-shadow: none;
   position: relative;
-  z-index: 2;
+  z-index: 100;
+  /* Base Layer */
   display: none;
 }
 
@@ -165,7 +167,8 @@ input[type="text"] {
   position: fixed;
   left: 0;
   top: 0;
-  z-index: 2;
+  z-index: 100;
+  /* Base Layer */
   display: none;
 }
 
@@ -289,6 +292,21 @@ input[type="text"] {
   font-size: 1.15em;
   font-weight: bold;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* FIX: Back button matches z-index priority over changelog */
+#back-to-main-btn {
+  background: transparent;
+  color: #fff;
+  border: none;
+  font-size: 2em;
+  cursor: pointer;
+  position: absolute;
+  top: -40px;
+  left: 0;
+  z-index: 1050 !important;
+  /* Overlay */
+  padding: 0 10px;
 }
 
 /* Action Buttons */
@@ -2614,7 +2632,7 @@ body>.floatingchat-donate-button {
   overflow: hidden !important;
   box-shadow: 0 2px 12px #794bc488 !important;
   background: #794bc4 !important;
-  z-index: 2500 !important;
+  z-index: 1050 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -2638,7 +2656,7 @@ body>.floatingchat-donate-button {
   position: fixed !important;
   top: 20px;
   right: 20px;
-  z-index: 250;
+  z-index: 1050;
 }
 
 body>.floatingchat-donate-button img {
@@ -2704,14 +2722,22 @@ body>.floatingchat-donate-button span {
     right: 10px !important;
     /* Top right corner */
     left: auto !important;
-    z-index: 250 !important;
-    /* NUCLEAR OPTION: FORCE ABOVE EVERYTHING */
+    z-index: 1200 !important;
+    /* FORCE ABOVE CARD (1000) */
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
     outline: none !important;
     /* Remove white circle/square/borders */
     border-radius: 0 !important;
+  }
+
+  /* Fix Side Buttons Cutoff on Mobile Landscape */
+  #botoes-acoes-laterais {
+    right: 120px !important;
+    /* Push inwards to avoid cutoff */
+    transform: translateY(-50%) scale(0.9) !important;
+    /* Slightly smaller */
   }
 
   /* Internal Close Button - HIDDEN as per user request */
@@ -3424,4 +3450,33 @@ body {
   transform: scale(0.95);
   filter: none;
   outline: none;
+}
+
+/* FIX: Coin Selector Z-Index */
+#escolha-cara-coroa {
+  z-index: 1000 !important;
+  /* Modal Tier */
+}
+
+#moeda-btn {
+  z-index: 150 !important;
+  /* Active Tier */
+}
+
+/* FIX: Action Icon and Speech Bubble Override */
+#icone-acoes {
+  z-index: 1050 !important;
+  /* Overlay Tier */
+  pointer-events: auto !important;
+}
+
+#bot-speech-bubble {
+  z-index: 2100 !important;
+  /* Critical Tier (Toasts) */
+}
+
+/* FIX: Ensure Start Screen Changelog respects layer */
+#changelog-box {
+  z-index: 50 !important;
+  /* Sub-base layer or just below Base */
 }

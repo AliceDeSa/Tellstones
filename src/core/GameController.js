@@ -30,11 +30,15 @@ const GameController = {
         // Por enquanto, validação básica aqui
         if (estado.mesa[slotIdx] !== null) {
             console.warn("Slot ocupado!");
+            if (window.audioManager) window.audioManager.playFailure();
             return false;
         }
 
         // 2. Atualização de Estado
         estado.mesa[slotIdx] = pedraObj;
+
+        // Sound Event (Visual Polish)
+        if (window.audioManager) window.audioManager.playPlace();
 
         // Remove da reserva (já feito pelo caller por enquanto)
 
@@ -276,6 +280,11 @@ const GameController = {
         if (!window.estadoJogo) return;
         window.estadoJogo.vencedor = nome;
         this.persistirEstado();
+
+        // VISUAL POLISH: Confetti & Sound
+        if (window.ConfettiManager) window.ConfettiManager.start();
+        if (window.audioManager) window.audioManager.playSuccess();
+
         if (window.notificationManager) {
             window.notificationManager.showGlobal(`VENCEDOR: ${nome}!`, 5000);
         }

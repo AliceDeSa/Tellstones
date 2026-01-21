@@ -5,6 +5,15 @@
 const ChangelogManager = {
     data: [
         {
+            version: "v5.2.0 - AI & UI Polish",
+            changes: [
+                "<strong>AI:</strong> Bot mais inteligente (Memória Dinâmica).",
+                "<strong>Safe Play:</strong> Bot evita blefes arriscados.",
+                "<strong>UI Fixes:</strong> Fim dos conflitos de camadas (Z-Index).",
+                "<strong>Mobile:</strong> Ícone de ações corrigido."
+            ]
+        },
+        {
             version: "v5.1.0 - The Quality Update",
             changes: [
                 "<strong>Quality:</strong> Testes Automatizados & CI/CD.",

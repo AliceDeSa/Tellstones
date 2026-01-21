@@ -2704,14 +2704,15 @@ body>.floatingchat-donate-button span {
     right: 10px !important;
     /* Top right corner */
     left: auto !important;
-    z-index: 250 !important;
-    /* NUCLEAR OPTION: FORCE ABOVE EVERYTHING */
+    z-index: 3000 !important;
+    /* NUCLEAR OPTION: FORCE ABOVE EVERYTHING (Card is 1000, Changelog is 3000) */
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
     outline: none !important;
     /* Remove white circle/square/borders */
     border-radius: 0 !important;
+    pointer-events: auto !important;
   }
 
   /* Internal Close Button - HIDDEN as per user request */
@@ -3428,23 +3429,24 @@ body {
 
 /* Bot Speech Bubble */
 #bot-speech-bubble {
-    position: absolute;
-    top: 80px; 
-    left: 20px;
-    background: #fff;
-    color: #000;
-    padding: 10px 15px;
-    border-radius: 12px;
-    border-bottom-left-radius: 0;
-    font-family: 'Cinzel', serif;
-    font-size: 14px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    z-index: 9999;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-    max-width: 250px;
+  position: absolute;
+  top: 80px;
+  left: 20px;
+  background: #fff;
+  color: #000;
+  padding: 10px 15px;
+  border-radius: 12px;
+  border-bottom-left-radius: 0;
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  max-width: 250px;
 }
+
 #bot-speech-bubble.visible {
-    opacity: 1;
+  opacity: 1;
 }

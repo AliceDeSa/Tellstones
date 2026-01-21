@@ -20,7 +20,8 @@ class MultiplayerMode extends GameMode {
         window.nomeAtual = this.playerName;
 
         // Lógica de entrar na sala (Join Room)
-        this.joinRoom(config.playerName, "jogador"); // Default role
+        // REMOVIDO: RoomManager gerencia a entrada agora para evitar duplicatas
+        // this.joinRoom(config.playerName, "jogador"); // Default role
 
         // Busca Inicial
         this.fetchInitialState();
