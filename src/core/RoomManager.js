@@ -283,6 +283,7 @@ const RoomManager = {
                         // Muda status da sala para startar clients
                         getDBRef("salas/" + codigo + "/status").set("jogo");
                         if (window.notificationManager) window.notificationManager.showGlobal("Jogo iniciado!");
+                        if (window.AnalyticsManager) window.AnalyticsManager.logGameStart("multiplayer", codigo, jogadores.length);
 
                     } catch (err) {
                         console.error("[RoomManager] Erro ao iniciar jogo:", err);

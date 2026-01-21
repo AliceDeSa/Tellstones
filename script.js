@@ -3,6 +3,15 @@
 // Main Orchestrator for Game Logic, managing Room State and legacy interactions.
 // Note: Logic is progressively being migrated to src/ modules.
 
+
+window.onerror = function (message, source, lineno, colno, error) {
+  if (window.AnalyticsManager) {
+    window.AnalyticsManager.logError(message, error ? error.stack : "");
+  }
+  // Prevent default handling (optional, usually false to let browser log it too)
+  return false;
+};
+
 let tellstonesBot = null;
 
 // =========================
@@ -3005,6 +3014,10 @@ document.addEventListener("DOMContentLoaded", () => {
     window.InputHandler.init();
   }
 
+  if (window.AnalyticsManager && !window.AnalyticsManager.initialized) {
+    window.AnalyticsManager.init();
+  }
+
   // 1. Tutorial
   const btnTutorial = document.getElementById('tutorial-btn');
   if (btnTutorial) {
@@ -3044,14 +3057,34 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  const btnCreateRoom = document.getElementById('create-room-btn');
+  const btnJoinRoom = document.getElementById('join-room-btn');
+  const btnStartGame = document.getElementById('start-game-btn');
+  const btnEnterRoom = document.getElementById('enter-room-btn');
+
+  const addAudio = (btn) => {
+    if (btn) {
+      btn.addEventListener('click', () => {
+        if (window.audioManager) window.audioManager.playPress();
+      });
+    }
+  };
+
+  addAudio(btnCreateRoom);
+  addAudio(btnJoinRoom);
+  addAudio(btnStartGame);
+  addAudio(btnEnterRoom);
+
   if (btnBack && divOnline && divMainBtns) {
     btnBack.onclick = () => {
       if (window.audioManager) window.audioManager.playPress();
       divOnline.style.display = 'none';
       divMainBtns.style.display = 'flex';
       divMainBtns.style.flexDirection = 'column';
-      divMainBtns.style.gap = '-5px';
       divMainBtns.style.alignItems = 'center';
     };
   }
+
+  // Inicializa Changelog Module
+  if (window.ChangelogManager) window.ChangelogManager.init();
 });

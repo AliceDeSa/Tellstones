@@ -1,16 +1,38 @@
 /* =====================================================
    LAYOUTS: LOBBY E TELA INICIAL
    ===================================================== */
+#back-to-main-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 4000;
+    /* Above Changelog (3000) */
+}
+
 #lobby {
     max-width: 400px;
-    margin: 40px auto;
+    /* Restaurado tamanho original */
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    margin: 0;
     padding: 30px;
-    background: rgba(24, 28, 36, 0.92);
-    border-radius: 10px;
+    background: rgba(24, 28, 36, 0.98);
+    border: 2px solid #daa520;
+    /* Borda Dourada Restaurada */
+    border-radius: 12px;
     text-align: center;
-    box-shadow: 0 2px 16px #0008;
-    position: relative;
-    z-index: 2;
+    box-shadow: 0 4px 32px #0008;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5000;
     display: none;
 }
 

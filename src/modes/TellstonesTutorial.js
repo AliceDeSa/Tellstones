@@ -414,6 +414,9 @@ class TellstonesTutorial {
         this.passo = idx;
         const cena = this.roteiro[idx];
 
+        // Analytics
+        if (window.AnalyticsManager) window.AnalyticsManager.logTutorialStep(this.passo, cena.titulo);
+
         // Executa Setup da Cena
         try {
             if (cena.setup) cena.setup();

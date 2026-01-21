@@ -204,10 +204,18 @@ const GameController = {
                 // Optimistic update locally
                 estado.jogadores[idxJogador].pontos += 3;
 
+                if (window.AnalyticsManager) window.AnalyticsManager.logAction('boast', { result: 'win', points: 3 });
+
                 // Direct DB update to ensure points are counted even if full state save fails
                 if (salaAtual !== "MODO_TUTORIAL") {
                     getDBRef(`salas/${salaAtual}/estadoJogo/jogadores/${idxJogador}/pontos`)
                         .transaction(pontos => (pontos || 0) + 3);
+                }
+
+                // Check Vitoria
+                if (estado.jogadores[idxJogador].pontos >= 3) {
+                    this.declararVencedor(estado.jogadores[idxJogador].nome);
+                    if (window.AnalyticsManager) window.AnalyticsManager.logGameEnd(window.salaAtual, estado.jogadores[idxJogador].nome, 0);
                 }
             }
 

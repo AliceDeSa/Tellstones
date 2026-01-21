@@ -42,6 +42,8 @@ class PvEMode extends GameMode {
         window.nomeAtual = this.playerName;
         window.souCriador = true; // FIX: Essential for coin toss logic
 
+        if (window.AnalyticsManager) window.AnalyticsManager.logGameStart("pve", this.roomCode, 1);
+
         // Reset Local State
         if (window.clearLocalData) {
             window.clearLocalData("salas/" + this.roomCode);
@@ -742,6 +744,16 @@ class PvEMode extends GameMode {
                         GameController.persistirEstado();
 
                         let vencedor = null;
+
+                        // Analytics
+                        const success = (palpite === correta);
+                        if (window.AnalyticsManager) window.AnalyticsManager.logAction('challenge', {
+                            target_stone: correta,
+                            bot_guess: palpite,
+                            success: success, // Did the Challenger (Player) succeed? No, Bot guessed. So if Success=True (Bot Correct), Player Failed.
+                            // Let's invert: Action is 'challenge'. Player Challenged. Success means Bot FAILED to guess.
+                            player_won: (palpite !== correta)
+                        });
 
                         // Normalize players array/object
                         const playersList = Array.isArray(estado.jogadores)
