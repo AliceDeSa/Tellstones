@@ -17,13 +17,15 @@ const AnalyticsManager = {
     logEvent: function (eventName, params = {}) {
         if (!this.initialized) return;
 
-        // Debug Log (Development)
-        // console.log(`[Analytics] Event: ${eventName}`, params);
+        // Debug Log (Development Only via Logger)
+        if (window.Logger) {
+            window.Logger.debug('Analytics', `Event: ${eventName}`, params);
+        }
 
         try {
             gtag('event', eventName, params);
         } catch (err) {
-            console.warn("[Analytics] Failed to log event:", err);
+            if (window.Logger) window.Logger.warn('Analytics', "Failed to log event:", err);
         }
     },
 
@@ -69,9 +71,21 @@ const AnalyticsManager = {
     }
 };
 
-// Initialize manually or auto-init if gtag exists
+// Initialize manually or auto-init when ready
 if (typeof gtag === 'function') {
     AnalyticsManager.init();
+} else {
+    // If loaded before gtag, wait for window load
+    window.addEventListener('load', () => {
+        if (typeof gtag === 'function') {
+            AnalyticsManager.init();
+        } else {
+            console.error("[AnalyticsManager] GA4 Failed to Load.");
+        }
+    });
 }
 
+// Expose globally
 window.AnalyticsManager = AnalyticsManager;
+
+

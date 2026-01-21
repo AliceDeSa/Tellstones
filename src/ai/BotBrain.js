@@ -722,3 +722,11 @@ class BotBrain {
         return keys[0];
     }
 }
+// Export for Node/Jest environment
+if (typeof module !== 'undefined' && module.exports) {
+    // Mock window.estadoJogo in tests or handle it
+    module.exports = { BotBrain, MentalModel, PROFILES };
+} else {
+    // Browser
+    window.BotBrain = BotBrain;
+}

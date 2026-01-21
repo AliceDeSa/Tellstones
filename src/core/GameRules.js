@@ -51,4 +51,11 @@ const GameRules = {
     }
 };
 
-window.GameRules = GameRules;
+if (typeof window !== 'undefined') {
+    window.GameRules = GameRules;
+}
+
+// Export for Node/Jest environment
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = GameRules;
+}

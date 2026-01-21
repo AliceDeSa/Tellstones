@@ -18,7 +18,7 @@
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
-    gtag('config', 'G-QK5X0YDD54');
+    gtag('config', 'G-QK5X0YDD54', { 'debug_mode': true });
   </script>
 </head>
 
@@ -295,6 +295,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script src="src/core/constants.js"></script>
+  <script src="src/utils/Logger.js"></script>
   <script src="src/utils/utils.js"></script>
   <script src="src/config/firebase-config.js"></script>
   <script src="src/services/network.js"></script>
@@ -321,7 +322,7 @@
   <script src="src/modes/TellstonesTutorial.js"></script>
   <script src="src/modes/TutorialMode.js?v=v4_alpha_1"></script>
 
-  <script src="script.js?v=5.0.0"></script>
+  <script src="src/main.js?v=5.0.0"></script>
 
   <!-- Debug / Automation -->
   <script src="src/debug/TutorialAutomator.js"></script>

@@ -1,0 +1,26 @@
+{
+  "name": "tellstones",
+  "version": "5.1.0",
+  "description": "https://alicedesa.github.io/Tellstones/",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AliceDeSa/Tellstones.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AliceDeSa/Tellstones/issues"
+  },
+  "homepage": "https://github.com/AliceDeSa/Tellstones#readme",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "jest": "^30.2.0"
+  }
+}

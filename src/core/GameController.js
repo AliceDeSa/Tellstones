@@ -267,12 +267,22 @@ const GameController = {
         this.verificarFimDeJogo();
     },
 
-    // Helpers de Estado
+    // --- HELPERS ---
     atualizarEstado: function (novoEstado) {
         window.estadoJogo = novoEstado;
         // Sync global se necessário
     },
+    declararVencedor: function (nome) {
+        if (!window.estadoJogo) return;
+        window.estadoJogo.vencedor = nome;
+        this.persistirEstado();
+        if (window.notificationManager) {
+            window.notificationManager.showGlobal(`VENCEDOR: ${nome}!`, 5000);
+        }
+        console.log(`[GameController] Vencedor declarado: ${nome}`);
+    },
 
+    // --- UTILS ---
     persistirEstado: function () {
         // Salva no Firebase/LocalDB
         if (window.salaAtual) {

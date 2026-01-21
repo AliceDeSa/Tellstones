@@ -1,5 +1,14 @@
 # Histórico de Versões - Tellstones
 
+## V5.1.0 - The Quality Update
+**Data:** 21/01/2026
+- **[ARCH]** **Project Structure:** Migração do `script.js` para `src/main.js`, limpando a raiz do projeto.
+- **[DEV]** **Logger System:** Novo utilitário `Logger.js` para logs coloridos e filtrados por ambiente (Prod/Dev).
+- **[QA]** **Automated Tests:** Implementação de testes unitários (Jest) para `GameRules` e `BotBrain`.
+- **[QA]** **CI/CD:** Configuração de *pre-commit hooks* (Husky) para garantir código seguro.
+- **[FIX]** **Game Controller:** Correção crítica de crash no Tutorial ('declararVencedor').
+- **[DOCS]** **Analytics Guides:** Documentação completa de configuração e insights do GA4.
+
 ## V5.0.0 - The Modular Era
 **Data:** 21/01/2026
 - **[ARCH]** **Modularization:** Refatoração completa do gerenciamento de estado (`GameController.js`) e salas (`RoomManager.js`), removendo dependências do `script.js` monolítico.

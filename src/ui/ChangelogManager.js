@@ -5,6 +5,15 @@
 const ChangelogManager = {
     data: [
         {
+            version: "v5.1.0 - The Quality Update",
+            changes: [
+                "<strong>Quality:</strong> Testes Automatizados & CI/CD.",
+                "<strong>Arch:</strong> Limpeza de arquivos (script.js -> main.js).",
+                "<strong>Fix:</strong> Correções no Tutorial e Logs.",
+                "<strong>Dev:</strong> Novo sistema de Logger."
+            ]
+        },
+        {
             version: "v5.0.0 - Modular Era",
             changes: [
                 "<strong>Architecture:</strong> Nova estrutura de módulos (Managers).",
