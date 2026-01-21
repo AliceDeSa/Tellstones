@@ -11,6 +11,45 @@ const InputHandler = {
     init: function () {
         // Inicializa listeners globais se necessário
         console.log("[InputHandler] Initialized");
+        this.setupGlobalListeners();
+    },
+
+    setupGlobalListeners: function () {
+        // Botões de Desafio e Se Gabar (Tutorial Integration)
+        const btnDesafiar = document.getElementById("btn-desafiar");
+        if (btnDesafiar) {
+            btnDesafiar.addEventListener("click", () => {
+                if (window.tellstonesTutorial) {
+                    setTimeout(() => window.tellstonesTutorial.registrarAcaoConcluida(), 200);
+                }
+            });
+        }
+        const btnSeGabar = document.getElementById("btn-segabar");
+        if (btnSeGabar) {
+            btnSeGabar.addEventListener("click", () => {
+                if (window.tellstonesTutorial) {
+                    setTimeout(() => window.tellstonesTutorial.registrarAcaoConcluida(), 200);
+                }
+            });
+        }
+
+        // Escolha Cara ou Coroa
+        const btnCara = document.getElementById("btn-cara");
+        if (btnCara) {
+            btnCara.onclick = () => {
+                const el = document.getElementById("escolha-cara-coroa");
+                if (el) el.style.display = "none";
+                if (window.definirEscolha) window.definirEscolha("cara");
+            };
+        }
+        const btnCoroa = document.getElementById("btn-coroa");
+        if (btnCoroa) {
+            btnCoroa.onclick = () => {
+                const el = document.getElementById("escolha-cara-coroa");
+                if (el) el.style.display = "none";
+                if (window.definirEscolha) window.definirEscolha("coroa");
+            };
+        }
     },
 
     // Setup para pedras da reserva (Drag & Drop para o tabuleiro)

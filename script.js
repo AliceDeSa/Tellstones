@@ -6,10 +6,6 @@
 let tellstonesBot = null;
 
 // =========================
-// 2. Utilidades Gerais
-// =========================
-
-// =========================
 // 2. Utilidades Gerais & Shims Legados
 // =========================
 
@@ -270,30 +266,10 @@ function setupMesaInteractions() {
 // =========================
 // 8. Event Listeners para Botões de Ação (Desafiar / Se Gabar)
 // =========================
-document.addEventListener("DOMContentLoaded", () => {
-  const btnDesafiar = document.getElementById("btn-desafiar");
-  const btnSeGabar = document.getElementById("btn-segabar");
-
-  if (btnDesafiar) {
-    btnDesafiar.addEventListener("click", (e) => {
-      // Logic handled by Mystery Listener or Controller?
-      // Assuming the button already does the job via another listener we can't find.
-      // We just ensure the Tutorial knows about it.
-      if (window.tellstonesTutorial) {
-        // Delay to allow state update
-        setTimeout(() => window.tellstonesTutorial.registrarAcaoConcluida(), 200);
-      }
-    });
-  }
-
-  if (btnSeGabar) {
-    btnSeGabar.addEventListener("click", (e) => {
-      if (window.tellstonesTutorial) {
-        setTimeout(() => window.tellstonesTutorial.registrarAcaoConcluida(), 200);
-      }
-    });
-  }
-});
+// =========================
+// 8. Event Listeners para Botões de Ação (Desafiar / Se Gabar)
+// =========================
+// Movido para InputHandler.setupGlobalListeners()
 
 // =========================
 // 7. Moeda e Animações
@@ -328,14 +304,7 @@ function definirEscolha(escolha) {
     return; // já existe escolha
   });
 }
-document.getElementById("btn-cara").onclick = function () {
-  document.getElementById("escolha-cara-coroa").style.display = "none";
-  definirEscolha("cara");
-};
-document.getElementById("btn-coroa").onclick = function () {
-  document.getElementById("escolha-cara-coroa").style.display = "none";
-  definirEscolha("coroa");
-};
+// Listeners movidos para InputHandler.setupGlobalListeners()
 
 // Variável global para evitar toast duplicado
 let ultimoLadoNotificado = null;
@@ -3027,7 +2996,15 @@ document.addEventListener('DOMContentLoaded', function () {
 // =========================
 // 9. Event Listeners para Menu Principal (Restaurados)
 // =========================
+// =========================
+// 9. Inicialização Global
+// =========================
 document.addEventListener("DOMContentLoaded", () => {
+  // Inicializa InputHandler (Listeners Globais)
+  if (window.InputHandler && window.InputHandler.init) {
+    window.InputHandler.init();
+  }
+
   // 1. Tutorial
   const btnTutorial = document.getElementById('tutorial-btn');
   if (btnTutorial) {
