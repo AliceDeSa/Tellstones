@@ -11,11 +11,11 @@ let tellstonesBot = null;
 
 // gerarCodigoSala movido para src/utils/utils.js
 
-// showToast movido para src/utils/utils.js
+// if (window.notificationManager) window.notificationManager.showGlobal movido para src/utils/utils.js
 
 // tocarSomClick movido para src/utils/utils.js
 
-// showToastInterno movido para src/utils/utils.js
+// if (window.notificationManager) window.notificationManager.showInternal movido para src/utils/utils.js
 
 // =========================
 // 3. Lógica de Lobby e Salas
@@ -137,22 +137,18 @@ function mostrarTela(tela) {
   document.getElementById("game").classList.remove("active");
   document.getElementById(tela).classList.add("active");
   // Som de fundo (Regra: Tocar no Menu/Lobby, Parar no Jogo)
-  const somFundo = document.getElementById("som-fundo");
   const creditosSom = document.getElementById("creditos-som");
   const placarTurno = document.getElementById("placar-turno-central");
   const btnMute = document.getElementById("btn-mute-global");
 
   if (tela === "start-screen" || tela === "lobby") {
-    if (somFundo && !window.isMuted) {
-      somFundo.volume = 0.5;
-      somFundo.play().catch(() => { });
-    }
+    if (window.audioManager) window.audioManager.playAmbience();
     if (creditosSom) creditosSom.style.display = "";
     if (placarTurno) placarTurno.style.display = "none";
     if (btnMute) btnMute.style.display = "flex"; // Mostrar botão mute
   } else {
     // Tela de Jogo ou outras: Parar música
-    if (somFundo) somFundo.pause();
+    if (window.audioManager) window.audioManager.stopAmbience();
     if (creditosSom) creditosSom.style.display = "none";
     if (placarTurno) placarTurno.style.display = "";
     if (btnMute) btnMute.style.display = "none"; // Esconder botão mute no jogo
@@ -265,7 +261,7 @@ function adicionarListenerNotificacoes() {
       msg = val.msg;
     }
     if (msg) {
-      showToast(msg);
+      if (window.notificationManager) window.notificationManager.showGlobal(msg);
       snap.ref.remove();
     }
   });
@@ -295,7 +291,7 @@ function mostrarLobby(codigo, nome, criador = false) {
   const btnIniciar = document.getElementById("lobby-iniciar");
   if (btnIniciar) {
     btnIniciar.onclick = function () {
-      tocarSomPress();
+      if (window.audioManager) window.audioManager.playPress();
       // Buscar o modo da sala
       getDBRef("salas/" + codigo).once("value", function (snapshot) {
         const sala = snapshot.val();
@@ -306,7 +302,7 @@ function mostrarLobby(codigo, nome, criador = false) {
           (modo === "1x1" && jogadores.length !== 2) ||
           (modo === "2x2" && jogadores.length !== 4)
         ) {
-          showToast("Número de jogadores incorreto para o modo selecionado!");
+          if (window.notificationManager) window.notificationManager.showGlobal("Número de jogadores incorreto para o modo selecionado!");
           return;
         }
         // Limpa campos de vencedor e sorteio da moeda antes de iniciar novo jogo
@@ -343,7 +339,7 @@ function mostrarLobby(codigo, nome, criador = false) {
             inicializarJogo(jogadores);
             salvarEstadoJogo();
             getDBRef("salas/" + codigo + "/status").set("jogo");
-            showToast("Jogo iniciado!");
+            if (window.notificationManager) window.notificationManager.showGlobal("Jogo iniciado!");
           });
         }, 600);
       });
@@ -375,7 +371,7 @@ function mostrarLobby(codigo, nome, criador = false) {
         !ultimosJogadores.some((u) => u.nome === j.nome) &&
         j.nome !== nomeAtual
       ) {
-        showToast(`${j.nome} entrou como jogador!`);
+        if (window.notificationManager) window.notificationManager.showGlobal(`${j.nome} entrou como jogador!`);
       }
     });
     ultimosJogadores = jogadores;
@@ -385,13 +381,13 @@ function mostrarLobby(codigo, nome, criador = false) {
         !ultimosEspectadores.some((u) => u.nome === e.nome) &&
         e.nome !== nomeAtual
       ) {
-        showToast(`${e.nome} entrou como espectador!`);
+        if (window.notificationManager) window.notificationManager.showGlobal(`${e.nome} entrou como espectador!`);
       }
     });
     ultimosEspectadores = espectadores;
     // Notificação de início de partida
     if (sala && sala.notificacao) {
-      showToast(sala.notificacao);
+      if (window.notificationManager) window.notificationManager.showGlobal(sala.notificacao);
       getDBRef("salas/" + codigo + "/notificacao").remove();
     }
     // Se status mudar para jogo, mostrar tela do jogo
@@ -546,6 +542,34 @@ function inicializarJogo(jogadores) {
 }
 
 // =========================
+// 4. Lógica de Turno (Global)
+// =========================
+
+window.avancarTurno = function () {
+  if (!window.estadoJogo) return;
+  const jogadores = window.estadoJogo.jogadores || [];
+  if (jogadores.length === 0) return;
+
+  // Toggle logic for 2 players
+  let proximaVez = (window.estadoJogo.vez + 1) % jogadores.length;
+  window.estadoJogo.vez = proximaVez;
+
+  // Notify (System)
+  const proximoJogador = jogadores[proximaVez];
+  const nome = proximoJogador ? proximoJogador.nome : "Oponente";
+
+  // Use Global Notification for Turn Change (Optional, but good feedback)
+  // if (window.notificationManager) window.notificationManager.showGlobal(`Vez de ${nome}`);
+
+  console.log(`[System] Turn Advanced. Now it is ${nome}'s turn (Index: ${proximaVez})`);
+
+  // Persist State
+  if (window.GameController && window.GameController.persistirEstado) {
+    window.GameController.persistirEstado();
+  }
+};
+
+// =========================
 // 5. Renderização de UI
 // =========================
 
@@ -574,7 +598,7 @@ function realizarTroca(from, to) {
       jogador: window.nomeAtual
     }
   });
-  // showToastInterno("Pedras trocadas!");
+  // if (window.notificationManager) window.notificationManager.showInternal("Pedras trocadas!");
 }
 
 // Configura as interações de drag & drop e clique nas pedras da mesa
@@ -724,7 +748,7 @@ function ouvirCaraCoroa() {
       feedbackDiv.innerHTML = `Você ficou com: <b>${minhaEscolha.toUpperCase()}</b><br><span style='font-size:0.95em;color:#ffd700;'>Aguarde o sorteio da moeda...</span>`;
     }
     if (minhaEscolha !== ultimoLadoNotificado) {
-      showToastInterno(`Você ficou com: ${minhaEscolha.toUpperCase()}`);
+      if (window.notificationManager) window.notificationManager.showInternal(`Você ficou com: ${minhaEscolha.toUpperCase()}`);
       ultimoLadoNotificado = minhaEscolha;
     }
     const agora = Date.now();
@@ -1297,7 +1321,7 @@ function mostrarMoedaParaSorteioCriador() {
         "value",
         function (snapEscolha) {
           if (!snapEscolha.exists()) {
-            showToastInterno("Aguardando escolha de Cara ou Coroa!");
+            if (window.notificationManager) window.notificationManager.showInternal("Aguardeando escolha de Cara ou Coroa!");
             if (moedaBtn) {
               moedaBtn.style.display = "none";
               moedaBtn.onclick = null;
@@ -1307,7 +1331,7 @@ function mostrarMoedaParaSorteioCriador() {
           if (moedaBtn) {
             moedaBtn.style.display = "block";
             moedaBtn.onclick = function () {
-              tocarSomPress();
+              // if (window.audioManager) window.audioManager.playPress(); // Removed to avoid double sound with Coin Audio
               moedaBtn.onclick = null; // desabilita localmente
               if (moedaAnimada) {
                 moedaAnimada.classList.remove("moeda-girando");
@@ -1382,14 +1406,14 @@ const btnBot = document.getElementById("bot-pve-btn");
 
 if (btnTutorial) {
   btnTutorial.onclick = function () {
-    tocarSomPress();
+    if (window.audioManager) window.audioManager.playPress();
     iniciarModoTutorial();
   };
 }
 
 if (btnBot) {
   btnBot.onclick = function () {
-    tocarSomPress();
+    if (window.audioManager) window.audioManager.playPress();
     iniciarModoBot();
   };
 }
@@ -1397,7 +1421,7 @@ if (btnBot) {
 const btnSairPartida = document.getElementById("btn-sair-partida");
 if (btnSairPartida) {
   btnSairPartida.onclick = function () {
-    tocarSomPress();
+    if (window.audioManager) window.audioManager.playPress();
     const btnVoltarLobbyManual = document.getElementById("btn-voltar-lobby");
     if (btnVoltarLobbyManual) {
       btnVoltarLobbyManual.click();
@@ -1459,7 +1483,7 @@ if (btnDesafiar) {
   btnDesafiar.onclick = function () {
     // tocarSomDesafio(); // REMOVIDO A PEDIDO DO USUARIO
     if (!ehMinhaVez()) {
-      showToastInterno("Aguarde sua vez!");
+      if (window.notificationManager) window.notificationManager.showInternal("Aguarde sua vez!");
       return;
     }
     // Restrição Tutorial: Strict Mode
@@ -1469,16 +1493,16 @@ if (btnDesafiar) {
     // Restrição Tutorial
     // Restrição Tutorial
     if (salaAtual === "MODO_TUTORIAL" && window.tellstonesTutorial && window.tellstonesTutorial.passo !== 5) {
-      showToastInterno("Siga o tutorial: agora não é hora de desafiar.");
+      if (window.notificationManager) window.notificationManager.showInternal("Siga o tutorial: agora não é hora de desafiar.");
       return;
     }
     // Só permite se houver pelo menos uma pedra virada para baixo
     const pedrasViradas = estadoJogo.mesa.filter((p) => p && p.virada);
     if (!pedrasViradas.length) {
-      showToastInterno("Não há pedras viradas para baixo para desafiar!");
+      if (window.notificationManager) window.notificationManager.showInternal("Não há pedras viradas para baixo para desafiar!");
       return;
     }
-    showToastInterno("Selecione uma pedra virada para baixo para desafiar.");
+    if (window.notificationManager) window.notificationManager.showInternal("Selecione uma pedra virada para baixo para desafiar.");
     window.selecionandoDesafio = true;
     // Marcar status 'selecionando' no desafio com o jogador correto
     estadoJogo.desafio = { status: "selecionando", jogador: nomeAtual };
@@ -1490,14 +1514,19 @@ if (btnDesafiar) {
 const btnSegabar = document.getElementById("btn-segabar");
 if (btnSegabar) {
   btnSegabar.onclick = function () {
+    console.log("[DEBUG] Boast Button Clicked");
+    console.log("[DEBUG] ehMinhaVez:", ehMinhaVez());
+    console.log("[DEBUG] salaAtual:", salaAtual);
+
     // tocarSomDesafio(); // REMOVIDO A PEDIDO DO USUARIO
     if (!ehMinhaVez()) {
-      showToastInterno("Aguarde sua vez!");
+      console.warn("[DEBUG] Boast Blocked: Not my turn");
+      if (window.notificationManager) window.notificationManager.showInternal("Aguarde sua vez!");
       return;
     }
     // Restrição Tutorial
     if (salaAtual === "MODO_TUTORIAL" && window.tellstonesTutorial && window.tellstonesTutorial.passo !== 7) {
-      showToastInterno("Siga o tutorial: agora não é hora de se gabar.");
+      if (window.notificationManager) window.notificationManager.showInternal("Siga o tutorial: agora não é hora de se gabar.");
       return;
     }
     // Lógica de Se Gabar
@@ -1746,6 +1775,12 @@ function renderizarPedrasMesa(pedras) {
 
     return;
   }
+  // DEBUG VISUAL STATE
+  if (pedras && pedras.length > 0) {
+    const states = pedras.map((p, i) => p ? `${i}:${p.virada ? 'DOWN' : 'UP'}` : `${i}:NULL`);
+    console.log(`[RENDER] Pedras: ${states.join(', ')}`);
+  }
+
   const wrapper = document.getElementById("tabuleiro-wrapper");
   const pedrasMesa = document.getElementById("pedras-mesa");
   pedrasMesa.innerHTML = "";
@@ -1779,10 +1814,10 @@ function renderizarPedrasMesa(pedras) {
           div.onclick = function (e) {
             e.stopPropagation();
             if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("SELECIONAR_DESAFIO")) return;
-            tocarSomClick();
+            if (window.audioManager) window.audioManager.playClick();
             if (!estadoJogo.mesa[i] || !estadoJogo.mesa[i].virada) return;
             adicionarSilhuetaEspiada(i);
-            showToastInterno("Aguarde o oponente escolher a pedra!");
+            if (window.notificationManager) window.notificationManager.showInternal("Aguarde o oponente escolher a pedra!");
             const pedrasMesa = document.querySelectorAll(".pedra-mesa");
             pedrasMesa.forEach((d) => { d.onclick = null; d.style.cursor = "not-allowed"; });
 
@@ -1811,7 +1846,7 @@ function renderizarPedrasMesa(pedras) {
           // Espiar
           div.ondblclick = function () {
             if (window.tellstonesTutorial && !window.tellstonesTutorial.verificarAcao("ESPIAR_PEDRA")) return;
-            tocarSomClick();
+            if (window.audioManager) window.audioManager.playClick();
             espiarPedra(i);
           };
           div.style.cursor = "pointer";
@@ -1848,27 +1883,35 @@ function renderizarPedrasMesa(pedras) {
         if (estadoJogo.desafio && estadoJogo.desafio.status === "responder_pecas" && estadoJogo.desafio.jogador === nomeAtual && ehMinhaVez()) {
           div.onclick = function () {
             if (window.currentGameMode && !window.currentGameMode.canPerformAction("RESPONDER_DESAFIO")) return;
-            tocarSomClick();
+            if (window.audioManager) window.audioManager.playClick();
             abrirSeletorPedra(i);
           };
           div.style.cursor = "pointer";
         }
 
         // Virar Pedra
+        // Virar Pedra (Esconder)
         if (estadoJogo.alinhamentoFeito && ehMinhaVez() && (!estadoJogo.desafio || estadoJogo.desafio.status !== "responder_pecas")) {
           div.ondblclick = function () {
             const idx = parseInt(div.getAttribute("data-idx"));
             if (estadoJogo.mesa[idx] && !estadoJogo.mesa[idx].virada) {
               if (window.currentGameMode && !window.currentGameMode.canPerformAction("VIRAR_PEDRA")) return;
-              tocarSomClick();
+              if (window.audioManager) window.audioManager.playClick();
+              // Estado update
               estadoJogo.mesa[idx].virada = true;
               salvarEstadoJogo();
               enviarNotificacaoGlobal(`Pedra (${estadoJogo.mesa[idx].nome}) foi virada.`);
+
               if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
+
               avancarTurno();
+
+              // FORCE RE-RENDER to ensure visual updates immediately
+              if (window.Renderer) window.Renderer.renderizarMesa();
             }
           };
           div.style.cursor = "pointer";
+          div.title = "Esconder pedra (duplo clique)";
         }
       }
 
@@ -1899,10 +1942,10 @@ function renderizarPedrasMesa(pedras) {
           if (window.currentGameMode && !window.currentGameMode.canPerformAction("TROCAR_PEDRAS")) {
             e.preventDefault(); return;
           }
-          tocarSomClick();
+          if (window.audioManager) window.audioManager.playClick();
           setTimeout(() => div.classList.add("pedra-troca-selecionada"), 0);
           e.dataTransfer.setData("idx", i);
-          showToastInterno(`Arrastando Pedra ${i}`);
+          if (window.notificationManager) window.notificationManager.showInternal(`Arrastando Pedra ${i}`);
         };
         div.ondragend = () => { div.classList.remove("pedra-troca-selecionada"); };
         div.ondragover = (e) => { e.preventDefault(); div.classList.add("pedra-drop-alvo"); };
@@ -1920,7 +1963,7 @@ function renderizarPedrasMesa(pedras) {
             // Swap Logic
             const fromIdxDrop = parseInt(e.dataTransfer.getData("idx"));
             if (isNaN(fromIdxDrop) || fromIdxDrop === i) return;
-            if (!estadoJogo.mesa[fromIdxDrop]) { showToastInterno("Inválido!"); return; }
+            if (!estadoJogo.mesa[fromIdxDrop]) { if (window.notificationManager) window.notificationManager.showInternal("Inválido!"); return; }
 
             // FIX: Write directly to child path to ensure LocalDB/Firebase listeners trigger correctly
             getDBRef("salas/" + salaAtual + "/estadoJogo/trocaAnimacao").set({
@@ -1929,7 +1972,7 @@ function renderizarPedrasMesa(pedras) {
               timestamp: Date.now(),
               jogador: nomeAtual
             });
-            showToastInterno("Pedras trocadas!");
+            if (window.notificationManager) window.notificationManager.showInternal("Pedras trocadas!");
           }
         };
 
@@ -2131,7 +2174,7 @@ function enviarNotificacaoGlobal(msg) {
 function espiarPedra(idx) {
   if (estadoJogo.mesa[idx] && estadoJogo.mesa[idx].virada) {
     const pedra = estadoJogo.mesa[idx];
-    showToastInterno(
+    if (window.notificationManager) window.notificationManager.showInternal(
       `Você espiou: ${pedra.nome} <span style='display:inline-block;width:44px;height:44px;background:#fff;border-radius:50%;vertical-align:middle;margin-left:8px;box-shadow:0 1px 4px #0002;'><img src='${pedra.url}' alt='${pedra.nome}' style='width:40px;height:40px;vertical-align:middle;margin:2px;'></span>`
     );
     // Notifica todos os outros jogadores que alguém espiou
@@ -2151,7 +2194,7 @@ function espiarPedra(idx) {
     }, 2200);
     avancarTurno();
   } else {
-    showToastInterno("Só é possível espiar pedras viradas.");
+    if (window.notificationManager) window.notificationManager.showInternal("Só é possível espiar pedras viradas.");
   }
 }
 
@@ -2543,10 +2586,10 @@ function renderizarMarcadoresPonto() {
 
   // Verifica vitória automática (Lógica mantém checagem absoluta de P1/P2)
   if (ptsP1 >= 3) {
-    showToast(`Vitória de ${estadoJogo.jogadores[0].nome}!`);
+    if (window.notificationManager) window.notificationManager.showGlobal(`Vitória de ${estadoJogo.jogadores[0].nome}!`);
     bloquearAcoesDuranteDesafio();
   } else if (ptsP2 >= 3) {
-    showToast(`Vitória de ${estadoJogo.jogadores[1].nome}!`);
+    if (window.notificationManager) window.notificationManager.showGlobal(`Vitória de ${estadoJogo.jogadores[1].nome}!`);
     bloquearAcoesDuranteDesafio();
   }
 }
@@ -2611,6 +2654,8 @@ if (btnVoltarLobby) {
     // Limpa Moeda (Persistence Fix)
     const coinBtn = document.getElementById("moeda-btn");
     if (coinBtn) coinBtn.remove();
+    // Limpa Fala do Bot
+    if (window.Renderer && window.Renderer.limparFalaBot) window.Renderer.limparFalaBot();
     // Limpa UI
     document.getElementById("game").classList.remove("active");
     document.getElementById("lobby").classList.remove("active");
@@ -3368,3 +3413,58 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 })();
+
+// =========================
+// 9. Event Listeners para Menu Principal (Restaurados)
+// =========================
+document.addEventListener("DOMContentLoaded", () => {
+  // 1. Tutorial
+  const btnTutorial = document.getElementById('tutorial-btn');
+  if (btnTutorial) {
+    btnTutorial.onclick = () => {
+      if (window.audioManager) window.audioManager.playPress();
+      console.log("[Menu] Iniciando Tutorial...");
+      if (window.currentGameMode) window.currentGameMode.cleanup();
+      window.currentGameMode = new TutorialMode();
+      window.currentGameMode.start();
+    };
+  }
+
+  // 2. PvE (Contra Bot)
+  const btnPvE = document.getElementById('bot-pve-btn');
+  if (btnPvE) {
+    btnPvE.onclick = () => {
+      if (window.audioManager) window.audioManager.playPress();
+      console.log("[Menu] Iniciando PvE...");
+      if (window.currentGameMode) window.currentGameMode.cleanup();
+      if (typeof mostrarTela === 'function') mostrarTela('game');
+      window.currentGameMode = new PvEMode();
+      window.currentGameMode.start({ playerName: 'Jogador' });
+    };
+  }
+
+  // 3. Online Menu (Toggle)
+  const btnOnline = document.getElementById('online-menu-btn');
+  const divOnline = document.getElementById('online-menu');
+  const divMainBtns = document.getElementById('main-menu-btns');
+  const btnBack = document.getElementById('back-to-main-btn');
+
+  if (btnOnline && divOnline && divMainBtns) {
+    btnOnline.onclick = () => {
+      if (window.audioManager) window.audioManager.playPress();
+      divMainBtns.style.display = 'none';
+      divOnline.style.display = 'flex';
+    };
+  }
+
+  if (btnBack && divOnline && divMainBtns) {
+    btnBack.onclick = () => {
+      if (window.audioManager) window.audioManager.playPress();
+      divOnline.style.display = 'none';
+      divMainBtns.style.display = 'flex';
+      divMainBtns.style.flexDirection = 'column';
+      divMainBtns.style.gap = '-5px';
+      divMainBtns.style.alignItems = 'center';
+    };
+  }
+});

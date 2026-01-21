@@ -5,7 +5,7 @@ class TellstonesTutorial {
         if (permissoes && permissoes.acoes && permissoes.acoes.includes(acao)) {
             return true;
         }
-        showToastInterno(`Ação indisponível neste passo do tutorial.`);
+        if (window.notificationManager) window.notificationManager.showInternal(`Ação indisponível neste passo do tutorial.`);
         return false;
     }
 
@@ -159,7 +159,7 @@ class TellstonesTutorial {
                         });
 
                         // Força UI update visual imediato (embora listener vá capturar)
-                        showToast("O Mestre desafiou você!");
+                        if (window.notificationManager) window.notificationManager.showGlobal("O Mestre desafiou você!");
                         window.tutorialDesafioIniciado = true; // Flag set
                         if (window.Renderer) window.Renderer.renderizarOpcoesDesafio(); // Força renderização imediata manual
                     }
@@ -215,7 +215,7 @@ class TellstonesTutorial {
                         window.estadoJogo.desafio.jogador !== "Mestre") {
 
 
-                        showToastInterno("Mestre: 'Eu duvido! Prove que você sabe todas as pedras.'");
+                        if (window.notificationManager) window.notificationManager.showInternal("Mestre: 'Eu duvido! Prove que você sabe todas as pedras.'");
 
                         // FIX: Verificar se JÁ estamos no estado correto E se já disparou para evitar loop infinito
                         // (Update DB -> Listener -> Render -> Check Tutorial -> Validacao -> Update DB...)
@@ -278,7 +278,7 @@ class TellstonesTutorial {
                     window.estadoJogo.desafio = novoDesafio;
                     window.estadoJogo.vez = 0;
 
-                    showToast("O Mestre está se gabando!");
+                    if (window.notificationManager) window.notificationManager.showGlobal("O Mestre está se gabando!");
                     window.tutorialBoastIniciado = true;
                     if (window.Renderer) window.Renderer.renderizarOpcoesSegabar(); // Força UI manual
                 },
@@ -316,6 +316,9 @@ class TellstonesTutorial {
                         }
 
                         if (window.estadoJogo.desafio.status === "responder_pecas") {
+                            setTimeout(() => {
+                                if (window.tellstonesTutorial) window.tellstonesTutorial.proximo();
+                            }, 500);
                             return true;
                         }
                     }
@@ -325,7 +328,7 @@ class TellstonesTutorial {
             {
                 // 9
                 titulo: "Provando seu Conhecimento",
-                msg: "O Mestre duvidou de você! Como você se gabou também, agora deve provar que sabe TODAS as pedras viradas.",
+                msg: "Agora é sua vez! O Mestre duvidou de você (ou você escolheu atacar). Prove que você sabe onde estão as pedras.",
                 acao: "Clique nas opções para identificar cada pedra sequencialmente.",
                 setup: () => {
                     // FORÇAR PROVA DE CONHECIMENTO MESMO NO FINAL
@@ -357,7 +360,7 @@ class TellstonesTutorial {
                         window.estadoJogo.desafio = desafioFinal;
                         window.estadoJogo.vez = 1;
 
-                        showToastInterno("Vamos testar sua memória uma última vez!");
+                        if (window.notificationManager) window.notificationManager.showInternal("Vamos testar sua memória uma última vez!");
                         if (window.Renderer) window.Renderer.renderizarMesa();
 
                         // Disparar UI render
@@ -369,7 +372,7 @@ class TellstonesTutorial {
                         // Caso Normal (Veio de Se Gabar Também)
                         // Bot Duvida do contra-boast se ainda não o fez
                         if (window.estadoJogo.desafio.status === "aguardando_resposta") {
-                            showToastInterno("Mestre: 'Você também sabe? Duvido! Prove.'");
+                            if (window.notificationManager) window.notificationManager.showInternal("Mestre: 'Você também sabe? Duvido! Prove.'");
                             window.estadoJogo.desafio.status = "responder_pecas";
                             window.estadoJogo.desafio.idxAtual = 0;
                             window.estadoJogo.desafio.respostas = [];
@@ -445,7 +448,7 @@ class TellstonesTutorial {
 
     proximo() {
         if (!this.acaoConcluida) {
-            showToastInterno("Complete a ação primeiro!");
+            if (window.notificationManager) window.notificationManager.showInternal("Complete a ação primeiro!");
             return;
         }
         this.mostrarPasso(this.passo + 1);
@@ -513,7 +516,10 @@ class TellstonesTutorial {
             background: #4caf50; color: white; border: none; padding: 8px 16px;
             border-radius: 4px; cursor: pointer; align-self: flex-end; margin-top: 10px;
         `;
-        this.btnNext.onclick = () => this.proximo();
+        this.btnNext.onclick = () => {
+            if (window.audioManager) window.audioManager.playClick();
+            this.proximo();
+        };
         this.overlay.appendChild(this.btnNext);
 
         document.body.appendChild(this.overlay);
@@ -614,7 +620,7 @@ class TellstonesTutorial {
             if (btnSair) btnSair.click();
         };
 
-        showToast("Tutorial Finalizado! Parabéns!");
+        if (window.notificationManager) window.notificationManager.showGlobal("Tutorial Finalizado! Parabéns!");
     }
     cleanup() {
         if (this.overlay) {

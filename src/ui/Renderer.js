@@ -4,6 +4,77 @@
 
 const Renderer = {
 
+    // Exibe balão de fala do Bot no topo do tabuleiro
+    mostrarFalaBot: function (texto) {
+        const wrapper = document.getElementById("tabuleiro-wrapper");
+        if (!wrapper) return;
+
+        let bubble = document.getElementById("bot-speech-bubble");
+        if (!bubble) {
+            bubble = document.createElement("div");
+            bubble.id = "bot-speech-bubble";
+            bubble.style.position = "absolute";
+            bubble.style.top = "-80px"; // Acima do tabuleiro
+            bubble.style.left = "10%"; // Esquerda
+            // bubble.style.transform = "translateX(-50%)"; // Removido centralização
+            bubble.style.transform = "translateX(0)";
+            bubble.style.backgroundColor = "#ffffff";
+            bubble.style.color = "#333";
+            bubble.style.padding = "12px 24px";
+            bubble.style.borderRadius = "10px";
+            bubble.style.boxShadow = "0 4px 15px rgba(0,0,0,0.2)";
+            bubble.style.fontFamily = "'Cinzel', serif";
+            bubble.style.fontSize = "16px";
+            bubble.style.fontWeight = "bold";
+            bubble.style.zIndex = "1000";
+            bubble.style.opacity = "0";
+            bubble.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+            bubble.style.pointerEvents = "none";
+            bubble.style.textAlign = "center";
+            bubble.style.minWidth = "200px";
+
+            // Triângulo do balão
+            const triangle = document.createElement("div");
+            triangle.style.content = "''";
+            triangle.style.position = "absolute";
+            triangle.style.bottom = "-10px";
+            triangle.style.bottom = "-10px";
+            triangle.style.left = "20px"; // Align with left bubble
+            triangle.style.marginLeft = "0";
+            triangle.style.borderWidth = "10px 10px 0";
+            triangle.style.borderStyle = "solid";
+            triangle.style.borderColor = "#ffffff transparent transparent transparent";
+            bubble.appendChild(triangle);
+
+            wrapper.appendChild(bubble);
+        }
+
+        // Se já estiver visivel, pisca levemente
+        bubble.style.transform = "translateX(-50%) scale(0.95)";
+        setTimeout(() => {
+            bubble.style.transform = "translateX(-50%) scale(1)";
+        }, 50);
+
+        // Atualiza texto preservando o triângulo
+        const triangle = bubble.querySelector('div');
+        bubble.innerText = texto;
+        if (triangle) bubble.appendChild(triangle);
+
+        bubble.style.opacity = "1";
+
+        if (this.speechTimeout) clearTimeout(this.speechTimeout);
+        this.speechTimeout = setTimeout(() => {
+            bubble.style.opacity = "0";
+        }, 4000);
+    },
+
+    // Remove o balão de fala do DOM e limpa timeouts
+    limparFalaBot: function () {
+        const bubble = document.getElementById("bot-speech-bubble");
+        if (bubble) bubble.remove();
+        if (this.speechTimeout) clearTimeout(this.speechTimeout);
+    },
+
     // Renderiza as pedras na mesa (tabuleiro)
     renderizarPedrasMesa: function (mesa) {
         const wrapper = document.getElementById("tabuleiro-wrapper");
@@ -61,7 +132,7 @@ const Renderer = {
             div.onclick = function () {
                 if (window.selecionandoDesafio) {
                     if (!p.virada) {
-                        if (window.showToastInterno) window.showToastInterno("Escolha uma pedra virada para desafiar!");
+                        if (window.notificationManager) window.notificationManager.showInternal("Escolha uma pedra virada para desafiar!");
                         return;
                     }
                     console.log("[Renderer] Pedra selecionada para desafio:", i);
@@ -456,6 +527,59 @@ const Renderer = {
         anim.onfinish = function () {
             if (callback) callback();
         };
+    },
+
+    animarBotColocar: function (pedra, fromIdx, slotIdx, callback) {
+        // Encontra a pedra na reserva visual
+        const circle = document.getElementById("circle-pedras");
+        if (!circle) {
+            if (callback) callback();
+            return;
+        }
+
+        // Tenta encontrar pelo slot da reserva (assumindo que p.nome bate ou index)
+        let pedraDiv = null;
+        const candidates = circle.querySelectorAll(".pedra-reserva");
+        candidates.forEach(el => {
+            const img = el.querySelector("img");
+            if (img && img.src.includes(encodeURIComponent(pedra.url))) {
+                pedraDiv = el;
+            } else if (img && img.src.includes(pedra.url)) {
+                pedraDiv = el;
+            }
+        });
+
+        if (!pedraDiv) {
+            console.warn("[Renderer] Pedra do Bot não encontrada na reserva visual:", pedra);
+            if (callback) callback();
+            return;
+        }
+
+        // Clone para animação
+        const ghost = pedraDiv.cloneNode(true);
+        const rect = pedraDiv.getBoundingClientRect();
+
+        ghost.style.position = "fixed";
+        ghost.style.left = rect.left + "px";
+        ghost.style.top = rect.top + "px";
+        ghost.style.width = rect.width + "px";
+        ghost.style.height = rect.height + "px";
+        ghost.style.zIndex = "999999";
+        ghost.style.pointerEvents = "none";
+        ghost.style.opacity = "1";
+        document.body.appendChild(ghost);
+
+        // Oculta original
+        pedraDiv.style.opacity = "0";
+
+        // Anima até o slot
+        const tab = document.getElementById("tabuleiro-wrapper");
+        this.animarPedraReservaParaMesa(ghost, tab, slotIdx, () => {
+            ghost.remove();
+            // O estado será atualizado pelo callback, que renderizará a mesa nova
+            // Não precisamos restaurar a opacidade do original pois ele será removido na re-renderização
+            if (callback) callback();
+        });
     },
 
     // --- DEBUG: BOT MEMORY OVERLAY ---
@@ -942,13 +1066,31 @@ const Renderer = {
             };
 
             btn.onclick = function () {
-                if (window.tocarSomClick) window.tocarSomClick();
+                if (window.audioManager) window.audioManager.playClick();
                 if (window.GameController) window.GameController.verificarRespostaSegabar(pedrasViradas[idxAtual].idx, p.nome);
             };
             linha.appendChild(btn);
         });
         box.appendChild(linha);
         container.appendChild(box);
+    },
+
+    mostrarFalaBot: function (texto) {
+        let bubble = document.getElementById("bot-speech-bubble");
+        if (!bubble) {
+            bubble = document.createElement("div");
+            bubble.id = "bot-speech-bubble";
+            document.body.appendChild(bubble); // Body or Wrapper? Body is safer for absolute positioning.
+        }
+
+        bubble.innerText = texto;
+        bubble.classList.add("visible");
+
+        // Auto-hide after 3.5s
+        if (this.botSpeechTimeout) clearTimeout(this.botSpeechTimeout);
+        this.botSpeechTimeout = setTimeout(() => {
+            bubble.classList.remove("visible");
+        }, 3500);
     },
 
     // Helper UTILS

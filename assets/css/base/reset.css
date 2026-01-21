@@ -1,0 +1,44 @@
+/* =====================================================
+   ESTRUTURA GERAL E RESET
+   ===================================================== */
+html,
+body {
+    height: 100%;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    /* background removed -> moved to #parallax-container or specific layout */
+    background: #181c24 url("../../img/Fundo.jpg") no-repeat center center fixed;
+    background-size: cover;
+    color: #f1f1f1;
+    font-family: "Segoe UI", Arial, sans-serif;
+    cursor: url("../../img/cursor_opt.png") 0 0, auto;
+    overflow: hidden;
+    /* Prevent scrollbars from moving layers */
+}
+
+/* Base interactive elements */
+button,
+.token,
+.pedra-oficial,
+a,
+.clickable {
+    cursor: url("../../img/cursor_opt.png") 0 0, pointer !important;
+}
+
+label,
+input,
+#room-options label {
+    color: #f1f1f1;
+}
+
+input[type="text"] {
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #444;
+    background: #222;
+    color: #fff;
+    margin-bottom: 10px;
+}

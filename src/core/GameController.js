@@ -80,7 +80,7 @@ const GameController = {
             if (idx !== -1) estado.jogadores[idx].pontos++;
 
             if (salaAtual === "MODO_TUTORIAL") {
-                if (window.showToastInterno) window.showToastInterno(`Você acreditou. O Mestre marcou ponto!`);
+                if (window.notificationManager) window.notificationManager.showInternal(`Você acreditou. O Mestre marcou ponto!`);
                 estado.vez = 1;
                 // Force update
                 getDBRef("salas/" + salaAtual + "/estadoJogo").update({
@@ -99,17 +99,22 @@ const GameController = {
                 jogadores: estado.jogadores
             });
             getDBRef("salas/" + salaAtual + "/estadoJogo/desafio").remove();
-            if (window.showToast) window.showToast(`${jogadorDesafio} ganhou 1 ponto!`);
+
+            // FORCE LOCAL UPDATE (Sync with PvE Loop)
+            estado.desafio = null;
+            if (window.estadoJogo) window.estadoJogo.desafio = null;
+
+            if (window.notificationManager) window.notificationManager.showGlobal(`${jogadorDesafio} ganhou 1 ponto!`);
             if (window.avancarTurno) window.avancarTurno(); // Legacy Global Call
         }
 
         // --- DUVIDAR ---
         else if (acao === "duvidar") {
             if (salaAtual === "MODO_TUTORIAL") {
-                if (window.showToastInterno) window.showToastInterno("Você duvidou! O Mestre vai provar...");
+                if (window.notificationManager) window.notificationManager.showInternal("Você duvidou! O Mestre vai provar...");
                 // Simula Mestre provando
                 setTimeout(() => {
-                    if (window.showToastInterno) window.showToastInterno("Mestre revelou as pedras e acertou! 3 Pantos para ele.");
+                    if (window.notificationManager) window.notificationManager.showInternal("Mestre revelou as pedras e acertou! 3 Pantos para ele.");
                     const idxBot = estado.jogadores.findIndex(j => j.nome === "Mestre");
                     if (idxBot !== -1) estado.jogadores[idxBot].pontos += 3;
                     estado.vez = 1;
@@ -151,6 +156,7 @@ const GameController = {
     // Ação: Verificar Resposta (Exame Se Gabar)
     verificarRespostaSegabar: function (idxMesa, nomeEscolhido) {
         const estado = window.estadoJogo;
+        if (!estado.desafio) return;
         if (!estado.desafio.respostas) estado.desafio.respostas = [];
         if (typeof estado.desafio.idxAtual === 'undefined') estado.desafio.idxAtual = 0;
 
@@ -187,8 +193,8 @@ const GameController = {
 
         if (!errou) {
             // VENCEU O DESAFIO
-            if (window.tocarSomSucesso) window.tocarSomSucesso();
-            if (window.showToast) window.showToast("Você provou seu conhecimento e VENCEU 3 PONTOS!");
+            if (window.audioManager) window.audioManager.playSuccess();
+            if (window.notificationManager) window.notificationManager.showGlobal("Você provou seu conhecimento e VENCEU 3 PONTOS!");
 
             // Robust Scoring: Update directly via Firebase Transaction/Update to avoid race
             const boasterName = estado.desafio.jogador;
@@ -215,8 +221,8 @@ const GameController = {
         } else {
             // ERROU
             // ERROU - Ponto ao oponente
-            if (window.tocarSomFalha) window.tocarSomFalha();
-            if (window.showToastInterno) window.showToastInterno(`Você errou a sequência! Oponente ganha 3 PONTOS.`);
+            if (window.audioManager) window.audioManager.playFailure();
+            if (window.notificationManager) window.notificationManager.showInternal(`Você errou a sequência! Oponente ganha 3 PONTOS.`);
             estado.desafio = null;
 
             // Oponente ganha 3 pontos
@@ -224,6 +230,10 @@ const GameController = {
             const idxOponente = (estado.vez + 1) % estado.jogadores.length;
             if (estado.jogadores[idxOponente]) {
                 estado.jogadores[idxOponente].pontos += 3;
+                if (salaAtual === "MODO_TUTORIAL" && window.tellstonesTutorial) {
+                    window.tellstonesTutorial.registrarAcaoConcluida();
+                }
+
                 // Direct DB update
                 if (salaAtual !== "MODO_TUTORIAL") {
                     getDBRef(`salas/${salaAtual}/estadoJogo/jogadores/${idxOponente}/pontos`)
@@ -243,8 +253,10 @@ const GameController = {
             estado.desafio.respostas = [];
             estado.desafio.idxAtual = 0;
         }
+
         this.persistirEstado();
         this.notificarAtualizacao();
+        this.verificarFimDeJogo();
     },
 
     // Helpers de Estado
@@ -265,6 +277,55 @@ const GameController = {
         if (window.Renderer) {
             window.Renderer.renderizarMesa();
             window.Renderer.renderizarPedrasReserva();
+        }
+    },
+
+    // Verificação de Fim de Jogo
+    verificarFimDeJogo: function () {
+        const estado = window.estadoJogo;
+        if (!estado || !estado.jogadores) return;
+
+        // SKIP for Tutorial (Managed by Script)
+        if (window.salaAtual === "MODO_TUTORIAL") return;
+
+        const WIN_SCORE = 3;
+
+        let vencedor = null;
+        if (Array.isArray(estado.jogadores)) {
+            vencedor = estado.jogadores.find(j => j.pontos >= WIN_SCORE);
+        } else {
+            vencedor = Object.values(estado.jogadores).find(j => j.pontos >= WIN_SCORE);
+        }
+
+        if (vencedor) {
+            console.log("[GameController] Fim de Jogo! Vencedor:", vencedor.nome);
+
+            // Mark state as ended to stop Bot/Interactions
+            estado.vencedor = vencedor.nome;
+            this.persistirEstado();
+
+            if (window.notificationManager) window.notificationManager.showGlobal(`Vencedor: ${vencedor.nome}!`);
+
+            // Show Victory Screen
+            const tela = document.getElementById("tela-vitoria");
+            if (tela) {
+                tela.style.display = "flex";
+                const titulo = document.getElementById("tela-vitoria-titulo");
+                const msg = document.getElementById("tela-vitoria-msg");
+
+                if (titulo) titulo.innerText = `${vencedor.nome} Venceu o Jogo!`;
+
+                const isMe = (vencedor.id === 'p1' || vencedor.nome === window.nomeAtual);
+                if (msg) msg.innerText = isMe
+                    ? "Parabéns! Você provou ser um mestre do Tellstones."
+                    : "Derrota! Mais sorte na próxima vez.";
+
+                // Play Sound
+                if (window.audioManager) {
+                    if (isMe) window.audioManager.playSuccess();
+                    else window.audioManager.playFailure();
+                }
+            }
         }
     }
 };

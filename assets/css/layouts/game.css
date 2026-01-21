@@ -1,0 +1,191 @@
+/* =====================================================
+   LAYOUTS: JOGO E TABULEIRO
+   ===================================================== */
+#tabuleiro {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin: 30px 0 10px 0;
+    min-height: 70px;
+}
+
+#game-mesa {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 30px 0 10px 0;
+    min-height: 120px;
+    gap: 32px;
+    min-width: 95vw;
+    max-width: 100vw;
+    padding: 24px 0;
+}
+
+#pedras-oficiais {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 32px;
+}
+
+#pano-mesa {
+    width: 320px;
+    height: 100px;
+    background: linear-gradient(135deg, #eaeaea 80%, #b0b0b0 100%);
+    border: 4px solid #2d8cff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px #0005;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+#resultado-moeda {
+    margin-top: 10px;
+    font-size: 1.1em;
+    color: #ffd700;
+    text-shadow: 0 2px 8px #000a;
+}
+
+#painel-acoes {
+    margin-top: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    justify-content: center;
+}
+
+/* Código da sala no canto superior esquerdo */
+#codigo-sala-fixo {
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    background: rgba(24, 28, 36, 0.92);
+    color: #8ecfff;
+    font-size: 1em;
+    border-radius: 6px;
+    padding: 6px 14px;
+    z-index: 30;
+    border: 1.5px solid #2d8cff;
+    box-shadow: 0 2px 8px #0004;
+    opacity: 0.85;
+}
+
+/* 1. Código da sala no canto superior ESQUERDO (HUD - Safe outside wrapper) */
+#info-sala {
+    position: fixed;
+    top: 0 !important;
+    bottom: auto !important;
+    left: 0 !important;
+    right: auto !important;
+    width: auto;
+    text-align: left;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 4px 10px;
+    border-bottom-right-radius: 8px;
+    z-index: 100;
+    pointer-events: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: none;
+    border-left: none;
+}
+
+/* Esconder listas de jogadores/espectadores após início do jogo */
+#game-jogadores,
+#game-espectadores {
+    display: none !important;
+}
+
+/* Ícones flutuantes para abrir cards */
+#icones-flutuantes {
+    position: fixed;
+    top: 60px;
+    right: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    z-index: 1050;
+}
+
+.icone-flutuante {
+    width: 48px;
+    height: 48px;
+    background: #fff;
+    border: 2px solid #2d8cff;
+    border-radius: 50%;
+    box-shadow: 0 2px 12px #0004;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2em;
+    color: #2d8cff;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+.icone-flutuante:hover {
+    background: #e6f0ff;
+    box-shadow: 0 4px 18px #2224;
+}
+
+#btn-mute-global {
+    position: fixed;
+    top: 10px;
+    right: 5px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 3000;
+    transition: transform 0.2s;
+}
+
+/* --- Cloth Animation --- */
+#pano-mesa {
+    animation: clothSway 8s ease-in-out infinite alternate;
+}
+
+@keyframes clothSway {
+    0% {
+        transform: translateY(0) skewX(0deg);
+    }
+
+    100% {
+        transform: translateY(-2px) skewX(0.5deg);
+    }
+}
+
+/* --- Vignette --- */
+.vignette-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, transparent 40%, rgba(0, 0, 0, 0.6) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+#placar-turno-central {
+    font-family: "Cinzel Decorative", serif !important;
+    font-size: 1.5em !important;
+    color: #fff !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8) !important;
+    letter-spacing: 1px;
+    background: none !important;
+    padding: 5px 10px;
+    border: none !important;
+    backdrop-filter: none !important;
+    transition: opacity 0.3s ease;
+    opacity: 0.9;
+}
+
+#placar-turno-central:hover {
+    opacity: 1;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.6) !important;
+    cursor: default;
+}

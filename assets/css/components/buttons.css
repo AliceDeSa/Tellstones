@@ -1,0 +1,370 @@
+/* =====================================================
+   BOTÕES GERAIS E DE AÇÃO
+   ===================================================== */
+#lobby-iniciar,
+#voltar-lobby {
+    background: #2d8cff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background 0.2s;
+}
+
+#lobby-iniciar:hover,
+#voltar-lobby:hover {
+    background: #1a5fb4;
+}
+
+#start-screen button {
+    margin: 0;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 5px;
+    border: none;
+    background: #2d8cff;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: "Cinzel Decorative", serif;
+    letter-spacing: 1px;
+}
+
+#start-screen button:hover {
+    filter: brightness(1.1);
+    transform: scale(1.02);
+}
+
+#start-screen #tutorial-btn {
+    background: url("../../img/Borda_Verde.webp?v=4.4") no-repeat center center;
+    background-size: 100% 100%;
+    width: 300px;
+    height: 75px;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+#start-screen #bot-pve-btn {
+    background: url("../../img/Borda_Dourada.webp?v=4.4") no-repeat center center;
+    background-size: 100% 100%;
+    width: 300px;
+    height: 75px;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+#start-screen #online-menu-btn {
+    background: url("../../img/Borda_Preta.webp?v=4.4") no-repeat center center;
+    background-size: 100% 100%;
+    width: 300px;
+    height: 75px;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Side by Side Buttons */
+#start-screen #create-room-btn {
+    background: url("../../img/Laranja.webp?v=4.4") no-repeat center center;
+    background-size: 100% 100%;
+    width: 260px;
+    height: 65px;
+    font-size: 1.15em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+#start-screen #join-room-btn {
+    background: url("../../img/Ciano.webp?v=4.4") no-repeat center center;
+    background-size: 100% 100%;
+    width: 260px;
+    height: 65px;
+    font-size: 1.15em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Action Buttons */
+#start-screen #start-game-btn {
+    background: url("../../img/Roxo.webp?v=4.4") no-repeat center center;
+    background-size: 100% 100%;
+    width: 300px;
+    height: 75px;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    font-family: "Cinzel Decorative", serif;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px auto;
+    padding: 0;
+}
+
+#start-screen #enter-room-btn {
+    background: url("../../img/Verde.webp?v=4.4") no-repeat center center;
+    background-size: 100% 100%;
+    width: 300px;
+    height: 75px;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    font-family: "Cinzel Decorative", serif;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px auto;
+    padding: 0;
+}
+
+#start-screen #tutorial-btn:hover,
+#start-screen #bot-pve-btn:hover,
+#start-screen #online-menu-btn:hover,
+#start-screen #create-room-btn:hover,
+#start-screen #join-room-btn:hover,
+#start-screen #start-game-btn:hover,
+#start-screen #enter-room-btn:hover {
+    filter: brightness(1.2);
+    transform: scale(1.02);
+    box-shadow: none;
+}
+
+/* Botões de ação com identidade visual (In-Game) */
+.acao-btn {
+    position: relative;
+    z-index: 1050 !important;
+    pointer-events: auto !important;
+    background: linear-gradient(135deg, #2d8cff 70%, #1a5fb4 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 18px 28px;
+    font-size: 1.15em;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 12px #0005;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+
+.acao-btn:hover {
+    background: linear-gradient(135deg, #1a5fb4 70%, #2d8cff 100%);
+    transform: scale(1.05);
+    box-shadow: 0 4px 18px #2224;
+}
+
+.acao-btn i {
+    font-size: 1.2em;
+    margin-right: 4px;
+}
+
+#moeda-btn {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: #ffd700;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+    font-size: 2.2em;
+    font-weight: bold;
+    box-shadow: none;
+    cursor: pointer;
+    z-index: 150;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, box-shadow 0.2s, opacity 0.5s;
+    outline: none !important;
+    border: none !important;
+    background: none !important;
+}
+
+#moeda-btn:hover {
+    background: #ffe066;
+    box-shadow: none;
+}
+
+#moeda-btn:focus,
+#moeda-btn:active {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: none !important;
+}
+
+/* --- Custom Button Image Override (Start Screen Specific) --- */
+#start-game-btn {
+    background-image: url('../../img/Verde.webp') !important;
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-color: transparent !important;
+    color: #fff !important;
+    font-family: "Cinzel Decorative", serif;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    border: none !important;
+    width: 300px !important;
+    height: 60px !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+#start-game-btn:hover {
+    transform: scale(1.05);
+}
+
+#start-game-btn:active {
+    transform: scale(0.95);
+}
+
+#create-room-btn {
+    background-image: url('../../img/Laranja.webp') !important;
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-color: transparent !important;
+    color: #fff !important;
+    font-family: "Cinzel Decorative", serif;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    border: none !important;
+    width: 180px !important;
+    height: 65px !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+#create-room-btn:hover {
+    transform: scale(1.05);
+}
+
+#create-room-btn:active {
+    transform: scale(0.95);
+}
+
+#join-room-btn {
+    background-image: url('../../img/Ciano.webp') !important;
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-color: transparent !important;
+    color: #fff !important;
+    font-family: "Cinzel Decorative", serif;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    border: none !important;
+    width: 280px !important;
+    height: 65px !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+#join-room-btn:hover {
+    transform: scale(1.05);
+}
+
+#join-room-btn:active {
+    transform: scale(0.95);
+}
+
+/* --- Game Action Buttons (Desafiar/Se Gabar) --- */
+#btn-desafiar,
+#btn-segabar {
+    width: 230px;
+    height: 76px;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    background-color: transparent;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    color: transparent !important;
+    text-shadow: none !important;
+    cursor: pointer;
+    transition: transform 0.2s;
+    display: block;
+    margin: 0;
+}
+
+#btn-desafiar {
+    background-image: url('../../img/Desafiar.webp');
+}
+
+#btn-segabar {
+    background-image: url('../../img/Se_Gabar.webp');
+}
+
+#btn-desafiar:hover,
+#btn-segabar:hover {
+    transform: scale(1.1);
+    filter: none;
+    outline: none;
+    box-shadow: none;
+}
+
+#btn-desafiar:active,
+#btn-segabar:active {
+    transform: scale(0.95);
+    filter: none;
+    outline: none;
+}
+
+#back-to-main-btn {
+    position: absolute !important;
+    top: 18% !important;
+    left: calc(50% + 220px) !important;
+    right: auto !important;
+    transform: translateY(-50%);
+    background: none !important;
+    border: none !important;
+    color: #daa520 !important;
+    font-family: sans-serif !important;
+    font-size: 3.5rem !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    z-index: 2000;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0 !important;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    box-shadow: none !important;
+}
+
+#back-to-main-btn:hover {
+    color: #fff !important;
+    transform: translateY(-50%) !important;
+    filter: brightness(1.2);
+}

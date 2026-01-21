@@ -1,0 +1,75 @@
+/* =====================================================
+   PEDRAS E TOKENS
+   ===================================================== */
+.token {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #222 linear-gradient(145deg, #333 60%, #111 100%);
+    border: 2px solid #888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    color: #fff;
+    box-shadow: 0 2px 8px #000a;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s, border 0.2s;
+}
+
+.token.revealed {
+    background: #2d8cff;
+    border: 2px solid #fff;
+    color: #fff;
+}
+
+.pedra-oficial {
+    width: 60px;
+    height: 60px;
+    background-size: cover;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #2d8cff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+    transition: transform 0.2s, box-shadow 0.2s, top 0.3s, left 0.3s;
+    z-index: 100 !important;
+    position: relative;
+    pointer-events: auto !important;
+}
+
+.pedra-oficial img,
+.pedra-oficial svg {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+    margin: auto;
+    box-sizing: border-box;
+}
+
+.pedra-mesa {
+    /* Default styles for stones on the table */
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pedra-circulo {
+    /* Default styles for stones in reserve circle */
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.ghost-pedra {
+    /* Dragging ghost style */
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.8;
+}
+
+.highlight-slot {
+    /* Drop zone highlight */
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 10000;
+}

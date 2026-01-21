@@ -12,11 +12,11 @@ body {
   min-height: 100vh;
   margin: 0;
   /* background removed -> moved to #parallax-container */
-  background: #181c24 url("assets/img/Fundo.jpg") no-repeat center center fixed;
+  background: #181c24 url("../img/Fundo.jpg") no-repeat center center fixed;
   background-size: cover;
   color: #f1f1f1;
   font-family: "Segoe UI", Arial, sans-serif;
-  cursor: url("assets/img/cursor_opt.png") 0 0, auto;
+  cursor: url("../img/cursor_opt.png") 0 0, auto;
   overflow: hidden;
   /* Prevent scrollbars from moving layers */
 }
@@ -33,7 +33,7 @@ button,
 .pedra-oficial,
 a,
 .clickable {
-  cursor: url("assets/img/cursor_opt.png") 0 0, pointer !important;
+  cursor: url("../img/cursor_opt.png") 0 0, pointer !important;
 }
 
 /* =====================================================
@@ -241,7 +241,7 @@ input[type="text"] {
 }
 
 #start-screen #tutorial-btn {
-  background: url("assets/img/Borda_Verde.webp?v=4.4") no-repeat center center;
+  background: url("../img/Borda_Verde.webp?v=4.4") no-repeat center center;
   background-size: 100% 100%;
   width: 300px;
   height: 75px;
@@ -251,7 +251,7 @@ input[type="text"] {
 }
 
 #start-screen #bot-pve-btn {
-  background: url("assets/img/Borda_Dourada.webp?v=4.4") no-repeat center center;
+  background: url("../img/Borda_Dourada.webp?v=4.4") no-repeat center center;
   background-size: 100% 100%;
   width: 300px;
   height: 75px;
@@ -261,7 +261,7 @@ input[type="text"] {
 }
 
 #start-screen #online-menu-btn {
-  background: url("assets/img/Borda_Preta.webp?v=4.4") no-repeat center center;
+  background: url("../img/Borda_Preta.webp?v=4.4") no-repeat center center;
   background-size: 100% 100%;
   width: 300px;
   height: 75px;
@@ -272,7 +272,7 @@ input[type="text"] {
 
 /* Side by Side Buttons */
 #start-screen #create-room-btn {
-  background: url("assets/img/Laranja.webp?v=4.4") no-repeat center center;
+  background: url("../img/Laranja.webp?v=4.4") no-repeat center center;
   background-size: 100% 100%;
   width: 260px;
   height: 65px;
@@ -282,7 +282,7 @@ input[type="text"] {
 }
 
 #start-screen #join-room-btn {
-  background: url("assets/img/Ciano.webp?v=4.4") no-repeat center center;
+  background: url("../img/Ciano.webp?v=4.4") no-repeat center center;
   background-size: 100% 100%;
   width: 260px;
   height: 65px;
@@ -293,7 +293,7 @@ input[type="text"] {
 
 /* Action Buttons */
 #start-screen #start-game-btn {
-  background: url("assets/img/Roxo.webp?v=4.4") no-repeat center center;
+  background: url("../img/Roxo.webp?v=4.4") no-repeat center center;
   background-size: 100% 100%;
   width: 300px;
   height: 75px;
@@ -314,7 +314,7 @@ input[type="text"] {
 }
 
 #start-screen #enter-room-btn {
-  background: url("assets/img/Verde.webp?v=4.4") no-repeat center center;
+  background: url("../img/Verde.webp?v=4.4") no-repeat center center;
   background-size: 100% 100%;
   width: 300px;
   height: 75px;
@@ -2118,7 +2118,7 @@ input[type="text"] {
   bottom: -55px;
   left: 50%;
   transform: translateX(-50%);
-  background: transparent url('assets/img/notification_icon.png') no-repeat center center !important;
+  background: transparent url('../img/notification_icon.png') no-repeat center center !important;
   background-size: 100% 100% !important;
   /* Fit image exactly */
   color: #fff;
@@ -2144,7 +2144,7 @@ input[type="text"] {
   /* Matched to #toast */
   left: 50%;
   transform: translateX(-50%);
-  background: transparent url('assets/img/notification_icon.png') no-repeat center center !important;
+  background: transparent url('../img/notification_icon.png') no-repeat center center !important;
   background-size: 100% 100% !important;
   color: #fff;
   padding: 120px 180px;
@@ -2728,7 +2728,7 @@ body>.floatingchat-donate-button span {
 /* ================================= PREMIUM START SCREEN CSS ================================= */
 /* Premium Body Background Override */
 body {
-  background: #0d1117 url('assets/img/Fundo.jpg') no-repeat center 25% fixed;
+  background: #0d1117 url('../img/Fundo.jpg') no-repeat center 25% fixed;
   background-size: 100% auto;
   font-family: 'Times New Roman', serif;
 }
@@ -2976,7 +2976,7 @@ body {
 
   /* Move action buttons right on mobile */
   #botoes-acoes-laterais {
-    right: -230px !important;
+    right: 10px !important;
     /* Was -170px */
   }
 
@@ -3033,7 +3033,7 @@ body {
   left: 0;
   width: 200%;
   height: 100%;
-  background: url("assets/img/fog_texture.png") repeat-x;
+  background: url("../img/fog_texture.png") repeat-x;
   background-size: 50% 100%;
   opacity: 0.15;
   animation: fogScroll 60s linear infinite;
@@ -3155,7 +3155,7 @@ body {
 
 /* --- Custom Button Image Override --- */
 #start-game-btn {
-  background-image: url('assets/img/Verde.webp') !important;
+  background-image: url('../img/Verde.webp') !important;
   background-size: 100% 100% !important;
   background-repeat: no-repeat !important;
   background-position: center !important;
@@ -3218,7 +3218,7 @@ body {
 
 
 #create-room-btn {
-  background-image: url('assets/img/Laranja.webp') !important;
+  background-image: url('../img/Laranja.webp') !important;
   background-size: 100% 100% !important;
   background-repeat: no-repeat !important;
   background-position: center !important;
@@ -3245,7 +3245,7 @@ body {
 }
 
 #join-room-btn {
-  background-image: url('assets/img/Ciano.webp') !important;
+  background-image: url('../img/Ciano.webp') !important;
   background-size: 100% 100% !important;
   background-repeat: no-repeat !important;
   background-position: center !important;
@@ -3403,11 +3403,11 @@ body {
 }
 
 #btn-desafiar {
-  background-image: url('assets/img/Desafiar.webp');
+  background-image: url('../img/Desafiar.webp');
 }
 
 #btn-segabar {
-  background-image: url('assets/img/Se_Gabar.webp');
+  background-image: url('../img/Se_Gabar.webp');
 }
 
 #btn-desafiar:hover,
@@ -3424,27 +3424,4 @@ body {
   transform: scale(0.95);
   filter: none;
   outline: none;
-}
-
-/* Bot Speech Bubble */
-#bot-speech-bubble {
-    position: absolute;
-    top: 80px; 
-    left: 20px;
-    background: #fff;
-    color: #000;
-    padding: 10px 15px;
-    border-radius: 12px;
-    border-bottom-left-radius: 0;
-    font-family: 'Cinzel', serif;
-    font-size: 14px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    z-index: 9999;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-    max-width: 250px;
-}
-#bot-speech-bubble.visible {
-    opacity: 1;
 }

@@ -45,7 +45,7 @@ const InputHandler = {
         e.stopPropagation();
 
         // Som
-        if (window.tocarSomClick) window.tocarSomClick();
+        if (window.audioManager) window.audioManager.playClick();
 
         this.isDragging = true;
         this.dragItem = { element, pedraObj, index };

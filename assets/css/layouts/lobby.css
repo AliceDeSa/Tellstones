@@ -1,0 +1,174 @@
+/* =====================================================
+   LAYOUTS: LOBBY E TELA INICIAL
+   ===================================================== */
+#lobby {
+    max-width: 400px;
+    margin: 40px auto;
+    padding: 30px;
+    background: rgba(24, 28, 36, 0.92);
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 16px #0008;
+    position: relative;
+    z-index: 2;
+    display: none;
+}
+
+#start-screen {
+    max-width: 400px;
+    margin: 40px auto;
+    padding: 30px;
+    background: transparent;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: none;
+    position: relative;
+    z-index: 2;
+    display: none;
+}
+
+#game {
+    width: 100vw;
+    height: 100vh;
+    background: none;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 2;
+    display: none;
+}
+
+#start-screen.active,
+#lobby.active,
+#game.active {
+    display: block;
+}
+
+#lobby,
+#start-screen {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#lobby ul,
+#game ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px 0;
+}
+
+#lobby li,
+#game li {
+    color: #e0e0e0;
+    margin-bottom: 4px;
+    text-shadow: 0 1px 4px #000a;
+}
+
+#room-options,
+#join-room {
+    margin-top: 20px;
+}
+
+/* ÁREA DE CRÉDITOS */
+/* --- RPG Text Inputs --- */
+#room-options input[type="text"],
+#join-room input[type="text"] {
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid #daa520;
+    border-radius: 4px;
+    color: #ffd700;
+    font-family: "Cinzel", serif;
+    font-size: 1.1em;
+    padding: 10px;
+    margin: 10px 0;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+    width: 300px !important;
+}
+
+#room-options input[type="text"]:focus,
+#join-room input[type="text"]:focus {
+    border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    background: rgba(0, 0, 0, 0.8);
+}
+
+#room-options input[type="text"]::placeholder,
+#join-room input[type="text"]::placeholder {
+    color: rgba(255, 215, 0, 0.5);
+}
+
+/* --- RPG Radio Buttons --- */
+#room-options label,
+#join-room label {
+    font-family: "Cinzel", serif;
+    color: #baecff;
+    font-size: 1.1em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 5px 10px;
+    transition: color 0.3s;
+}
+
+#room-options label:hover,
+#join-room label:hover {
+    color: #fff;
+    text-shadow: 0 0 5px #baecff;
+}
+
+#room-options input[type="radio"],
+#join-room input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #daa520;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    margin: 0;
+}
+
+#room-options input[type="radio"]:checked,
+#join-room input[type="radio"]:checked {
+    background: #daa520;
+    box-shadow: 0 0 8px #daa520;
+    border-color: #ffd700;
+}
+
+#room-options input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    background: #fff;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#creditos {
+    position: fixed;
+    right: 20px;
+    bottom: 10px;
+    color: #f8f8ff;
+    font-size: 0.95em;
+    opacity: 0.7;
+    z-index: 100;
+    pointer-events: none;
+    font-family: "Segoe UI", Arial, sans-serif;
+    text-shadow: 0 1px 4px #000a;
+    zoom: 0.8;
+}

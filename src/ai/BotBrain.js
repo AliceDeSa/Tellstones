@@ -131,14 +131,25 @@ class BotBrain {
             return;
         }
 
-        if (action.tipo === 'colocar' || action.tipo === 'virar' || action.tipo === 'espiar') {
+        if (action.tipo === 'colocar' || action.tipo === 'virar' || action.tipo === 'espiar' || action.tipo === 'revelar') {
             const slot = action.origem;
             let stoneName = action.pedra ? action.pedra.nome : null;
             if (!stoneName && state && state.mesa[slot]) {
                 stoneName = state.mesa[slot].nome;
             }
             if (stoneName && slot !== undefined) {
+                // If it's revealed/placed face up, confidence is 1.0
+                // 'virar' usually means Hide (Face Down) -> Verify state.mesa[slot].virada
+                // Actually 'observe' receives the action, but state might be post-action.
+                // If 'revelar', it is definitely KNOWN.
                 this.updateMemory(slot, stoneName, 1.0);
+
+                // If revealed, Player also knows it
+                if (action.tipo === 'revelar' || (action.tipo === 'colocar' && state.mesa[slot] && !state.mesa[slot].virada)) {
+                    if (this.mentalModel) {
+                        this.mentalModel.playerKnowledge[slot] = { confidence: 1.0, time: Date.now() };
+                    }
+                }
             }
         } else if (action.tipo === 'trocar') {
             const idxA = action.origem;
@@ -162,7 +173,7 @@ class BotBrain {
     // --- INFERENCE ENGINE ---
     applyInference(state) {
         // Sherlock Holmes Logic: "When you have eliminated the impossible..."
-        const allStones = ["Coroa", "Espada", "Escudo", "Bandeira", "Martelo", "Balança", "Cavaleiro"];
+        const allStones = ["Coroa", "Espada", "Escudo", "Bandeira", "Martelo", "Balança", "Cavalo"];
         const knownStones = new Set();
         const unknownSlots = [];
 
@@ -658,7 +669,7 @@ class BotBrain {
         const estado = window.estadoJogo;
         if (!estado || !estado.mesa) return "Coroa";
 
-        const allStones = ["Coroa", "Espada", "Escudo", "Bandeira", "Martelo", "Balança", "Cavaleiro"];
+        const allStones = ["Coroa", "Espada", "Escudo", "Bandeira", "Martelo", "Balança", "Cavalo"];
         const impossible = new Set();
 
         estado.mesa.forEach((p, i) => {

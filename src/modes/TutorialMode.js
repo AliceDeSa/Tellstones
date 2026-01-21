@@ -11,6 +11,9 @@ class TutorialMode extends GameMode {
     start(config) {
         super.start(config);
 
+        // Switch Screen Explicitly
+        if (typeof mostrarTela === 'function') mostrarTela('game');
+
         window.isLocalMode = true;
         window.salaAtual = "MODO_TUTORIAL";
         window.salaAtual = "MODO_TUTORIAL";
@@ -164,9 +167,9 @@ class TutorialMode extends GameMode {
         }
 
         if (vencedor && vencedor.id === "p1") {
-            if (window.tocarSomSucesso) window.tocarSomSucesso();
+            if (window.audioManager) window.audioManager.playSuccess();
         } else {
-            if (window.tocarSomFalha) window.tocarSomFalha();
+            if (window.audioManager) window.audioManager.playFailure();
         }
 
         estado.vez = idxOponente;
@@ -178,7 +181,7 @@ class TutorialMode extends GameMode {
             window.GameController.notificarAtualizacao();
         }
 
-        if (window.showToastInterno) window.showToastInterno("Pedra revelada e pontos computados!");
+        if (window.notificationManager) window.notificationManager.showInternal("Pedra revelada e pontos computados!");
         if (window.tellstonesTutorial) {
             setTimeout(() => window.tellstonesTutorial.registrarAcaoConcluida(), 500);
         }

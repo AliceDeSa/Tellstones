@@ -73,7 +73,8 @@ class PvEMode extends GameMode {
         // Priority 1: Developer Override (LocalStorage)
         const devProfile = localStorage.getItem('tellstones_dev_bot_profile');
         if (devProfile && devProfile !== 'random' && profiles.includes(devProfile)) {
-            console.log(`[PvE] Dev Override Bot Personality: ${devProfile}`);
+            const isDev = localStorage.getItem('tellstones_dev_mode') === 'true';
+            if (isDev) console.log(`[PvE] Dev Override Bot Personality: ${devProfile}`);
             this.botBrain = new BotBrain(devProfile);
             // Don't save to DB yet, keep it local override? 
             // Better to save it so state is consistent if we reload and lose localstorage?
@@ -99,7 +100,7 @@ class PvEMode extends GameMode {
         const nameMap = { 'Lógico': 'logical', 'Trapaceiro': 'trickster', 'Agressivo': 'aggressive' };
         if (refProfile) refProfile.set(nameMap[this.botBrain.profile.name] || 'logical');
 
-        if (window.showToastInterno) window.showToastInterno(`Bot: ${this.botBrain.profile.name}`);
+        if (window.notificationManager) window.notificationManager.showInternal(`Bot: ${this.botBrain.profile.name}`);
 
         // Configuração de Estado Inicial
         const jogadores = [
@@ -131,7 +132,7 @@ class PvEMode extends GameMode {
         if (!this.botBrain) return;
         this.botBrain = new BotBrain(profileName);
         console.log("[PvEMode] Bot Personality forced to:", profileName);
-        if (window.showToastInterno) window.showToastInterno(`Bot Personality: ${this.botBrain.profile.name}`);
+        if (window.notificationManager) window.notificationManager.showInternal(`Bot Personality: ${this.botBrain.profile.name}`);
     }
 
     listenToCoinToss() {
@@ -283,7 +284,7 @@ class PvEMode extends GameMode {
                 if (estado.vencedor) {
                     const msg = `Vencedor: ${estado.vencedor.nomes ? estado.vencedor.nomes.join(', ') : 'Desconhecido'}`;
                     console.log("[PvE] " + msg);
-                    if (window.showToast) window.showToast(msg);
+                    if (window.notificationManager) window.notificationManager.showGlobal(msg);
                 }
 
                 // DEBUG BOT MEMORY
@@ -303,12 +304,73 @@ class PvEMode extends GameMode {
         });
     }
 
+    // --- PRIORITY LOGIC DECOUPLER ---
+    checkPendingActions(estado) {
+        if (!estado.desafio) return false;
+
+        // 1. Bot needs to Prove Boast (Highest Priority)
+        // Bot Boasted -> Player Doubted -> Bot MUST reveal stones immediately
+        if (estado.desafio.tipo === "segabar" && estado.desafio.jogador === "Bot" && estado.desafio.status === "responder_pecas") {
+            if (!this.botThinking) {
+                this.botThinking = true;
+                setTimeout(() => this.proveBotBoast(estado), 1000);
+            }
+            return true;
+        }
+
+        // 2. Bot needs to Respond to Player Boast
+        // Player Boasted -> Bot must Believe/Doubt
+        if (estado.desafio.tipo === "segabar" && estado.desafio.jogador !== "Bot" && estado.desafio.status === "aguardando_resposta") {
+            if (!this.botThinking) {
+                this.botThinking = true;
+                if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot("Hm... deixe-me pensar.");
+                setTimeout(() => this.respondToPlayerBoast(estado), 2500);
+            }
+            return true;
+        }
+
+        // 3. Bot needs to Resolve Player Challenge
+        // Player Challenged Bot -> Bot must Guess Stone
+        const isSimpleChallenge = (estado.desafio.tipo === "desafio" || estado.desafio.tipo === "desafio_simples" || !estado.desafio.tipo);
+        if (isSimpleChallenge && estado.desafio.jogador !== "Bot" && estado.desafio.status === 'aguardando_resposta') {
+            if (!this.botThinking) {
+                this.botThinking = true;
+                setTimeout(() => {
+                    const d = window.estadoJogo.desafio;
+                    if (!d) {
+                        this.botThinking = false; return;
+                    }
+                    const idx = (d.alvo !== undefined) ? d.alvo : (d.pedra !== undefined) ? d.pedra : d.idxPedra;
+                    console.log(`[PvE] Bot responding to Player Challenge on Slot ${idx}`);
+                    this.resolveChallenge(idx || 0);
+                }, 1500);
+            }
+            return true;
+        }
+
+        // 4. Handle Resolved Bot Challenge (Cleanup/Scoring)
+        // Bot Challenged -> Player Answered -> Result is Ready
+        if (estado.desafio.jogador === "Bot" && estado.desafio.status === "resolvido") {
+            // Avoid loop if already thinking
+            if (!this.botThinking) this.resolveBotChallengeResult(estado);
+            return true;
+        }
+
+        return false;
+    }
+
     checkTurn(estado) {
         try {
             if (!estado || estado.vencedor) return;
             if (!this.botBrain) {
                 console.warn("[PvE] BotBrain missing, re-initializing...");
                 this.setBotProfile('random'); // Self-repair
+                return;
+            }
+
+            // CRITICAL FIX: Disable autonomous Bot in Tutorial Mode
+            // The Tutorial script manages the bot interactions manually.
+            if (this.roomCode === "MODO_TUTORIAL") {
                 return;
             }
 
@@ -324,126 +386,47 @@ class PvEMode extends GameMode {
             // Guard: Se houver animação ou interação bloqueante, não faz nada
             if (window.animacaoTrocaEmAndamento) return;
 
-            // Se tem desafio pendente (Jogador se gabou), Bot precisa responder
-            // Se tem desafio pendente (Jogador se gabou), Bot precisa responder
-            if (estado.desafio && estado.desafio.tipo === "segabar" && estado.desafio.jogador !== "Bot" && !estado.desafio.resolvido && estado.desafio.status === "aguardando_resposta") {
-                if (!this.botThinking) {
-                    this.botThinking = true;
-                    setTimeout(() => {
-                        try {
-                            const resp = this.botBrain.decideBoastResponse(estado);
-                            // Usa GameController para responder
-                            GameController.responderSegabar(resp);
-                        } catch (e) {
-                            console.error("[PvE CRITICAL] Bot Boast Response Failed:", e);
-                            // Fallback: Duvidar para não travar
-                            GameController.responderSegabar("duvidar");
-                        } finally {
+            // --- PRIORITY INTERRUPTS ---
+            if (this.checkPendingActions(estado)) {
+                return;
+            }
+
+            // --- NORMAL TURN LOGIC ---
+            if (estado.vez === 1 && !this.botThinking && !window.selecionandoDesafio && !window.resolvendoDesafio && !window.animacaoTrocaEmAndamento && !estado.trocaAnimacao) {
+                console.log("[PvE DEBUG] Bot Turn Logic Triggered. Calling executeBotTurn...");
+
+                this.botThinking = true;
+                // Delay aumentado para ser mais perceptível (Thinking Time)
+                setTimeout(() => {
+                    try {
+                        // Safety check again before executing
+                        if (window.estadoJogo.vez !== 1) {
+                            console.warn("[PvE] Bot aborted turn (Turn changed during think time).");
                             this.botThinking = false;
+                            // RE-CHECK: We might have missed a high-priority interrupt (like Boast) 
+                            // while we were "thinking" about a turn that is no longer ours.
+                            this.checkTurn(window.estadoJogo);
+                            return;
                         }
-                    }, 2000);
+                        this.executeBotTurn();
+                    } catch (e) {
+                        console.error("[PvE ERROR] Bot Crashed:", e);
+                        this.botThinking = false;
+                    }
+                }, 4000 + Math.random() * 2000);
+            } else {
+                if (estado.vez === 1) {
+                    console.log(`[PvE DEBUG] Bot Turn Blocked. Thinking: ${this.botThinking}`);
+                    console.log(`[PvE DEBUG] Flags: selDesafio=${window.selecionandoDesafio}, resDesafio=${window.resolvendoDesafio}, animTrocaGlobal=${window.animacaoTrocaEmAndamento}, animTrocaState=${!!estado.trocaAnimacao}`);
                 }
-                return;
             }
 
-            // --- BOT PROVING BOAST (Bot Boasted -> Player Doubted -> Bot must Reveal) ---
-            if (estado.desafio && estado.desafio.tipo === "segabar" && estado.desafio.jogador === "Bot" && estado.desafio.status === "responder_pecas") {
-                if (!this.botThinking) {
-                    this.botThinking = true;
-                    setTimeout(() => {
-                        this.proveBotBoast(estado);
-                    }, 1500);
-                }
-                return;
-            }
-
-            // --- DETECT RESOLVED BOT CHALLENGE ---
-            // Jogador respondeu ao desafio do Bot.
-            if (estado.desafio && estado.desafio.jogador === "Bot" && estado.desafio.status === "resolvido") {
-                this.resolveBotChallengeResult(estado);
-                return;
-            }
-
+            // Update bot's internal state memory after processing
+            this.lastMesaState = JSON.parse(JSON.stringify(estado.mesa));
         } catch (err) {
             console.error("[PvE CRITICAL] checkTurn crashed:", err);
-            this.botThinking = false; // Reset lock
+            this.botThinking = false;
         }
-
-        // Se Bot foi desafiado (tipo 'desafio_simples' ou 'duvida' vindo do Player), ele deve ter respondido via resolveChallenge
-        // Mas se o estado estiver 'esperando resposta', e o desafio foi feito PELO JOGADOR, o Bot precisa responder.
-        // Em Tellstones, Player desafia clicando na pedra. O Controller chama resolveChallenge imediatamente se for local?
-        // Vamos verificar como o Controller lida com Challenge.
-
-        // Added !estado.trocaAnimacao to block Bot if an animation is pending but not yet started by listener
-
-        // --- PRIORITY: Responding to Simple Challenge ---
-        // Even if it's NOT Bot's turn (Player Challenged -> vez=0), Bot must respond.
-        const isChallenge = estado.desafio
-            && (estado.desafio.tipo === "desafio" || estado.desafio.tipo === "desafio_simples" || !estado.desafio.tipo)
-            && estado.desafio.tipo !== "segabar"; // Explicit exclude boast
-
-        if (isChallenge && !estado.desafio.resolvido && estado.desafio.jogador !== "Bot" && !this.botThinking) {
-            this.botThinking = true;
-            setTimeout(() => {
-                if (!estado.desafio) {
-                    console.warn("[PvE] Challenge disappeared before Bot could resolve.");
-                    this.botThinking = false;
-                    return;
-                }
-                const idx = (estado.desafio.alvo !== undefined) ? estado.desafio.alvo :
-                    (estado.desafio.pedra !== undefined) ? estado.desafio.pedra :
-                        (estado.desafio.idxPedra !== undefined) ? estado.desafio.idxPedra : 0;
-
-                console.log(`[PvE] Bot resolving challenge at index ${idx}`);
-                this.resolveChallenge(idx);
-            }, 2000);
-            return;
-        }
-
-        // --- NORMAL TURN LOGIC ---
-        if (estado.vez === 1 && !this.botThinking && !window.selecionandoDesafio && !window.resolvendoDesafio && !window.animacaoTrocaEmAndamento && !estado.trocaAnimacao) {
-            console.log("[PvE DEBUG] Bot Turn Logic Triggered. Calling executeBotTurn...");
-
-            console.log("[PvE DEBUG] Bot Turn Logic Triggered. Calling executeBotTurn...");
-
-            // (Challenge Check removed from here, moved up)
-
-            // Verifica se há um SE GABAR pendente (Jogador se gabou, Bot precisa responder)
-            if (estado.desafio && estado.desafio.tipo === "segabar" && estado.desafio.status === "aguardando_resposta" && estado.desafio.jogador !== "Bot") {
-                this.botThinking = true;
-                console.log("[PvE] Bot precisa responder ao Se Gabar do Jogador.");
-                if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot("Hm... deixe-me pensar.");
-
-                setTimeout(() => {
-                    this.respondToPlayerBoast(estado);
-                    this.botThinking = false;
-                }, 2500);
-                return;
-            }
-
-            this.botThinking = true;
-            // showToastInterno("Bot está pensando..."); REMOVED BY USER REQUEST
-
-            // Delay aumentado para ser mais perceptível (Thinking Time)
-            setTimeout(() => {
-                try {
-                    // Safety check again before executing
-                    if (estado.vez !== 1) return;
-
-                    this.executeBotTurn();
-                } catch (e) {
-                    console.error("[PvE ERROR] Bot Crashed:", e);
-                    this.botThinking = false;
-                }
-                // DO NOT reset botThinking here unconditionally if using async actions!
-                // Logic moved inside executeBotTurn
-            }, 5000 + Math.random() * 2000);
-        } else {
-            if (estado.vez === 1) console.log(`[PvE DEBUG] Bot Turn Blocked. Thinking: ${this.botThinking}, SelDesafio: ${window.selecionandoDesafio}, ResDesafio: ${window.resolvendoDesafio}`);
-        }
-
-        // Update bot's internal state memory after processing
-        this.lastMesaState = JSON.parse(JSON.stringify(estado.mesa));
     }
 
     // Helper to scan visible stones
@@ -523,7 +506,7 @@ class PvEMode extends GameMode {
                         if (window.Renderer && window.Renderer.mostrarFalaBot) {
                             window.Renderer.mostrarFalaBot("Hm... deixe-me ver.");
                         } else {
-                            showToastInterno(`Bot espiou a pedra na posição ${idx + 1}`);
+                            if (window.notificationManager) window.notificationManager.showInternal(`Bot espiou a pedra na posição ${idx + 1}`);
                         }
 
                         // VISUALIZATION: Golden Glow
@@ -617,12 +600,14 @@ class PvEMode extends GameMode {
             return true; // Started async flow
         } else {
             // Fallback: Instant
+            console.log("[PvE] Using Fallback Instant Placement (No Animation)");
             estado.mesa[slotVazio] = pedra;
             estado.mesa[slotVazio].virada = false;
             estado.reserva[pedraIdx] = null; // Tira da mão
 
             this.botBrain.observe({ tipo: 'colocar', origem: slotVazio, pedra: pedra }, estado);
             GameController.persistirEstado();
+            console.log("[PvE] Advancing Turn after Instant Place...");
             window.avancarTurno();
             return true;
         }
@@ -767,39 +752,44 @@ class PvEMode extends GameMode {
                         const player = playersList.find(j => j.id === 'p1' || j.nome !== 'Bot');
 
                         if (palpite === correta) {
-                            showToastInterno("Bot acertou! Ponto para o Bot.");
-                            if (window.tocarSomFalha) window.tocarSomFalha();
+                            if (window.notificationManager) window.notificationManager.showInternal("Bot acertou! Ponto para o Bot.");
+                            if (window.audioManager) window.audioManager.playFailure();
                             bot.pontos = (bot.pontos || 0) + 1;
                             vencedor = bot;
 
                             const chat = this.botBrain.getChatter('winning');
-                            if (chat) setTimeout(() => showToastInterno(`Bot: "${chat}"`), 2000);
+                            if (chat) setTimeout(() => { if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot(chat); else if (window.notificationManager) window.notificationManager.showInternal(`Bot: "${chat}"`); }, 2000);
                             if (window.Renderer && window.Renderer.mostrarMensagem) {
                                 window.Renderer.mostrarMensagem("Bot venceu o desafio!");
                             } else {
                                 console.log("[PvE] Bot venceu desafio.");
                             }
                         } else {
-                            showToastInterno("Bot errou! Ponto para você.");
+                            if (window.notificationManager) window.notificationManager.showInternal("Bot errou! Ponto para você.");
                             player.pontos = (player.pontos || 0) + 1;
                             vencedor = player;
 
                             const chat = this.botBrain.getChatter('losing');
-                            if (chat) setTimeout(() => showToastInterno(`Bot: "${chat}"`), 2000);
+                            if (chat) setTimeout(() => { if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot(chat); else if (window.notificationManager) window.notificationManager.showInternal(`Bot: "${chat}"`); }, 2000);
                         }
 
                         // Tocar Som
                         if (vencedor && vencedor.id === 'p1') {
-                            if (window.tocarSomSucesso) window.tocarSomSucesso();
+                            if (window.audioManager) window.audioManager.playSuccess();
                         } else {
-                            if (window.tocarSomFalha) window.tocarSomFalha();
+                            if (window.audioManager) window.audioManager.playFailure();
                         }
 
-                        // Limpa desafio
+                        // Limpa desafio FORCEFULLY
+                        try {
+                            if (window.estadoJogo) window.estadoJogo.desafio = null;
+                            getDBRef("salas/" + window.salaAtual + "/estadoJogo/desafio").remove();
+                        } catch (err) { console.error("Error clearing challenge DB", err); }
+
                         estado.desafio = null;
                         GameController.persistirEstado();
-                        // ADVANCE TURN: Challenge Resolution is an interaction. Play must continue.
-                        if (window.avancarTurno) window.avancarTurno();
+                        if (window.GameController) window.GameController.verificarFimDeJogo();
+
 
                     } catch (innerE) {
                         console.error("[PvE ERROR] resolveChallenge Inner:", innerE);
@@ -807,7 +797,14 @@ class PvEMode extends GameMode {
                         estado.desafio = null;
                         GameController.persistirEstado();
                     } finally {
-                        this.botThinking = false; // FIX: Reset lock after async logic is done
+                        this.botThinking = false; // Must be false BEFORE turn advance triggers next turn logic
+                        // ADVANCE TURN: Player Challenged (Turn 0) -> Resolved -> Should be Bot Turn (1)
+                        if (window.avancarTurno) window.avancarTurno();
+
+                        // Force check: If turn is still Player (0), force it to Bot (1)
+                        if (window.estadoJogo && window.estadoJogo.vez === 0) {
+                            if (window.avancarTurno) window.avancarTurno();
+                        }
                     }
                 }, 1500);
             } catch (e) {
@@ -820,8 +817,9 @@ class PvEMode extends GameMode {
     respondToPlayerBoast(estado) {
         // Simple logic: If Bot knows many stones, it might Doubt. For now, 50/50 or always Doubt to be aggressive.
         // Better: Check confidence sum.
-        const confidenceSum = this.botBrain.memory.reduce((acc, m) => acc + (m ? m.confidence : 0), 0);
-        const knownCount = this.botBrain.memory.filter(m => m && m.confidence > 0.8).length;
+        const memoryValues = Object.values(this.botBrain.memory);
+        const confidenceSum = memoryValues.reduce((acc, m) => acc + (m ? m.confidence : 0), 0);
+        const knownCount = memoryValues.filter(m => m && m.confidence > 0.8).length;
 
         // Se eu conheço poucas, assume que o Jogador conhece (Acredita).
         // Se eu conheço MUITAS, talvez o Jogador esteja blefando ou eu posso ganhar depois ?
@@ -829,7 +827,17 @@ class PvEMode extends GameMode {
         // Se Bot conhece < 3 pedras, Acredita (medo de perder ponto de imediato).
         // Se Bot conhece >= 3 pedras, Duvida (tenta ganhar ponto).
 
-        const decision = (knownCount >= 3 || Math.random() > 0.6) ? "duvidar" : "acreditar";
+        const visibleCount = estado.mesa.filter(p => p !== null).length;
+        // Se tem poucas pedras (<= 2), é suicídio duvidar (Player provavelmente sabe).
+        // Se Bot conhece < 3 pedras mas tem muitas na mesa, Acredita (medo).
+        // Se Bot conhece >= 3 pedras, Duvida (tenta ganhar ponto).
+
+        let decision = "acreditar";
+        if (visibleCount <= 2) {
+            decision = "acreditar";
+        } else if (knownCount >= 3 || (visibleCount > 4 && Math.random() > 0.5)) {
+            decision = "duvidar";
+        }
 
         console.log(`[PvE] Bot response to Boast: ${decision} (Known: ${knownCount})`);
 
@@ -841,7 +849,14 @@ class PvEMode extends GameMode {
             // showToastInterno("Bot diz: Ok, acredito.");
             if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot("Tudo bem, acredito.");
             if (window.GameController) window.GameController.responderSegabar("acreditar");
+
+            // Force Clear locally too for safety
+            estado.desafio = null;
+            GameController.persistirEstado();
         }
+
+        // CRITICAL FIX: Unlock Bot Brain
+        this.botThinking = false;
     }
 
     performBotBoast(estado) {
@@ -857,10 +872,14 @@ class PvEMode extends GameMode {
 
         // Chatter
         const msg = this.botBrain.getChatter('boast_start');
-        if (msg) showToastInterno(`Bot: ${msg}`);
-        else showToastInterno("Bot está se Gabando!");
+        if (msg) {
+            if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot(msg);
+            else if (window.notificationManager) window.notificationManager.showInternal(`Bot: ${msg}`);
+        } else {
+            if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot("Estou confiante. Eu sei todas!");
+        }
 
-        tocarSomDesafio();
+        if (window.audioManager) window.audioManager.playChallenge();
     }
 
     proveBotBoast(estado) {
@@ -894,7 +913,7 @@ class PvEMode extends GameMode {
                 }
 
                 const ans = answers[i];
-                showToastInterno(`Bot aposta que ${ans.idx} é ${ans.name}...`);
+                if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot(`Aposto que a ${ans.idx + 1} é... ${ans.name}!`);
 
                 // Using GameController method directly? 
                 if (window.GameController && window.GameController.verificarRespostaSegabar) {
@@ -902,23 +921,17 @@ class PvEMode extends GameMode {
                 }
 
                 i++;
-                if (i < answers.length) setTimeout(revealNext, 1500);
-                else {
-                    // Final Clean up after last reveal
-                    setTimeout(() => { this.botThinking = false; }, 1000);
-                }
+                setTimeout(revealNext, 2000); // Recursive call
             };
-
             revealNext();
 
         } catch (e) {
-            console.error("[PvE] proveBotBoast failed:", e);
+            console.error("[PvE CRITICAL] proveBotBoast failed:", e);
             this.botThinking = false;
-            // Abort
-            estado.desafio = null;
-            GameController.persistirEstado();
         }
+
     }
+
 
     resolveBotChallengeResult(estadoSnapshot) {
         if (this.botThinking) return;
@@ -948,70 +961,66 @@ class PvEMode extends GameMode {
         GameController.persistirEstado();
 
         // Notify
-        showToastInterno(`Pedra Revelada: ${realStone.nome}`);
+        if (window.notificationManager) window.notificationManager.showInternal(`Pedra Revelada: ${realStone.nome}`);
 
         setTimeout(() => {
-            // Score Logic
-            let winner = null;
-            // Normalize players array/object
-            const playersList = Array.isArray(estado.jogadores)
-                ? estado.jogadores
-                : Object.values(estado.jogadores);
+            try {
+                // Score Logic
+                let winner = null;
+                // Normalize players array/object
+                const playersList = Array.isArray(estado.jogadores)
+                    ? estado.jogadores
+                    : Object.values(estado.jogadores);
 
-            const bot = playersList.find(j => j.id === 'p2' || j.nome === 'Bot');
-            const player = playersList.find(j => j.id === 'p1' || j.nome !== 'Bot');
+                const bot = playersList.find(j => j.id === 'p2' || j.nome === 'Bot');
+                const player = playersList.find(j => j.id === 'p1' || j.nome !== 'Bot');
 
 
-            if (correct) {
-                showToastInterno("Você acertou! Ponto para você.");
-                if (window.tocarSomSucesso) window.tocarSomSucesso();
-                player.pontos = (player.pontos || 0) + 1;
-                winner = player;
+                if (correct) {
+                    if (window.notificationManager) window.notificationManager.showInternal("Você acertou! Ponto para você.");
+                    if (window.audioManager) window.audioManager.playSuccess();
+                    player.pontos = (player.pontos || 0) + 1;
+                    winner = player;
 
-                const chat = this.botBrain.getChatter('losing');
-                if (chat) setTimeout(() => showToastInterno(`Bot: "${chat}"`), 1500);
+                    const chat = this.botBrain.getChatter('losing');
+                    if (chat) setTimeout(() => { if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot(chat); }, 1500);
 
-            } else {
-                showToastInterno(`Você errou! Era ${realStone.nome}. Ponto para o Bot.`);
-                if (window.tocarSomFalha) window.tocarSomFalha();
-                bot.pontos = (bot.pontos || 0) + 1;
-                winner = bot;
+                } else {
+                    if (window.notificationManager) window.notificationManager.showInternal(`Você errou! Era ${realStone.nome}. Ponto para o Bot.`);
+                    if (window.audioManager) window.audioManager.playFailure();
+                    bot.pontos = (bot.pontos || 0) + 1;
+                    winner = bot;
 
-                const chat = this.botBrain.getChatter('winning');
-                if (chat) setTimeout(() => showToastInterno(`Bot: "${chat}"`), 1500);
-            }
+                    const chat = this.botBrain.getChatter('winning');
+                    if (chat) setTimeout(() => { if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot(chat); }, 1500);
+                }
 
-            // Clear Challenge
-            estado.desafio = null;
-            this.botThinking = false;
+                // Clear Challenge
+                estado.desafio = null;
 
-            // Persist
-            GameController.persistirEstado();
+                // Persist
+                GameController.persistirEstado();
+                // Check Win
+                if (window.GameController) window.GameController.verificarFimDeJogo();
 
-            // Important: Check Win Condition is implicit in persist/render loop in script.js
-            // BUT we might want to advance turn?
-            // If Player Answered, it was Bot's turn to Challenge.
-            // Now that it's resolved, it should be Player's Turn?
-            // "Desafiar" consumes turn. Correct.
-            // So we should call avancarTurno() to switch back to Player (vez 0).
-            // However, 'vez' might already be 0 if Bot logic didn't shift it yet?
-            // Bot turn sets vez=1. When finished, it calls avancarTurno -> vez=0.
-            // BUT Challenge logic is async. Bot set Challenge state.
-            // Wait. When Bot performed 'Challenge', did it pass turn?
-            // Usually Challenge is an Action. Action -> Next Turn.
-            // If Next Turn is Player, Player receives "Responder" state.
-            // Player Responds -> Saves State.
-            // Now Game detects "Resolved".
-            // We process points. And then... whose turn is it?
-            // Standard tellstones: Challenge ends the turn exchange for that interaction.
-            // If Challenger Wins -> Challenger goes again? No.
-            // Usually play continues unless game over.
-            // Let's assume standard rotation.
-            // Since Bot Challenged (Turn Bot), next is Player.
-            // So if we are processing this, we ensure 'vez' ends up at Player (0).
 
-            if (estado.vez === 1) { // If still Bot
-                window.avancarTurno();
+
+            } catch (e) {
+                console.error("[PvE ERROR] resolveBotChallengeResultAsync:", e);
+                // Recovery
+                if (window.avancarTurno) window.avancarTurno();
+            } finally {
+                this.botThinking = false;
+                // Advance Turn
+                if (window.avancarTurno) window.avancarTurno();
+
+                // Verify Turn safety
+                setTimeout(() => {
+                    const currentVez = window.estadoJogo ? window.estadoJogo.vez : -1;
+                    if (currentVez === 1) {
+                        if (window.avancarTurno) window.avancarTurno();
+                    }
+                }, 1000);
             }
 
         }, 2000);
@@ -1050,10 +1059,13 @@ class PvEMode extends GameMode {
 
         // Chatter
         const msg = this.botBrain.getChatter('challenge_start');
-        if (msg) showToastInterno(`Bot: ${msg}`);
-        else showToastInterno(`Bot desafiou pedra ${idx + 1}! O que é?`);
+        if (msg) {
+            if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot(msg);
+        } else {
+            if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot(`Desafio a pedra ${idx + 1}! O que é?`);
+        }
 
-        tocarSomDesafio();
+        if (window.audioManager) window.audioManager.playChallenge();
 
         // FORCE RENDER for visual highlight
         if (window.Renderer && window.Renderer.renderizarMesa) {

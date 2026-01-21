@@ -9,7 +9,7 @@
   <meta name="viewport" content="width=1024, user-scalable=no">
   <meta name="mobile-web-app-capable" content="yes">
   <title>TellStones</title>
-  <link rel="stylesheet" href="style.css?v=4.30">
+  <link rel="stylesheet" href="assets/css/main.css?v=4.5.1">
   <link rel="icon" type="image/webp" href="assets/img/logo.webp">
   <link rel="stylesheet" href="assets/fonts/fonts.css">
 </head>
@@ -353,6 +353,14 @@
   </div>
 
   <!-- ================= SCRIPTS E ÁUDIO ================= -->
+  <div id="audio-container" style="display:none;">
+    <audio id="som-fundo" src="assets/audio/ambient.mp3" loop></audio>
+    <audio id="som-click" src="assets/audio/click.wav"></audio>
+    <audio id="som-press" src="assets/audio/press.mp3"></audio>
+    <audio id="som-desafio" src="assets/audio/som teste.wav"></audio>
+    <audio id="som-sucesso" src="assets/audio/success minimalistic.wav"></audio>
+    <audio id="som-falha" src="assets/audio/failure.wav"></audio>
+  </div>
   <!-- Script principal do jogo -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -368,6 +376,8 @@
   <script src="src/core/InputHandler.js"></script>
   <script src="src/core/GameController.js"></script>
   <script src="src/ui/MouseTrail.js"></script>
+  <script src="src/utils/AudioManager.js"></script>
+  <script src="src/ui/NotificationManager.js"></script>
 
   <!-- AI -->
   <script src="src/ai/BotBrain.js"></script>
