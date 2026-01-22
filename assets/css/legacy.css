@@ -2675,7 +2675,7 @@ body>.floatingchat-donate-button span {
 
 /* ===== Mobile Landscape Fixes (Action Card) ===== */
 /* ===== Mobile Landscape Fixes (Action Card & Menu Scale) ===== */
-@media screen and (max-height: 768px) {
+@media screen and (max-height: 768px) and (max-width: 1024px) {
   #carta-acoes {
     top: 50% !important;
     /* Center vertically */
@@ -2752,7 +2752,7 @@ body>.floatingchat-donate-button span {
     height: 100vh !important;
     overflow: visible !important;
     padding: 0 !important;
-    transform: translate(-50%, -50%) scale(0.75) !important;
+    transform: translate(-50%, -50%) scale(0.77) !important;
     /* Force Scale */
     transform-origin: center center !important;
     display: flex !important;
