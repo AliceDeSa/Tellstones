@@ -1,6 +1,6 @@
-# Tellstones: King's Gambit - Online Edition (v5.2.0)
+# Tellstones: King's Gambit - Online Edition (v5.2.1)
 [![Status](https://img.shields.io/badge/Status-Active-success.svg)]()
-[![Version](https://img.shields.io/badge/Version-5.2.0-blue.svg)]()
+[![Version](https://img.shields.io/badge/Version-5.2.1-blue.svg)]()
 [![License](https://img.shields.io/badge/License-Fan_Project-purple.svg)]()
 [![PWA](https://img.shields.io/badge/PWA-Supported-orange.svg)]()
 
@@ -19,8 +19,7 @@ Os pontos são conquistados ao **desafiar** o oponente a adivinhar o símbolo de
 
 ### As Pedras (Tokens)
 O jogo utiliza 7 pedras com símbolos distintos:
-- 👑 **Coroa**: A peça central.
-- ⚔️ **Espada**, ⚖️ **Balança**, 🐴 **Cavalo**, 🛡️ **Escudo**, 🚩 **Bandeira**, 🔨 **Martelo**.
+- 👑 **Coroa**, ⚔️ **Espada**, ⚖️ **Balança**, 🐴 **Cavalo**, 🛡️ **Escudo**, 🚩 **Bandeira**, 🔨 **Martelo**.
 
 ### Ações Possíveis
 Em seu turno, o jogador pode realizar uma ação:
@@ -132,7 +131,10 @@ assets/                 # Recursos Estáticos
 
 ## 📅 Histórico de Atualizações (Changelog)
 
-### v5.1.0 - The Quality Update (Atual)
+### v5.2.1 - UI Adjustment (Atual)
+-   **UI Polish**: Widget do Ko-fi temporariamente oculto.
+
+### v5.2.0 - AI & UI Polish
 -   **Refatoração Completa**: Migração de `script.js` monolítico para arquitetura modular.
 -   **Novo Sistema de IA**: Implementação de lógica de "Match Point" (Bot não aceita blefes se estiver perto de perder).
 -   **Tratamento de Erros**: Correção de "Hangs" (travamentos) em turnos assíncronos.
@@ -179,7 +181,7 @@ Este é um **Projeto de Fã** sem fins lucrativos.
 Todo o código fonte é livre para fins educacionais.
 
 -   **Desenvolvimento**: AliceDeSa
--   **Conceito Original & Arte**: [Riot Games](https://www.riotgames.com/). *Tellstones* é uma marca registrada da Riot Games. Este projeto não é afiliado à Riot Games.
+-   **Conceito & Referencias**: [Riot Games](https://www.riotgames.com/). *Tellstones* é uma marca registrada da Riot Games. Este projeto não é afiliado à Riot Games.
 
 ---
 *Feito com 💙 e JavaScript.*

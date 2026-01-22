@@ -3018,6 +3018,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnTutorial) {
     btnTutorial.onclick = () => {
       if (window.audioManager) window.audioManager.playPress();
+      // Analytics
+      if (window.AnalyticsManager) window.AnalyticsManager.logEvent('select_content', { content_type: 'game_mode', item_id: 'tutorial' });
+
       console.log("[Menu] Iniciando Tutorial...");
       if (window.currentGameMode) window.currentGameMode.cleanup();
       window.currentGameMode = new TutorialMode();
@@ -3030,11 +3033,36 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnPvE) {
     btnPvE.onclick = () => {
       if (window.audioManager) window.audioManager.playPress();
+      // Analytics
+      if (window.AnalyticsManager) window.AnalyticsManager.logEvent('select_content', { content_type: 'game_mode', item_id: 'pve' });
+
       console.log("[Menu] Iniciando PvE...");
       if (window.currentGameMode) window.currentGameMode.cleanup();
       if (typeof mostrarTela === 'function') mostrarTela('game');
       window.currentGameMode = new PvEMode();
       window.currentGameMode.start({ playerName: 'Jogador' });
+    };
+  }
+
+  // 2.5 Demo Bot vs Bot (Dev Tool)
+  const btnBotVsBot = document.getElementById('btn-dev-bot-match');
+  if (btnBotVsBot) {
+    btnBotVsBot.onclick = () => {
+      if (window.audioManager) window.audioManager.playPress();
+      console.log("[Menu] Iniciando Demo Bot vs Bot...");
+      if (window.currentGameMode) window.currentGameMode.cleanup();
+      if (typeof mostrarTela === 'function') mostrarTela('game');
+      // Inicia PvE
+      window.currentGameMode = new PvEMode();
+      window.currentGameMode.start({ playerName: 'Bot (Automator)' });
+
+      // Inicia Automator
+      if (window.PvEAutomator) {
+        setTimeout(() => {
+          if (window.notificationManager) window.notificationManager.showGlobal("Modo Espectador: O Automator assumiu o controle.");
+          window.PvEAutomator.run();
+        }, 1000);
+      }
     };
   }
 
@@ -3047,6 +3075,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnOnline && divOnline && divMainBtns) {
     btnOnline.onclick = () => {
       if (window.audioManager) window.audioManager.playPress();
+      // Analytics
+      if (window.AnalyticsManager) window.AnalyticsManager.logEvent('select_content', { content_type: 'game_mode', item_id: 'online' });
+
       divMainBtns.style.display = 'none';
       divOnline.style.display = 'flex';
     };

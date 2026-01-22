@@ -403,6 +403,9 @@ class TellstonesTutorial {
 
     iniciar() {
         this._criarUI();
+        if (window.AnalyticsManager && typeof window.AnalyticsManager.logTutorialStart === 'function') {
+            window.AnalyticsManager.logTutorialStart();
+        }
         this.mostrarPasso(0);
     }
 
@@ -601,6 +604,8 @@ class TellstonesTutorial {
     finalizar() {
         // Guard: Prevent execution if not in Tutorial Mode (fixes persistence bug)
         if (window.salaAtual && window.salaAtual !== 'MODO_TUTORIAL') return;
+
+        if (window.AnalyticsManager) window.AnalyticsManager.logTutorialComplete();
 
         if (!this.overlay) return;
 

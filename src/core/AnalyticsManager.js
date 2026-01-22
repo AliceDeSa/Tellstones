@@ -68,6 +68,43 @@ const AnalyticsManager = {
             fatal: false, // We assume caught errors are non-fatal for now
             stack: stack.substring(0, 500) // Truncate to avoid limits
         });
+    },
+
+    // --- Enhanced Analytics for Funnel/Tree ---
+
+    logTutorialStart: function () {
+        this.logEvent('tutorial_start', {
+            timestamp: new Date().toISOString()
+        });
+    },
+
+    logTutorialComplete: function () {
+        this.logEvent('tutorial_complete', {
+            timestamp: new Date().toISOString()
+        });
+    },
+
+    logPvEChallenge: function (initiator, success, type, stoneName) {
+        this.logEvent('pve_challenge_result', {
+            initiator: initiator,
+            success: success, // Did the initiator Win?
+            challenge_type: type,
+            stone_name: stoneName
+        });
+    },
+
+    logPvEBoast: function (initiator) {
+        this.logEvent('pve_boast_event', {
+            initiator: initiator
+        });
+    },
+
+    logPvEWin: function (winnerName, scoreBot, scorePlayer) {
+        this.logEvent('pve_game_end', {
+            winner: winnerName,
+            score_bot: scoreBot,
+            score_player: scorePlayer
+        });
     }
 };
 

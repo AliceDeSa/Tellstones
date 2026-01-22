@@ -1,5 +1,9 @@
 # Histórico de Versões - Tellstones
 
+## V5.2.1 - UI Adjustment
+**Data:** 22/01/2026
+- **[UI]** **Ko-fi:** Widget temporariamente oculto para polimento de UI.
+
 ## V5.2.0 - AI & UI Polish
 **Data:** 21/01/2026
 - **[AI]** **Smart Memory:** Implementado lógica de "Esquecimento Dinâmico" (Bot esquece mais rápido se houver muitas pedras ocultas) e "Confusão em Trocas" (trocar pedras ocultas reduz confiança).

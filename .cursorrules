@@ -4,6 +4,17 @@
 - **Language**: Respond and comment in **Portuguese (PT-BR)**.
 - **Structure**: Maintain the modular structure (src/core, src/ui, etc.). Do not regress to monolithic files.
 
+## File Organization
+- **Root**: Configuration (`package.json`, `.cursorrules`), Logic Entry (`index.html`), and Documentation.
+- **src/**: Application Logic.
+  - `core/`: State management and GameController.
+  - `modes/`: Game loop logic (PvP, PvE).
+  - `ai/`: Bot behavioral logic.
+  - `ui/`: Rendering and visual managers.
+  - `utils/`: Shared helpers.
+- **assets/**: Static resources (Images, Audio) and Styles (`css/`).
+- **tests/**: Automated testing scripts.
+
 ## Versioning & Documentation
 - **CHANGELOG**: Whenever there is a medium or large update, save a brief description in `CHANGELOG.md`.
 - **Version Info**: For *every* code update, update the version number in the `#version-info` element and provide a simple description in `#sub-info` (inside `index.html`).

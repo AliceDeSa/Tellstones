@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tellstones-v5.0.1';
+const CACHE_NAME = 'tellstones-v5.1.0';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -12,11 +12,11 @@ const ASSETS_TO_CACHE = [
     './src/core/GameRules.js',
     './src/core/AnalyticsManager.js',
     './src/core/constants.js',
+    './src/core/Network.js',
 
     // Utils
     './src/utils/utils.js',
     './src/utils/Logger.js',
-    './src/utils/AudioManager.js',
 
     // UI
     './src/ui/Renderer.js',
@@ -24,10 +24,16 @@ const ASSETS_TO_CACHE = [
     './src/ui/ChangelogManager.js',
     './src/ui/AnimationManager.js',
     './src/ui/effects/Confetti.js',
+    './src/ui/AudioManager.js',
+
+    // AI
+    './src/ai/BotBrain.js',
 
     // Modes
     './src/modes/GameMode.js',
     './src/modes/MultiplayerMode.js',
+    './src/modes/PvEMode.js',
+    './src/modes/TutorialMode.js',
 
     // Images (Critical)
     './assets/img/logo.webp',

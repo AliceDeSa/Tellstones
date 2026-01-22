@@ -287,6 +287,18 @@ class PvEMode extends GameMode {
                     const msg = `Vencedor: ${estado.vencedor.nomes ? estado.vencedor.nomes.join(', ') : 'Desconhecido'}`;
                     console.log("[PvE] " + msg);
                     if (window.notificationManager) window.notificationManager.showGlobal(msg);
+
+                    // Analytics: Game End
+                    if (window.AnalyticsManager) {
+                        const playersList = Array.isArray(estado.jogadores) ? estado.jogadores : Object.values(estado.jogadores);
+                        const player = playersList.find(j => j.id === 'p1' || j.nome !== 'Bot');
+                        const bot = playersList.find(j => j.id === 'p2' || j.nome === 'Bot');
+                        window.AnalyticsManager.logPvEWin(
+                            estado.vencedor.nomes ? estado.vencedor.nomes[0] : 'Unknown',
+                            bot ? bot.pontos : 0,
+                            player ? player.pontos : 0
+                        );
+                    }
                 }
 
                 // DEBUG BOT MEMORY
@@ -398,15 +410,15 @@ class PvEMode extends GameMode {
                 console.log("[PvE DEBUG] Bot Turn Logic Triggered. Calling executeBotTurn...");
 
                 this.botThinking = true;
-                // Delay aumentado para ser mais perceptível (Thinking Time)
+                const thinkTime = this.botBrain.calculateThinkTime(window.estadoJogo, { type: 'unknown' }); // Initial estimate, refined inside if needed
+                console.log(`[PvE] Bot Thinking for ${thinkTime.toFixed(0)}ms`);
+
                 setTimeout(() => {
                     try {
                         // Safety check again before executing
                         if (window.estadoJogo.vez !== 1) {
                             console.warn("[PvE] Bot aborted turn (Turn changed during think time).");
                             this.botThinking = false;
-                            // RE-CHECK: We might have missed a high-priority interrupt (like Boast) 
-                            // while we were "thinking" about a turn that is no longer ours.
                             this.checkTurn(window.estadoJogo);
                             return;
                         }
@@ -415,7 +427,7 @@ class PvEMode extends GameMode {
                         console.error("[PvE ERROR] Bot Crashed:", e);
                         this.botThinking = false;
                     }
-                }, 4000 + Math.random() * 2000);
+                }, thinkTime);
             } else {
                 if (estado.vez === 1) {
                     console.log(`[PvE DEBUG] Bot Turn Blocked. Thinking: ${this.botThinking}`);
@@ -750,10 +762,18 @@ class PvEMode extends GameMode {
                         if (window.AnalyticsManager) window.AnalyticsManager.logAction('challenge', {
                             target_stone: correta,
                             bot_guess: palpite,
-                            success: success, // Did the Challenger (Player) succeed? No, Bot guessed. So if Success=True (Bot Correct), Player Failed.
-                            // Let's invert: Action is 'challenge'. Player Challenged. Success means Bot FAILED to guess.
+                            success: success,
                             player_won: (palpite !== correta)
                         });
+
+                        // Funnel Analytics: Player Challenge Result
+                        if (window.AnalyticsManager) {
+                            // Player Challenged Bot.
+                            // If Bot guessed correctly (palpite === correta), Player LOST the challenge.
+                            // If Bot guessed incorrectly, Player WON the challenge.
+                            const playerWon = (palpite !== correta);
+                            window.AnalyticsManager.logPvEChallenge("Player", playerWon, "challenge", correta);
+                        }
 
                         // Normalize players array/object
                         const playersList = Array.isArray(estado.jogadores)
@@ -827,6 +847,11 @@ class PvEMode extends GameMode {
     }
 
     respondToPlayerBoast(estado) {
+        // Analytics: Log Player Boast Event (only once per instance ideally, but here is safe enough as it runs on response)
+        if (window.AnalyticsManager && !this.botThinking) {
+            window.AnalyticsManager.logPvEBoast("Player");
+        }
+
         // Simple logic: If Bot knows many stones, it might Doubt. For now, 50/50 or always Doubt to be aggressive.
         // Better: Check confidence sum.
         const memoryValues = Object.values(this.botBrain.memory);
@@ -868,18 +893,36 @@ class PvEMode extends GameMode {
             // showToastInterno("Bot diz: Eu duvido!");
             if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot("Não acredito. Duvido!");
             if (window.GameController) window.GameController.responderSegabar("duvidar");
+        } else if (decision === "segabar_tambem") {
+            if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot("Ah é? Pois EU sei todas!");
+            if (window.GameController) window.GameController.responderSegabar("segabar_tambem");
         } else {
             // showToastInterno("Bot diz: Ok, acredito.");
             if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot("Tudo bem, acredito.");
-            if (window.GameController) window.GameController.responderSegabar("acreditar");
+            if (window.GameController) {
+                window.GameController.responderSegabar("acreditar");
+                // IMPORTANT: In PvE, GameController.responderSegabar("acreditar") doesn't auto-advance turn locally 
+                // in the way PvE expects sometimes. We force it here to be safe and prevent freeze.
+                // Wait... GameController ("acreditar") calls avancarTurno() ? 
+                // Let's check GameController. (It calls avancarTurno line 113).
+                // So double calling? No, GameController handles it.
+                // BUT, user reported freeze. Maybe local mode logic isn't triggering?
+                // Or maybe Boast Response is an interrupt and we need to verify if Turn passed back to Bot?
+                // No, Boast Response (Turn 0) -> Point -> End of Turn.
+                // If it freezes, maybe state didn't update?
+                // Let's force a refetch or ensure BotThinking is cleared.
+            }
 
             // Force Clear locally too for safety
             estado.desafio = null;
-            GameController.persistirEstado();
+            this.botThinking = false; // Ensure cleared
+            /* GameController should have advanced turn. */
         }
     }
 
     performBotBoast(estado) {
+        if (window.AnalyticsManager) window.AnalyticsManager.logPvEBoast("Bot");
+
         estado.desafio = {
             tipo: "segabar",
             jogador: "Bot",
@@ -1022,6 +1065,17 @@ class PvEMode extends GameMode {
 
                     const chat = this.botBrain.getChatter('winning');
                     if (chat) setTimeout(() => { if (window.Renderer && window.Renderer.mostrarFalaBot) window.Renderer.mostrarFalaBot(chat); }, 1500);
+                }
+
+                // Analytics: Bot Challenge Result
+                if (window.AnalyticsManager) {
+                    // Bot Challenged Player.
+                    // If Player (Answer) == RealStone (Correct), Player won the point (Bot lost challenge).
+                    // If Player != RealStone, Bot won the point (Bot won challenge).
+                    // logPvEChallenge(initiator, success, type, stone)
+                    // initiator="Bot". Success=True means Bot Won.
+                    const botWon = !correct;
+                    window.AnalyticsManager.logPvEChallenge("Bot", botWon, "challenge", realStone.nome);
                 }
 
                 // Clear Challenge

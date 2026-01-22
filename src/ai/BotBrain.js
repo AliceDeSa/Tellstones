@@ -14,7 +14,8 @@ const PROFILES = {
             confidenceToPeek: 0.85,
             // Só desafia se razoavelmente seguro que o player não sabe (calculado via tempo)
             // OU se tiver certeza absoluta (segurança).
-            challengeStrategy: "oldest_hidden"
+            challengeStrategy: "oldest_hidden",
+            opening: "compact" // 2, 3, 4
         }
     },
     trickster: {
@@ -29,7 +30,8 @@ const PROFILES = {
         },
         params: {
             preferredHiddenCount: 5,
-            challengeStrategy: "chaos" // Desafia peças envolvidas em trocas recentes
+            challengeStrategy: "chaos", // Desafia peças envolvidas em trocas recentes
+            opening: "spread" // 0, 6, 3
         }
     },
     aggressive: {
@@ -44,7 +46,9 @@ const PROFILES = {
         },
         params: {
             confidenceToPeek: 0.0,
-            challengeStrategy: "pressure_smart" // Desafia com pressão, mas evita suicídio
+            confidenceToPeek: 0.0,
+            challengeStrategy: "pressure_smart", // Desafia com pressão, mas evita suicídio
+            opening: "pressure" // Place, Flip, Place, Flip
         }
     }
 };
@@ -98,7 +102,31 @@ class BotBrain {
         this.memory = {}; // Map<slotIndex, {stoneName: string, confidence: number, lastSeen: timestamp}>
         this.mentalModel = new MentalModel(); // NEW: Meta-Reasoning
         this.myActionHistory = []; // Track own moves for combo logic
-        console.log(`[BotBrain] Initialized with Personality: ${this.profile.name} (v3.0 Grandmaster)`);
+        this.placedCount = 0; // Track number of placements for opening book
+        console.log(`[BotBrain] Initialized with Personality: ${this.profile.name} (v4.0 Super-Grandmaster)`);
+    }
+
+    // --- THINKING TIME ---
+    calculateThinkTime(state, decision) {
+        // Base latency
+        let base = 1500;
+
+        // Fast events
+        if (decision.type === 'place' || decision.type === 'boast') return 800 + Math.random() * 500;
+
+        // Confidence Factor
+        let conf = 0.5;
+        if (decision.type === 'challenge' && decision.target !== undefined) {
+            conf = this.memory[decision.target] ? this.memory[decision.target].confidence : 0;
+            if (conf > 0.9) return 600 + Math.random() * 400; // Instant snap
+        }
+
+        // Complex decisions (Swaps, Peeks, Bluffs)
+        if (decision.type === 'swap') base = 3000;
+        if (decision.type === 'peek') base = 2500;
+
+        // Add "Acting" variability
+        return base + (Math.random() * 2000);
     }
 
     // --- MEMORY SYSTEM ---
@@ -188,8 +216,8 @@ class BotBrain {
             hiddenCount = Object.keys(this.memory).length; // Fallback
         }
 
-        // Dynamic Decay: -2% per hidden stone
-        retention -= (hiddenCount * 0.02);
+        // Dynamic Decay: -0.5% per hidden stone (was 2%, too aggressive)
+        retention -= (hiddenCount * 0.005);
         if (retention < 0.5) retention = 0.5; // Floor
 
         Object.keys(this.memory).forEach(slot => {
@@ -244,7 +272,9 @@ class BotBrain {
         this.memory[slot] = {
             stoneName: name,
             confidence: confidence,
-            lastSeen: Date.now()
+            confidence: confidence,
+            lastSeen: Date.now(),
+            history: [] // For negative inference in future
         };
     }
 
@@ -253,6 +283,9 @@ class BotBrain {
         // Context can track: 'winning' (score), 'confused' (time), 'bluff'
         const profile = this.profile.name;
         const playerMetric = this.mentalModel.getPlayerMetric();
+
+        // Prevent repeating the last message
+        if (!this.lastChatter) this.lastChatter = "";
 
         const msgs = {
             'challenge_start': {
@@ -296,7 +329,13 @@ class BotBrain {
 
         const list = msgs[event] ? msgs[event][profile] : null;
         if (list && list.length > 0) {
-            return list[Math.floor(Math.random() * list.length)];
+            // Filter out last used
+            const available = list.filter(m => m !== this.lastChatter);
+            if (available.length === 0) return null; // All used? (Unlikely unless size 1)
+
+            const msg = available[Math.floor(Math.random() * available.length)];
+            this.lastChatter = msg;
+            return msg;
         }
         return null;
     }
@@ -322,6 +361,22 @@ class BotBrain {
 
         Object.assign(actions, this.profile.weights);
 
+        // --- 1. OPENING BOOK LOGIC ---
+        // If still placing initial stones (few stones on board), follow pattern
+        if (handStones && visibleStones < 7) {
+            // Influence 'place' weight heavily if we have stones
+            actions.place += 0.5;
+        }
+
+        // --- 3.A DESPERATION MODE ---
+        if (isDesperate) {
+            console.log("[BotBrain] DESPERATION MODE ACTIVE!");
+            actions.challenge += 0.5;
+            actions.boast += 0.3;
+            actions.swap += 0.2; // Create chaos
+            actions.peek = 0; // No time to learn, must act
+        }
+
         // Signature Check
         const signatureMove = this.checkSignatureMove(state);
         if (signatureMove) return signatureMove;
@@ -340,10 +395,9 @@ class BotBrain {
             if (visibleStones > 0) actions.flip += 0.3;
         }
 
-        // Desperation Override
+        // Desperation Override (Already handled above, but keeping logic consistent)
         if (isDesperate && hiddenStones > 2) {
-            actions.challenge += 0.4;
-            actions.boast += 0.2;
+            // Reinforced
         }
 
         // Logic Profile: Peek more if unsure
@@ -366,19 +420,38 @@ class BotBrain {
             actions.peek += (unknownHidden * 0.2); // Significant boost to recover memory
         }
 
-        // Selection
-        const selectedType = this.weightedRandom(actions);
-        const decision = { type: selectedType };
+        // Selection Loop (Retry if invalid target)
+        let attempts = 0;
+        let decision = null;
 
-        // Targets
-        if (selectedType === 'place') decision.target = this.choosePlaceTarget(state);
-        else if (selectedType === 'swap') decision.targets = this.chooseSwapTargets(state);
-        else if (selectedType === 'flip') decision.target = this.chooseFlipTarget(state);
-        else if (selectedType === 'peek') decision.target = this.choosePeekTarget(state);
-        else if (selectedType === 'challenge') decision.target = this.chooseChallengeTarget(state);
-        else if (selectedType === 'boast') { /* No target needed */ }
+        while (attempts < 3) {
+            const selectedType = this.weightedRandom(actions);
+            decision = { type: selectedType };
 
-        return decision;
+            // Targets
+            if (selectedType === 'place') decision.target = this.choosePlaceTarget(state);
+            else if (selectedType === 'swap') decision.targets = this.chooseSwapTargets(state);
+            else if (selectedType === 'flip') decision.target = this.chooseFlipTarget(state);
+            else if (selectedType === 'peek') decision.target = this.choosePeekTarget(state);
+            else if (selectedType === 'challenge') decision.target = this.chooseChallengeTarget(state);
+
+            // Validation
+            let valid = true;
+            if (selectedType === 'peek' && decision.target === -1) valid = false;
+            if (selectedType === 'place' && decision.target === -1) valid = false;
+            if (selectedType === 'swap' && !decision.targets) valid = false;
+            if (selectedType === 'flip' && decision.target === -1) valid = false;
+            if (selectedType === 'challenge' && decision.target === -1) valid = false;
+
+            if (valid) return decision;
+
+            // Mark invalid and retry
+            actions[selectedType] = 0;
+            attempts++;
+        }
+
+        // Fallback: Pass
+        return { type: 'pass' };
     }
 
     // --- TARGET SELECTION STRATEGIES ---
@@ -396,10 +469,88 @@ class BotBrain {
         return validSlots[Math.floor(Math.random() * validSlots.length)];
     }
 
+    choosePlaceTargetStats(state) {
+        // Wrapper to apply Opening Books
+        const strategy = this.config.opening;
+        const validSlots = [];
+        state.mesa.forEach((p, i) => { if (p === null) validSlots.push(i); });
+
+        if (validSlots.length === 0) return -1;
+
+        // 1. COMPACT (Logical): Prefer 2, 3, 4 (Center)
+        if (strategy === 'compact') {
+            const preferences = [3, 2, 4, 1, 5, 0, 6];
+            for (let p of preferences) {
+                if (validSlots.includes(p)) return p;
+            }
+        }
+
+        // 2. SPREAD (Trickster): Prefer 0, 6, 3 (Edges + Center)
+        if (strategy === 'spread') {
+            const preferences = [0, 6, 3, 1, 5, 2, 4];
+            for (let p of preferences) {
+                if (validSlots.includes(p)) return p;
+            }
+        }
+
+        // Default Random
+        return validSlots[Math.floor(Math.random() * validSlots.length)];
+    }
+
+    // Override original to use stats (I will patch the call site in decideMove above or just rename this one)
+    // Actually, let's replace the content of choosePlaceTarget directly.
+    choosePlaceTarget(state) {
+        const strategy = this.config.opening;
+        const validSlots = [];
+        state.mesa.forEach((p, i) => { if (p === null) validSlots.push(i); });
+
+        if (validSlots.length === 0) return -1;
+
+        // 1. COMPACT (Logical): Prefer 3, 2, 4
+        if (strategy === 'compact') {
+            const preferences = [3, 2, 4, 1, 5, 0, 6];
+            for (let p of preferences) {
+                if (validSlots.includes(p)) return p;
+            }
+        }
+
+        // 2. SPREAD (Trickster): Prefer 0, 6, 3
+        if (strategy === 'spread') {
+            const preferences = [0, 6, 3, 1, 5, 2, 4];
+            for (let p of preferences) {
+                if (validSlots.includes(p)) return p;
+            }
+        }
+
+        return validSlots[Math.floor(Math.random() * validSlots.length)];
+    }
+
     chooseSwapTargets(state) {
         // Default: Random valid swap
         const indices = state.mesa.map((p, i) => p ? i : -1).filter(i => i !== -1);
         if (indices.length < 2) return null;
+
+        // Constraint: Swapping two visible stones is useless and suspicious unless strategic.
+        // Prevent swaps if NO hidden stones exist (Early game noise).
+        const hiddenCount = state.mesa.filter(p => p && p.virada).length;
+        if (hiddenCount === 0) return null; // Abort swap if everything is visible
+
+        // --- 1.C COUNTER-PLAY SWAPS ---
+        // If we know the player knows slot X (high confidence in mental model), move it!
+        if (this.mentalModel) {
+            const knownToPlayer = Object.keys(this.mentalModel.playerKnowledge).map(k => parseInt(k));
+            if (knownToPlayer.length > 0) {
+                const targetA = knownToPlayer[0]; // Pick one they know
+                // Pick a destination that is NOT known or far away?
+                // Let's swap it with a random other stone to break their link
+                const others = indices.filter(i => i !== targetA);
+                if (others.length > 0) {
+                    const targetB = others[Math.floor(Math.random() * others.length)];
+                    console.log(`[BotBrain] Counter-Play Swap: Moving known slot ${targetA} to ${targetB}`);
+                    return { from: targetA, to: targetB };
+                }
+            }
+        }
 
         // Strategy: 
         // Let's try to swap a "Known/Visible" stone with a "Hidden" one to confuse opponent.
@@ -432,14 +583,40 @@ class BotBrain {
     }
 
     choosePeekTarget(state) {
-        // Prioritize stones with low confidence
-        const unsureIdx = this.findUnsureHiddenStone(state);
-        if (unsureIdx !== -1) return unsureIdx;
-
-        // Fallback: Random hidden
+        // State Constraints (New)
+        // If all hidden stones are known (high confidence), DO NOT Peek.
         const hiddenIndices = state.mesa.map((p, i) => (p && p.virada) ? i : -1).filter(i => i !== -1);
-        if (hiddenIndices.length > 0) return hiddenIndices[Math.floor(Math.random() * hiddenIndices.length)];
+        if (hiddenIndices.length === 0) return -1;
 
+        let knownCount = 0;
+        for (let idx of hiddenIndices) {
+            const mem = this.memory[idx];
+            if (mem && mem.confidence > 0.9) knownCount++;
+        }
+        if (knownCount === hiddenIndices.length) {
+            console.log("[BotBrain] All hidden stones are known. Skipping Peek.");
+            return -1;
+        }
+
+        // Prioritize stones with low confidence
+        // BUT check for Recent Peeks (Safety against loop)
+        const candidates = [];
+        const now = Date.now();
+        for (let idx of hiddenIndices) {
+            const mem = this.memory[idx];
+            // If recently seen (< 15s), assume we know it regardless of confidence decay
+            if (mem && (now - mem.lastSeen < 15000)) continue;
+
+            if (!mem || mem.confidence < this.config.confidenceToPeek) {
+                candidates.push(idx);
+            }
+        }
+
+        if (candidates.length > 0) {
+            return candidates[Math.floor(Math.random() * candidates.length)];
+        }
+
+        // Fallback: None? Then we are unsure about recently seen ones? Or confident about all.
         return -1;
     }
 

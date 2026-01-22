@@ -288,8 +288,14 @@ window.PvEAutomator = {
 
                     // Let's stick to window.realizarTroca for stability as it is global in script.js
 
-                    const i1 = validSlots[0].index;
-                    const i2 = validSlots[1].index;
+                    // FIX: Randomize swap targets
+                    const idx1 = Math.floor(Math.random() * validSlots.length);
+                    let idx2 = Math.floor(Math.random() * validSlots.length);
+                    while (idx1 === idx2 && validSlots.length > 1) {
+                        idx2 = Math.floor(Math.random() * validSlots.length);
+                    }
+                    const i1 = validSlots[idx1].index;
+                    const i2 = validSlots[idx2].index;
 
                     if (window.realizarTroca) {
                         window.realizarTroca(i1, i2);

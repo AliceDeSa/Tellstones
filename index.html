@@ -8,7 +8,15 @@
     content="default-src *; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data:;">
   <meta name="viewport" content="width=1024, user-scalable=no">
   <meta name="mobile-web-app-capable" content="yes">
+
   <title>TellStones</title>
+  <!-- Social Media Preview (Open Graph) -->
+  <meta property="og:title" content="Tellstones">
+  <meta property="og:description" content="Memorize. Blefe. Desafie. Jogue Tellstones contra o Bot ou online!">
+  <meta property="og:image" content="assets/img/og-social-card.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="stylesheet" href="assets/css/main.css?v=5.2.0">
   <link rel="icon" type="image/webp" href="assets/img/logo.webp">
   <link rel="stylesheet" href="assets/fonts/fonts.css">
@@ -83,60 +91,61 @@
       <button id="bot-pve-btn">Jogo PvE</button>
       <button id="online-menu-btn">Jogo Online</button>
     </div>
+  </div>
 
-    <!-- Menu Online -->
-    <!-- Menu Online (Tabbed Layout) -->
-    <div id="online-menu" style="display:none; flex-direction:column; gap:0px; align-items:center;">
-      <button id="back-to-main-btn">&#8617;</button>
+  <!-- Menu Online -->
+  <!-- Menu Online (Tabbed Layout) -->
+  <div id="online-menu" style="display:none; flex-direction:column; gap:0px; align-items:center;">
+    <button id="back-to-main-btn">&#8617;</button>
 
-      <!-- Tabs (Buttons Fixed) -->
-      <div id="online-tabs-container" style="display:flex; gap:20px; margin-bottom: 20px;">
-        <button id="create-room-btn">Criar Sala</button>
-        <button id="join-room-btn">Entrar em Sala</button>
-      </div>
-
-      <!-- Content Area -->
-      <div id="online-content-area"
-        style="width: 100%; display: flex; justify-content: center; height: 280px; align-items: flex-start;">
-
-        <!-- Opções para criar sala/lobby -->
-        <div id="room-options" style="display:none; flex-direction: column; align-items: center;">
-          <h3 style="color:#daa520; font-family:'Cinzel Decorative'; margin-bottom:15px; display:none;">Criar Nova Sala
-          </h3>
-          <div style="display:flex; gap:20px; margin-bottom:10px;">
-            <label>
-              <input type="radio" name="mode" value="1x1" checked> 1x1 (Duelo)
-            </label>
-            <label>
-              <input type="radio" name="mode" value="2x2"> 2x2 (Duplas)
-            </label>
-          </div>
-          <input type="text" id="nome-criar" placeholder="Seu apelido" maxlength="20" style="margin:10px 0;width:300px">
-          <button id="start-game-btn">Criar Lobby</button>
-          <div id="codigo-sala-criada" style="margin-top:10px;color:#8ecfff;font-weight:bold;"></div>
-        </div>
-
-        <!-- Opções para entrar em sala -->
-        <div id="join-room" style="display:none; flex-direction: column; align-items: center;">
-          <h3 style="color:#00ffff; font-family:'Cinzel Decorative'; margin-bottom:15px; display:none;">Entrar na Sala
-          </h3>
-          <input type="text" id="nome-entrar" placeholder="Seu apelido" maxlength="20"
-            style="margin-bottom:8px;width:300px">
-          <input type="text" id="room-code" placeholder="Código da sala" maxlength="8"
-            style="margin-bottom:8px;width:300px">
-          <div style="display:flex; gap:20px; margin: 5px 0 15px 0;">
-            <label style="color:#f1f1f1;">
-              <input type="radio" name="tipo-entrada" value="jogador" checked> Jogador
-            </label>
-            <label style="color:#f1f1f1;">
-              <input type="radio" name="tipo-entrada" value="espectador"> Espectador
-            </label>
-          </div>
-          <button id="enter-room-btn">Entrar</button>
-        </div>
-
-      </div>
+    <!-- Tabs (Buttons Fixed) -->
+    <div id="online-tabs-container" style="display:flex; gap:20px; margin-bottom: 20px;">
+      <button id="create-room-btn">Criar Sala</button>
+      <button id="join-room-btn">Entrar em Sala</button>
     </div>
+
+    <!-- Content Area -->
+    <div id="online-content-area"
+      style="width: 100%; display: flex; justify-content: center; height: 280px; align-items: flex-start;">
+
+      <!-- Opções para criar sala/lobby -->
+      <div id="room-options" style="display:none; flex-direction: column; align-items: center;">
+        <h3 style="color:#daa520; font-family:'Cinzel Decorative'; margin-bottom:15px; display:none;">Criar Nova Sala
+        </h3>
+        <div style="display:flex; gap:20px; margin-bottom:10px;">
+          <label>
+            <input type="radio" name="mode" value="1x1" checked> 1x1 (Duelo)
+          </label>
+          <label>
+            <input type="radio" name="mode" value="2x2"> 2x2 (Duplas)
+          </label>
+        </div>
+        <input type="text" id="nome-criar" placeholder="Seu apelido" maxlength="20" style="margin:10px 0;width:300px">
+        <button id="start-game-btn">Criar Lobby</button>
+        <div id="codigo-sala-criada" style="margin-top:10px;color:#8ecfff;font-weight:bold;"></div>
+      </div>
+
+      <!-- Opções para entrar em sala -->
+      <div id="join-room" style="display:none; flex-direction: column; align-items: center;">
+        <h3 style="color:#00ffff; font-family:'Cinzel Decorative'; margin-bottom:15px; display:none;">Entrar na Sala
+        </h3>
+        <input type="text" id="nome-entrar" placeholder="Seu apelido" maxlength="20"
+          style="margin-bottom:8px;width:300px">
+        <input type="text" id="room-code" placeholder="Código da sala" maxlength="8"
+          style="margin-bottom:8px;width:300px">
+        <div style="display:flex; gap:20px; margin: 5px 0 15px 0;">
+          <label style="color:#f1f1f1;">
+            <input type="radio" name="tipo-entrada" value="jogador" checked> Jogador
+          </label>
+          <label style="color:#f1f1f1;">
+            <input type="radio" name="tipo-entrada" value="espectador"> Espectador
+          </label>
+        </div>
+        <button id="enter-room-btn">Entrar</button>
+      </div>
+
+    </div>
+  </div>
 
   </div>
 
@@ -310,7 +319,7 @@
   <script src="src/utils/Logger.js"></script>
   <script src="src/utils/utils.js"></script>
   <script src="src/config/firebase-config.js"></script>
-  <script src="src/services/network.js"></script>
+  <script src="src/core/Network.js"></script>
   <script src="src/core/GameRules.js"></script>
   <script src="src/config/GameConfig.js"></script>
   <script src="src/ui/AnimationManager.js"></script>
@@ -318,11 +327,11 @@
   <script src="src/ui/Renderer.js"></script>
   <script src="src/ui/ChangelogManager.js"></script>
   <script src="src/core/InputHandler.js"></script>
-  <script src="src/core/AnalyticsManager.js"></script>
+  <script src="src/core/AnalyticsManager.js?v=5.0.2"></script>
   <script src="src/core/RoomManager.js?v=5.0.1"></script>
   <script src="src/core/GameController.js"></script>
   <script src="src/ui/MouseTrail.js"></script>
-  <script src="src/utils/AudioManager.js?v=5.0.1"></script>
+  <script src="src/ui/AudioManager.js?v=5.0.1"></script>
   <script src="src/ui/NotificationManager.js"></script>
 
   <!-- AI -->
@@ -346,9 +355,9 @@
       style="position:fixed; bottom:10px; right:120px; z-index:999999; background:#4caf50; color:white; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer; opacity:0.7;">
       🐞 Test Tutorial
     </button>
-    <button id="btn-dev-pve" onclick="if(window.PvEAutomator) window.PvEAutomator.run()"
-      style="position:fixed; bottom:10px; right:10px; z-index:999999; background:#ff9800; color:white; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer; opacity:0.7;">
-      🤖 Test PvE Link
+    <button id="btn-dev-bot-match"
+      style="position:fixed; bottom:10px; right:10px; z-index:999999; background:#54388e; color:white; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer; opacity:0.7;">
+      🤖 Bot vs Bot (Demo)
     </button>
     <button id="btn-dev-bot-profile"
       style="position:fixed; bottom:50px; right:10px; z-index:999999; background:#9c27b0; color:white; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer; opacity:0.7;">
@@ -397,6 +406,7 @@
   </script>
 
   <!-- ================= KO-FI WIDGET ================= -->
+  <!--
   <script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>
   <script>
     if (window.kofiWidgetOverlay && !document.getElementById('kofi-widget-overlay')) {
@@ -408,6 +418,7 @@
       });
     }
   </script>
+  -->
 
   <!-- ================= BOTÕES DE AÇÕES LATERAIS REMOVED FROM BODY ================= -->
 
