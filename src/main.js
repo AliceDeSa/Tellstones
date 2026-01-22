@@ -3086,8 +3086,25 @@ document.addEventListener("DOMContentLoaded", () => {
   // RECONNECTION TRIGGER: Check for active session
   if (window.RoomManager && window.RoomManager.tentarReconexao) {
     // Pequeno delay para garantir que o Firebase inicializou
+    // --- FIX: Mobile Scale Toggle for Online Menu ---
+    const onlineMenuBtn = document.getElementById("online-menu-btn");
+    const backToMainBtn = document.getElementById("back-to-main-btn");
+    const startScreen = document.getElementById("start-screen");
+
+    if (onlineMenuBtn && startScreen) {
+      onlineMenuBtn.addEventListener("click", () => {
+        startScreen.classList.add("mode-online");
+      });
+    }
+
+    if (backToMainBtn && startScreen) {
+      backToMainBtn.addEventListener("click", () => {
+        startScreen.classList.remove("mode-online");
+      });
+    }
     setTimeout(() => {
       window.RoomManager.tentarReconexao();
     }, 800);
   }
 });
+

@@ -2746,13 +2746,13 @@ body>.floatingchat-donate-button span {
     display: none !important;
   }
 
-  /* SCALE FIX for Mobile Landscape Menu */
-  #start-screen {
+  /* SCALE FIX for Mobile Landscape Menu ONLY */
+  #start-screen.mode-online {
     width: 100% !important;
     height: 100vh !important;
     overflow: visible !important;
     padding: 0 !important;
-    transform: translate(-50%, -50%) scale(0.70) !important;
+    transform: translate(-50%, -50%) scale(0.75) !important;
     /* Force Scale */
     transform-origin: center center !important;
     display: flex !important;
