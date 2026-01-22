@@ -2734,8 +2734,8 @@ body>.floatingchat-donate-button span {
 
   /* Fix Side Buttons Cutoff on Mobile Landscape */
   #botoes-acoes-laterais {
-    right: 120px !important;
-    /* Push inwards to avoid cutoff */
+    right: 16px !important;
+    /* Push to edge, avoiding board overlap */
     transform: translateY(-50%) scale(0.9) !important;
     /* Slightly smaller */
   }
@@ -2770,7 +2770,10 @@ body {
   justify-content: center;
   color: #fff;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
+  /* Allow scrolling on small screens */
+  overflow-x: hidden;
+  padding: 10px;
 }
 
 /* --- TYPOGRAPHY --- */
