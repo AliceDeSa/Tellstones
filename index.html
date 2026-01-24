@@ -91,62 +91,58 @@
       <button id="bot-pve-btn">Jogo PvE</button>
       <button id="online-menu-btn">Jogo Online</button>
     </div>
-  </div>
+    <!-- Menu Online (Moved Inside start-screen) -->
+    <div id="online-menu" style="display:none; flex-direction:column; gap:0px; align-items:center;">
+      <button id="back-to-main-btn">&#8617;</button>
 
-  <!-- Menu Online -->
-  <!-- Menu Online (Tabbed Layout) -->
-  <div id="online-menu" style="display:none; flex-direction:column; gap:0px; align-items:center;">
-    <button id="back-to-main-btn">&#8617;</button>
-
-    <!-- Tabs (Buttons Fixed) -->
-    <div id="online-tabs-container" style="display:flex; gap:20px; margin-bottom: 20px;">
-      <button id="create-room-btn">Criar Sala</button>
-      <button id="join-room-btn">Entrar em Sala</button>
-    </div>
-
-    <!-- Content Area -->
-    <div id="online-content-area"
-      style="width: 100%; display: flex; justify-content: center; height: 280px; align-items: flex-start;">
-
-      <!-- Opções para criar sala/lobby -->
-      <div id="room-options" style="display:none; flex-direction: column; align-items: center;">
-        <h3 style="color:#daa520; font-family:'Cinzel Decorative'; margin-bottom:15px; display:none;">Criar Nova Sala
-        </h3>
-        <div style="display:flex; gap:20px; margin-bottom:10px;">
-          <label>
-            <input type="radio" name="mode" value="1x1" checked> 1x1 (Duelo)
-          </label>
-          <label>
-            <input type="radio" name="mode" value="2x2"> 2x2 (Duplas)
-          </label>
-        </div>
-        <input type="text" id="nome-criar" placeholder="Seu apelido" maxlength="20" style="margin:10px 0;width:300px">
-        <button id="start-game-btn">Criar Lobby</button>
-        <div id="codigo-sala-criada" style="margin-top:10px;color:#8ecfff;font-weight:bold;"></div>
+      <!-- Tabs (Buttons Fixed) -->
+      <div id="online-tabs-container" style="display:flex; gap:20px; margin-bottom: 20px;">
+        <button id="create-room-btn">Criar Sala</button>
+        <button id="join-room-btn">Entrar em Sala</button>
       </div>
 
-      <!-- Opções para entrar em sala -->
-      <div id="join-room" style="display:none; flex-direction: column; align-items: center;">
-        <h3 style="color:#00ffff; font-family:'Cinzel Decorative'; margin-bottom:15px; display:none;">Entrar na Sala
-        </h3>
-        <input type="text" id="nome-entrar" placeholder="Seu apelido" maxlength="20"
-          style="margin-bottom:8px;width:300px">
-        <input type="text" id="room-code" placeholder="Código da sala" maxlength="8"
-          style="margin-bottom:8px;width:300px">
-        <div style="display:flex; gap:20px; margin: 5px 0 15px 0;">
-          <label style="color:#f1f1f1;">
-            <input type="radio" name="tipo-entrada" value="jogador" checked> Jogador
-          </label>
-          <label style="color:#f1f1f1;">
-            <input type="radio" name="tipo-entrada" value="espectador"> Espectador
-          </label>
+      <!-- Content Area -->
+      <div id="online-content-area"
+        style="width: 100%; display: flex; justify-content: center; height: 280px; align-items: flex-start;">
+
+        <!-- Opções para criar sala/lobby -->
+        <div id="room-options" style="display:none; flex-direction: column; align-items: center;">
+          <h3 style="color:#daa520; font-family:'Cinzel Decorative'; margin-bottom:15px; display:none;">Criar Nova Sala
+          </h3>
+          <div style="display:flex; gap:20px; margin-bottom:10px;">
+            <label>
+              <input type="radio" name="mode" value="1x1" checked> 1x1 (Duelo)
+            </label>
+            <label>
+              <input type="radio" name="mode" value="2x2"> 2x2 (Duplas)
+            </label>
+          </div>
+          <input type="text" id="nome-criar" placeholder="Seu apelido" maxlength="20" style="margin:10px 0;width:300px">
+          <button id="start-game-btn">Criar Lobby</button>
+          <div id="codigo-sala-criada" style="margin-top:10px;color:#8ecfff;font-weight:bold;"></div>
         </div>
-        <button id="enter-room-btn">Entrar</button>
+
+        <!-- Opções para entrar em sala -->
+        <div id="join-room" style="display:none; flex-direction: column; align-items: center;">
+          <h3 style="color:#00ffff; font-family:'Cinzel Decorative'; margin-bottom:15px; display:none;">Entrar na Sala
+          </h3>
+          <input type="text" id="nome-entrar" placeholder="Seu apelido" maxlength="20"
+            style="margin-bottom:8px;width:300px">
+          <input type="text" id="room-code" placeholder="Código da sala" maxlength="8"
+            style="margin-bottom:8px;width:300px">
+          <div style="display:flex; gap:20px; margin: 5px 0 15px 0;">
+            <label style="color:#f1f1f1;">
+              <input type="radio" name="tipo-entrada" value="jogador" checked> Jogador
+            </label>
+            <label style="color:#f1f1f1;">
+              <input type="radio" name="tipo-entrada" value="espectador"> Espectador
+            </label>
+          </div>
+          <button id="enter-room-btn">Entrar</button>
+        </div>
+
       </div>
-
     </div>
-  </div>
-
   </div>
 
   <div id="changelog-box"></div>
@@ -406,7 +402,6 @@
   </script>
 
   <!-- ================= KO-FI WIDGET ================= -->
-  <!--
   <script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>
   <script>
     if (window.kofiWidgetOverlay && !document.getElementById('kofi-widget-overlay')) {
@@ -418,7 +413,6 @@
       });
     }
   </script>
-  -->
 
   <!-- ================= BOTÕES DE AÇÕES LATERAIS REMOVED FROM BODY ================= -->
 

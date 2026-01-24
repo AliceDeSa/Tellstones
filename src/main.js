@@ -1002,6 +1002,10 @@ if (btnOnline) {
     tocarSomPress();
     mainMenu.style.display = "none";
     onlineMenu.style.display = "flex";
+
+    // UI Fix: Add class to start-screen
+    const startScreen = document.getElementById("start-screen");
+    if (startScreen) startScreen.classList.add("mode-online");
   };
 }
 
@@ -3108,6 +3112,10 @@ document.addEventListener("DOMContentLoaded", () => {
       divMainBtns.style.display = 'flex';
       divMainBtns.style.flexDirection = 'column';
       divMainBtns.style.alignItems = 'center';
+
+      // UI Fix: Remove class from start-screen
+      const startScreen = document.getElementById("start-screen");
+      if (startScreen) startScreen.classList.remove("mode-online");
     };
   }
 
@@ -3117,22 +3125,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // RECONNECTION TRIGGER: Check for active session
   if (window.RoomManager && window.RoomManager.tentarReconexao) {
     // Pequeno delay para garantir que o Firebase inicializou
-    // --- FIX: Mobile Scale Toggle for Online Menu ---
-    const onlineMenuBtn = document.getElementById("online-menu-btn");
-    const backToMainBtn = document.getElementById("back-to-main-btn");
-    const startScreen = document.getElementById("start-screen");
 
-    if (onlineMenuBtn && startScreen) {
-      onlineMenuBtn.addEventListener("click", () => {
-        startScreen.classList.add("mode-online");
-      });
-    }
-
-    if (backToMainBtn && startScreen) {
-      backToMainBtn.addEventListener("click", () => {
-        startScreen.classList.remove("mode-online");
-      });
-    }
     setTimeout(() => {
       window.RoomManager.tentarReconexao();
     }, 800);

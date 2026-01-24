@@ -186,6 +186,30 @@ input[type="text"] {
   transform: translate(-50%, -50%);
 }
 
+#online-menu {
+  position: relative;
+  width: 100%;
+  margin-top: 10px;
+}
+
+#start-screen.mode-online {
+  top: 50%;
+  /* Center the taller content */
+  transform: translate(-50%, -50%);
+  /* Re-assert transform just in case */
+}
+
+#start-screen.mode-online #slogan-main {
+  display: none !important;
+}
+
+#start-screen.mode-online h1 {
+  font-size: 2.5em;
+  /* Shrink title */
+  margin-bottom: 20px;
+  /* Add space between title and menu */
+}
+
 /* =====================================================
            LISTAS DE JOGADORES E ESPECTADORES
            ===================================================== */
@@ -3225,7 +3249,7 @@ body {
 
 #back-to-main-btn {
   position: absolute !important;
-  top: 18% !important;
+  top: -25% !important;
   /* Raised position */
   left: calc(50% + 220px) !important;
   /* To the right of the title */

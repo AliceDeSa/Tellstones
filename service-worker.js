@@ -56,7 +56,7 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('fetch', (event) => {
     // Network First for API/Firebase, Cache First for assets
-    if (event.request.url.includes('firebase') || event.request.url.includes('google')) {
+    if (event.request.url.includes('firebase') || event.request.url.includes('google') || event.request.url.includes('doubleclick')) {
         return;
     }
 

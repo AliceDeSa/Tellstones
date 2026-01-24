@@ -1,6 +1,6 @@
-# Tellstones: King's Gambit - Online Edition (v5.2.1)
+# Tellstones: King's Gambit - Online Edition (v5.2.0)
 [![Status](https://img.shields.io/badge/Status-Active-success.svg)]()
-[![Version](https://img.shields.io/badge/Version-5.2.1-blue.svg)]()
+[![Version](https://img.shields.io/badge/Version-5.2.0-blue.svg)]()
 [![License](https://img.shields.io/badge/License-Fan_Project-purple.svg)]()
 [![PWA](https://img.shields.io/badge/PWA-Supported-orange.svg)]()
 
@@ -131,10 +131,7 @@ assets/                 # Recursos Estáticos
 
 ## 📅 Histórico de Atualizações (Changelog)
 
-### v5.2.1 - UI Adjustment (Atual)
--   **UI Polish**: Widget do Ko-fi temporariamente oculto.
-
-### v5.2.0 - AI & UI Polish
+### v5.1.0 - The Quality Update (Atual)
 -   **Refatoração Completa**: Migração de `script.js` monolítico para arquitetura modular.
 -   **Novo Sistema de IA**: Implementação de lógica de "Match Point" (Bot não aceita blefes se estiver perto de perder).
 -   **Tratamento de Erros**: Correção de "Hangs" (travamentos) em turnos assíncronos.

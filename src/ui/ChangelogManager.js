@@ -5,12 +5,6 @@
 const ChangelogManager = {
     data: [
         {
-            version: "v5.2.1 - UI Adjustment",
-            changes: [
-                "<strong>UI:</strong> Widget do Ko-fi oculto temporariamente."
-            ]
-        },
-        {
             version: "v5.2.0 - AI & UI Polish",
             changes: [
                 "<strong>AI:</strong> Bot mais inteligente (Memória Dinâmica).",
