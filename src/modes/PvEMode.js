@@ -375,6 +375,7 @@ class PvEMode extends GameMode {
 
     checkTurn(estado) {
         try {
+            if (!this.active) return; // Prevent logic if mode is cleaned up
             if (!estado || estado.vencedor) return;
             if (!this.botBrain) {
                 console.warn("[PvE] BotBrain missing, re-initializing...");
@@ -456,6 +457,7 @@ class PvEMode extends GameMode {
 
     executeBotTurn() {
         try {
+            if (!this.active) { this.botThinking = false; return; }
             const estado = window.estadoJogo;
             // Validação dupla
             if (!estado || estado.vez !== 1) {

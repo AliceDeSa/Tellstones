@@ -110,7 +110,7 @@ function mostrarTela(tela) {
     if (segabarContainer) segabarContainer.remove();
 
     // Cleanup Global Overlays
-    const idsToHide = ["box-acoes", "carta-acoes", "icone-acoes", "tutorial-ui", "escolha-cara-coroa"];
+    const idsToHide = ["box-acoes", "carta-acoes", "icone-acoes", "tutorial-ui", "escolha-cara-coroa", "moeda-btn"];
     idsToHide.forEach(uiId => {
       const el = document.getElementById(uiId);
       if (el) el.style.display = "none";
@@ -318,9 +318,27 @@ function definirEscolha(escolha) {
 // Variável global para evitar toast duplicado
 let ultimoLadoNotificado = null;
 
+// Listener Reference for cleanup
+window.coinListenerRef = null;
+
+function pararOuvirCaraCoroa() {
+  if (window.coinListenerRef && salaAtual) {
+    try {
+      const ref = getDBRef("salas/" + salaAtual + "/caraCoroa");
+      ref.off("value", window.coinListenerRef);
+    } catch (e) { console.warn("Erro ao remover listener moeda", e); }
+  }
+  window.coinListenerRef = null;
+}
+
 function ouvirCaraCoroa() {
   if (!salaAtual) return;
-  getDBRef("salas/" + salaAtual + "/caraCoroa").on("value", function (snap) {
+  // Block Coin Logic in Tutorial Mode (Scripted)
+  if (salaAtual === "MODO_TUTORIAL") return;
+
+  pararOuvirCaraCoroa(); // Ensure clean start
+
+  window.coinListenerRef = getDBRef("salas/" + salaAtual + "/caraCoroa").on("value", function (snap) {
     const data = snap.val();
     window.ultimoCaraCoroaData = data;
     const escolhaDiv = document.getElementById("escolha-cara-coroa");
@@ -457,6 +475,7 @@ function mostrarMoedaParaSorteioSincronizado(resultado, minhaEscolha) {
         mostrarNotificacaoMoeda("");
         // --- NOVO: Buscar escolha do Firebase para garantir nomeGanhador correto ---
         function tentarDefinirVencedorMoeda(tentativas = 0) {
+          if (salaAtual === "MODO_TUTORIAL") return; // Guard clause
           getDBRef("salas/" + salaAtual + "/caraCoroa/escolha").once(
             "value",
             function (snapEscolha) {
