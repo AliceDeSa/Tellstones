@@ -1,18 +1,7 @@
 /* =====================================================
    LAYOUTS: LOBBY E TELA INICIAL
    ===================================================== */
-#back-to-main-btn {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 24px;
-    cursor: pointer;
-    z-index: 4000;
-    /* Above Changelog (3000) */
-}
+
 
 #lobby {
     max-width: 400px;
@@ -45,7 +34,8 @@
     text-align: center;
     box-shadow: none;
     position: relative;
-    z-index: 2;
+    z-index: 3100;
+    /* Raised above Changelog (3000) */
     display: none;
 }
 
@@ -65,17 +55,33 @@
 }
 
 #start-screen.active,
+#game-modes-screen.active,
 #lobby.active,
 #game.active {
     display: block;
 }
 
 #lobby,
-#start-screen {
+#start-screen,
+#game-modes-screen {
     position: absolute;
     top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
+}
+
+/* Game Modes Screen - Same styling as start-screen */
+#game-modes-screen {
+    max-width: 400px;
+    margin: 40px auto;
+    padding: 30px;
+    background: transparent;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: none;
+    position: relative;
+    z-index: 3100;
+    display: none;
 }
 
 #lobby ul,
@@ -193,4 +199,320 @@
     font-family: "Segoe UI", Arial, sans-serif;
     text-shadow: 0 1px 4px #000a;
     zoom: 0.8;
+}
+
+/* =====================================================
+   SETTINGS SCREEN - Painel de Opções Medieval
+   ===================================================== */
+
+#settings-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    /* Fundo escuro ao redor */
+    z-index: 6000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+#settings-screen .ui-screen__header,
+#settings-screen .ui-screen__body,
+#settings-screen .ui-screen__footer {
+    position: relative;
+    z-index: 2;
+}
+
+/* Botão Fechar Medieval (X) */
+.close-btn-medieval {
+    position: absolute;
+    /* Ajustado para o canto superior direito do frame da imagem */
+    top: 17%;
+    right: 26%;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(180deg, #5d4037 0%, #3e2723 100%);
+    border: 2px solid #8d6e63;
+    border-radius: 50%;
+    color: #e6e6e6;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 4px;
+    /* Ajuste fino do X */
+}
+
+.close-btn-medieval:hover {
+    background: linear-gradient(180deg, #8d6e63 0%, #5d4037 100%);
+    color: #ffd700;
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(232, 190, 64, 0.4);
+    border-color: #ffd700;
+}
+
+/* Container interno com a imagem do painel */
+#settings-screen::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(90vw, 1000px);
+    height: min(90vh, 650px);
+    background-image: url('../../img/ui/tavern/options_panel_bg.png');
+    /* Caminho atualizado */
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+}
+
+/* Header - Posicionar Título sobre a faixa da imagem */
+#settings-screen .ui-screen__header {
+    display: block !important;
+    position: absolute;
+    top: 9%;
+    /* Ajustado para alinhar visualmente com a faixa da imagem */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    text-align: center;
+    pointer-events: none;
+    z-index: 20;
+}
+
+#settings-screen .ui-screen__title {
+    font-family: 'Cinzel Decorative', serif !important;
+    font-size: 2.8em;
+    font-weight: 900;
+    color: #2c1810;
+    /* Marrom quase preto para cobrir o original */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 0;
+    text-shadow: 0 1px 0px rgba(255, 255, 255, 0.5), 0 0 20px rgba(218, 165, 32, 0.2);
+}
+
+/* Body - Posicionar dentro da área do pergaminho */
+#settings-screen .ui-screen__body {
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -40%);
+    width: min(60vw, 550px);
+    max-width: 400px;
+    padding: 40px 60px;
+}
+
+/* Footer - Posicionar abaixo do pergaminho */
+#settings-screen .ui-screen__footer {
+    position: absolute;
+    bottom: 30%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+}
+
+/* Ajustes nos controles de áudio para caber bem */
+#settings-screen .settings-audio-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Display active state */
+#settings-screen.active {
+    display: flex;
+}
+
+/* ===== SLIDERS MEDIEVAIS ===== */
+#settings-screen .slider-component {
+    margin-bottom: 0;
+}
+
+#settings-screen .slider-component label {
+    font-family: 'Cinzel Decorative', serif !important;
+    color: #2c1810 !important;
+    /* Marrom escuro forte */
+    font-weight: 700 !important;
+    font-size: 1.4em;
+    text-shadow: none;
+    /* Remover sombra que pode atrapalhar leitura */
+    margin-bottom: 12px;
+    display: block;
+}
+
+/* Track do slider - Madeira */
+#settings-screen .slider-component input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 12px;
+    background: linear-gradient(180deg, #3e2723 0%, #5d4037 50%, #4e342e 100%);
+    border: 2px solid #8d6e63;
+    border-radius: 6px;
+    outline: none;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+/* Thumb do slider - Dourado (WebKit) */
+#settings-screen .slider-component input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    background: radial-gradient(circle, #ffd700 0%, #daa520 50%, #b8860b 100%);
+    border: 3px solid #8b6914;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+    transition: all 0.2s ease;
+}
+
+#settings-screen .slider-component input[type="range"]::-webkit-slider-thumb:hover {
+    background: radial-gradient(circle, #ffed4e 0%, #ffd700 50%, #daa520 100%);
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(218, 165, 32, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.7);
+}
+
+/* Thumb do slider - Dourado (Firefox) */
+#settings-screen .slider-component input[type="range"]::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    background: radial-gradient(circle, #ffd700 0%, #daa520 50%, #b8860b 100%);
+    border: 3px solid #8b6914;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+    transition: all 0.2s ease;
+}
+
+/* Value display - Medieval style */
+#settings-screen .slider-component .slider-value {
+    font-family: 'Cinzel Decorative', serif !important;
+    color: #2c1810 !important;
+    /* Marrom escuro forte */
+    font-weight: 900 !important;
+    font-size: 1.2em;
+    text-shadow: none;
+}
+
+/* ===== BOTÕES MEDIEVAIS ===== */
+#settings-screen .ui-screen__footer button {
+    font-family: 'Cinzel Decorative', serif;
+    font-weight: 600;
+    font-size: 1em;
+    padding: 12px 32px;
+    border: 3px solid #8b6914;
+    border-radius: 8px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Botão Resetar - Tom escuro/madeira */
+#settings-screen .ui-screen__footer button[class*="secondary"],
+#settings-screen .ui-screen__footer .btn--secondary {
+    background: linear-gradient(180deg, #5d4037 0%, #4e342e 50%, #3e2723 100%);
+    color: #d7ccc8;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+#settings-screen .ui-screen__footer button[class*="secondary"]:hover,
+#settings-screen .ui-screen__footer .btn--secondary:hover {
+    background: linear-gradient(180deg, #6d4c41 0%, #5d4037 50%, #4e342e 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Botão Salvar - Dourado */
+#settings-screen .ui-screen__footer button[class*="primary"],
+#settings-screen .ui-screen__footer .btn--primary {
+    background: linear-gradient(180deg, #ffd700 0%, #daa520 50%, #b8860b 100%);
+    color: #3e2723;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+    border-color: #8b6914;
+}
+
+#settings-screen .ui-screen__footer button[class*="primary"]:hover,
+#settings-screen .ui-screen__footer .btn--primary:hover {
+    background: linear-gradient(180deg, #ffed4e 0%, #ffd700 50%, #daa520 100%);
+    box-shadow: 0 6px 12px rgba(218, 165, 32, 0.6);
+}
+
+/* 
+   FORÇA BRUTA UNIVERSAL 
+   Garante que NADA sobrescreva a cor e a fonte dentro dos sliders e títulos.
+*/
+#settings-screen * {
+    font-family: 'Cinzel Decorative', serif !important;
+}
+
+#settings-screen h1,
+#settings-screen label,
+#settings-screen span,
+#settings-screen div {
+    color: #000000 !important;
+    /* Preto Puro */
+    text-shadow: none !important;
+    /* Borda branca removida */
+    font-weight: 900 !important;
+}
+
+/* Exceção para o título principal que precisa de cor específica */
+#settings-screen .ui-screen__title {
+    text-shadow: 0 1px 0px rgba(255, 255, 255, 0.5), 0 0 20px rgba(218, 165, 32, 0.2) !important;
+}
+
+/* Exceção para botão fechar */
+#settings-screen .close-btn-medieval {
+    color: #e6e6e6 !important;
+}
+
+/* Exceção para botões do footer (manter cores originais) */
+#settings-screen .ui-screen__footer button {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+
+#settings-screen .ui-screen__footer button.btn--primary {
+    color: #3e2723 !important;
+}
+
+/* Pôsteres da Taverna */
+.tavern-poster {
+    position: absolute;
+    /* width removido daqui, controlado via JS individualmente */
+    cursor: grab;
+    z-index: 50;
+    filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.5));
+    transition: transform 0.1s ease, filter 0.2s ease;
+    user-select: none;
+    -webkit-user-drag: none;
+    touch-action: none;
+    /* Crucial para Pointer Events funcionarem bem em touch */
+    pointer-events: auto !important;
+}
+
+.tavern-poster:active {
+    cursor: grabbing;
+    transform: scale(1.05) rotate(2deg);
+    filter: drop-shadow(5px 10px 15px rgba(0, 0, 0, 0.6));
+    z-index: 20;
+    /* Traz para frente ao arrastar */
+}
+
+#settings-screen .ui-screen__footer button.btn--secondary {
+    color: #d7ccc8 !important;
 }

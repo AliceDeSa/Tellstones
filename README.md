@@ -1,6 +1,6 @@
-# Tellstones: King's Gambit - Online Edition (v5.2.0)
+# Tellstones: King's Gambit - Online Edition (v5.4.1 - UI Polish)
 [![Status](https://img.shields.io/badge/Status-Active-success.svg)]()
-[![Version](https://img.shields.io/badge/Version-5.2.0-blue.svg)]()
+[![Version](https://img.shields.io/badge/Version-5.4.1-blue.svg)]()
 [![License](https://img.shields.io/badge/License-Fan_Project-purple.svg)]()
 [![PWA](https://img.shields.io/badge/PWA-Supported-orange.svg)]()
 
@@ -39,19 +39,25 @@ Em seu turno, o jogador pode realizar uma ação:
 Este projeto evoluiu de um protótipo simples para uma aplicação web robusta (PWA).
 
 ### 🤖 Modo PvE (Inteligência Artificial)
-Enfrente um Bot desenvolvido com **Lógica Fuzzy** e **Modelos de Memória Humana (Decay)**.
--   **Memória Imperfeita**: O Bot "esquece" pedras antigas conforme o tempo passa ou muitas trocas acontecem.
--   **Personalidades**:
-    -   🧠 **O Lógico**: Joga seguro, foca em eficiência.
-    -   🃏 **O Trapaceiro**: Gosta de blefar e fazer jogadas confusas.
-    -   ⚔️ **O Agressivo**: Tenta vencer rápido, desafia constantemente.
--   **Meta-Game**: O Bot reage ao placar (ex: para de aceitar blefes se o jogador estiver vencendo).
+Enfrente um Bot desenvolvido com **arquitetura limpa** e **sistema de memória com decay**.
+-   **Memória com Decay**: O Bot "esquece" pedras antigas conforme turnos passam (15% por turno).
+-   **Predição Inteligente**: Usa memória e eliminação de pedras visíveis para adivinhar.
+-   **Decisões Ponderadas**: Sistema de pontuação para escolher melhor jogada.
+-   **Zero Bugs**: Recriado do zero (v5.0) - 100% funcional e estável.
 
 ### 🌍 Multiplayer Online
 Jogue contra amigos em tempo real.
 -   **Sincronização Realtime**: Uso do Firebase Realtime Database para latência mínima.
 -   **Resiliência**: Sistema de reconexão automática; se recarregar a página, você volta para a sala.
 -   **Lobby e Espectadores**: Suporte para espectadores assistirem a partida.
+-   **Nickname Sync**: Inputs de nome sincronizados automaticamente entre formulários.
+
+### 🎨 Sistema de Temas
+Personalize a experiência visual do jogo.
+-   **Múltiplos Temas**: Tellstones (padrão), Taberna Medieval (em desenvolvimento).
+-   **Assets Dinâmicos**: Cada tema possui tabuleiro, background e painel de opções únicos.
+-   **Hot-Swap**: Troca de tema em tempo real sem recarregar a página.
+-   **Extensível**: Arquitetura preparada para futuros temas (CyberPunk, Coliseum, Arcane).
 
 ### 📱 Progressive Web App (PWA)
 -   **Instalável**: Pode ser instalado como App no Android/iOS/Desktop.
@@ -66,9 +72,10 @@ Jogue contra amigos em tempo real.
 
 ## 🛠️ Tecnologias Utilizadas
 
-O projeto foi construído com foco em **Vanilla JavaScript** para máximo controle de performance e aprendizado profundo da linguagem, sem dependência de frameworks pesados.
+O projeto foi construído com foco em **TypeScript** e **Vanilla JS** para máximo controle de performance, tipagem estática e aprendizado profundo, sem dependência de frameworks pesados.
 
 ### Frontend
+-   **TypeScript (Strict)**: 100% da base de código tipada para segurança e manutenibilidade.
 -   **HTML5 Semantic**: Estrutura acessível e moderna.
 -   **CSS3 Advanced**:
     -   Variáveis CSS para temas.
@@ -92,6 +99,28 @@ O projeto foi construído com foco em **Vanilla JavaScript** para máximo contro
 
 ---
 
+### 🧠 Nova Arquitetura de IA (BotBrain v5)
+A partir da versão v5.4.0, o sistema de Inteligência Artificial foi completamente reescrito para suportar **Turnos Individuais Detalhados** e **Lógica Autônoma**.
+
+#### 1. Turnos Individuais (Individual Turn System)
+Diferente da versão antiga (monolítica), o controle do jogo agora opera em um sistema de *passagem de bastão*.
+-   **Orquestração**: O `GameController` gerencia o estado global, mas não decide pelo jogador/bot.
+-   **Isolamento**: Quando é a vez do Bot, o sistema concede controle total a ele. O Bot processa o estado, consulta sua memória, toma uma decisão e devolve uma `Action` para o controlador.
+-   **Assincronia**: Todas as tomadas de decisão são assíncronas, permitindo animações suaves e "tempo de pensamento" sem travar a UI.
+
+#### 2. Bots Autônomos (Decentralized Logic)
+Cada Bot é agora uma instância independente (`BotBrain`) com sua própria "psique":
+-   **Memória Privada**: Cada bot mantém sua própria instância de `BotMemory`. Eles não sabem o que está na mesa a menos que tenham visto (e lembrado).
+-   **Decay de Memória**: A memória falha. O Bot esquece pedras antigas ou se confunde quando muitas trocas ocorrem (simulação de carga cognitiva humana).
+-   **Personalidade Modular**: A arquitetura permite injetar diferentes "perfis" de comportamento (Agressivo, Cauteloso, Trapaceiro) que avaliam riscos de forma diferente.
+
+#### 3. Recriação dos Sistemas (System Rewrite)
+-   **Clean Architecture**: Separação estrita entre Regras (`GameRules`), Estado (`GameState`) e Apresentação (`Renderer`).
+-   **Event-Driven**: A comunicação entre sistemas ocorre via `EventBus`, reduzindo acoplamento.
+-   **TypeScript Strict**: Garantia de integridade de dados em todo o fluxo de jogo.
+
+---
+
 ## 📂 Estrutura do Projeto
 
 A arquitetura foi refatorada na versão 5.0 para seguir princípios de **Clean Code** e **Separação de Responsabilidades**.
@@ -99,7 +128,9 @@ A arquitetura foi refatorada na versão 5.0 para seguir princípios de **Clean C
 ```bash
 src/
 ├── ai/                 # Inteligência Artificial
-│   └── BotBrain.js     # "Cérebro" do Bot (Memória, Decisão)
+│   ├── BotBrain.ts     # "Cérebro" do Bot v5.0 (Decisão)
+│   ├── BotMemory.ts    # Sistema de Memória (Decay)
+│   └── DummyBot.ts     # Bot de Teste (Validação)
 ├── config/             # Configurações
 │   ├── firebase-config.js
 │   └── GameConfig.js
@@ -131,7 +162,19 @@ assets/                 # Recursos Estáticos
 
 ## 📅 Histórico de Atualizações (Changelog)
 
-### v5.1.0 - The Quality Update (Atual)
+### v5.4.1 - UI Polish & Theme System (Atual)
+-   **Refinamento UI**: Correção de alinhamento do GameModes, slogan unificado, emojis removidos.
+-   **Menu Online**: Navegação corrigida, seleção Jogador/Espectador restaurada, nickname sync.
+-   **Sistema de Temas**: Suporte para `optionsPanel` personalizado, cada tema com painel de opções único.
+-   **Bug Fixes**: mainMenuBtns error, CSS paths, screen registration.
+
+### v5.4.0 - BotBrain Reborn
+-   **Recriação Total da IA**: BotBrain v5.0 (~320 linhas, 50% menos código).
+-   **Sistema de Memória**: BotMemory separado com decay automático.
+-   **Zero Bugs**: Eliminados 100% dos travamentos do bot.
+-   **DummyBot**: Bot de teste para validação do sistema de turnos.
+
+### v5.1.0 - The Quality Update
 -   **Refatoração Completa**: Migração de `script.js` monolítico para arquitetura modular.
 -   **Novo Sistema de IA**: Implementação de lógica de "Match Point" (Bot não aceita blefes se estiver perto de perder).
 -   **Tratamento de Erros**: Correção de "Hangs" (travamentos) em turnos assíncronos.
@@ -181,4 +224,4 @@ Todo o código fonte é livre para fins educacionais.
 -   **Conceito & Referencias**: [Riot Games](https://www.riotgames.com/). *Tellstones* é uma marca registrada da Riot Games. Este projeto não é afiliado à Riot Games.
 
 ---
-*Feito com 💙 e JavaScript.*
+*Feito com 💙 e TypeScript.*

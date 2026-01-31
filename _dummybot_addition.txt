@@ -1,0 +1,6 @@
+  <!-- AI -->
+  <script type="module" src="dist/src/ai/BotBrain.js"></script>
+  <script type="module" src="dist/src/ai/DummyBot.js"></script>
+
+  <!-- Game Modes -->
+  <script type="module" src="dist/src/modes/GameMode.js?v=v4_alpha_1"></script>

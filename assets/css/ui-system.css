@@ -1,0 +1,411 @@
+/**
+ * UI Design System - Tellstones
+ * Sistema de design global com variáveis CSS
+ * Fase 6.2: Sistema de UI e Navegação
+ */
+
+/* =================================================================
+   CORES
+   ================================================================= */
+:root {
+    /* Primárias - Dourado */
+    --ui-primary: #d4af37;
+    --ui-primary-hover: #e6c44a;
+    --ui-primary-active: #b8962e;
+    --ui-primary-light: rgba(212, 175, 55, 0.2);
+
+    /* Secundárias - Cinza */
+    --ui-secondary: #2a2a2a;
+    --ui-secondary-hover: #3a3a3a;
+    --ui-secondary-active: #1a1a1a;
+
+    /* Accent - Marrom */
+    --ui-accent: #8b4513;
+    --ui-accent-hover: #a0522d;
+
+    /* Estados */
+    --ui-success: #4caf50;
+    --ui-warning: #ff9800;
+    --ui-error: #f44336;
+    --ui-info: #2196f3;
+
+    /* Neutros */
+    --ui-bg-dark: #1a1a1a;
+    --ui-bg-medium: #2d2d2d;
+    --ui-bg-light: #404040;
+    --ui-text: #f5f5f5;
+    --ui-text-muted: #888888;
+    --ui-text-dark: #1a1a1a;
+
+    /* Bordas */
+    --ui-border: rgba(212, 175, 55, 0.3);
+    --ui-border-hover: rgba(212, 175, 55, 0.6);
+    --ui-border-active: var(--ui-primary);
+
+    /* Transparências */
+    --ui-overlay: rgba(0, 0, 0, 0.7);
+    --ui-overlay-light: rgba(0, 0, 0, 0.5);
+    --ui-glass: rgba(255, 255, 255, 0.1);
+    --ui-glass-dark: rgba(0, 0, 0, 0.3);
+}
+
+/* =================================================================
+   TIPOGRAFIA
+   ================================================================= */
+:root {
+    /* Fontes */
+    --font-title: 'Cinzel Decorative', 'Times New Roman', serif;
+    --font-heading: 'Cinzel', 'Times New Roman', serif;
+    --font-body: 'Roboto', 'Arial', sans-serif;
+
+    /* Tamanhos */
+    --text-xs: 0.75rem;
+    /* 12px */
+    --text-sm: 0.875rem;
+    /* 14px */
+    --text-base: 1rem;
+    /* 16px */
+    --text-lg: 1.125rem;
+    /* 18px */
+    --text-xl: 1.25rem;
+    /* 20px */
+    --text-2xl: 1.5rem;
+    /* 24px */
+    --text-3xl: 2rem;
+    /* 32px */
+    --text-4xl: 2.5rem;
+    /* 40px */
+    --text-5xl: 3rem;
+    /* 48px */
+
+    /* Line Heights */
+    --leading-tight: 1.2;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.75;
+
+    /* Font Weights */
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+}
+
+/* =================================================================
+   ESPAÇAMENTO
+   ================================================================= */
+:root {
+    --space-xs: 0.25rem;
+    /* 4px */
+    --space-sm: 0.5rem;
+    /* 8px */
+    --space-md: 1rem;
+    /* 16px */
+    --space-lg: 1.5rem;
+    /* 24px */
+    --space-xl: 2rem;
+    /* 32px */
+    --space-2xl: 3rem;
+    /* 48px */
+    --space-3xl: 4rem;
+    /* 64px */
+}
+
+/* =================================================================
+   BORDAS E SOMBRAS
+   ================================================================= */
+:root {
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 9999px;
+
+    /* Sombras */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
+
+    /* Glow (dourado) */
+    --glow-sm: 0 0 5px rgba(212, 175, 55, 0.3);
+    --glow-md: 0 0 10px rgba(212, 175, 55, 0.4);
+    --glow-lg: 0 0 20px rgba(212, 175, 55, 0.5);
+}
+
+/* =================================================================
+   ANIMAÇÕES
+   ================================================================= */
+:root {
+    /* Durations */
+    --duration-fast: 150ms;
+    --duration-normal: 300ms;
+    --duration-slow: 500ms;
+
+    /* Easings */
+    --ease-default: ease;
+    --ease-in: ease-in;
+    --ease-out: ease-out;
+    --ease-in-out: ease-in-out;
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    /* Transitions */
+    --transition-fast: var(--duration-fast) var(--ease-default);
+    --transition-normal: var(--duration-normal) var(--ease-default);
+    --transition-slow: var(--duration-slow) var(--ease-default);
+}
+
+/* =================================================================
+   Z-INDEX
+   ================================================================= */
+:root {
+    --z-base: 1;
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-fixed: 300;
+    --z-modal-backdrop: 400;
+    --z-modal: 500;
+    --z-popover: 600;
+    --z-tooltip: 700;
+}
+
+/* =================================================================
+   KEYFRAMES DE ANIMAÇÃO
+   ================================================================= */
+
+/* Fade In */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Fade In Up */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Fade In Down */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Scale In */
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Pulse */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Glow Pulse (dourado) */
+@keyframes glowPulse {
+
+    0%,
+    100% {
+        box-shadow: var(--glow-sm);
+    }
+
+    50% {
+        box-shadow: var(--glow-lg);
+    }
+}
+
+/* Shimmer (brilho) */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Slide In Left */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Slide In Right */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* =================================================================
+   CLASSES UTILITÁRIAS
+   ================================================================= */
+
+/* Animações */
+.animate-fadeIn {
+    animation: fadeIn var(--duration-normal) var(--ease-out);
+}
+
+.animate-fadeInUp {
+    animation: fadeInUp var(--duration-normal) var(--ease-out);
+}
+
+.animate-fadeInDown {
+    animation: fadeInDown var(--duration-normal) var(--ease-out);
+}
+
+.animate-scaleIn {
+    animation: scaleIn var(--duration-normal) var(--ease-bounce);
+}
+
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+.animate-glow {
+    animation: glowPulse 2s infinite;
+}
+
+/* Delays para stagger */
+.delay-1 {
+    animation-delay: 100ms;
+}
+
+.delay-2 {
+    animation-delay: 200ms;
+}
+
+.delay-3 {
+    animation-delay: 300ms;
+}
+
+.delay-4 {
+    animation-delay: 400ms;
+}
+
+.delay-5 {
+    animation-delay: 500ms;
+}
+
+/* Text */
+.text-center {
+    text-align: center;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.text-right {
+    text-align: right;
+}
+
+/* Flexbox */
+.flex {
+    display: flex;
+}
+
+.flex-col {
+    flex-direction: column;
+}
+
+.flex-row {
+    flex-direction: row;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.gap-sm {
+    gap: var(--space-sm);
+}
+
+.gap-md {
+    gap: var(--space-md);
+}
+
+.gap-lg {
+    gap: var(--space-lg);
+}
+
+/* Visibility */
+.hidden {
+    display: none !important;
+}
+
+.visible {
+    visibility: visible;
+}
+
+.invisible {
+    visibility: hidden;
+}
+
+/* =================================================================
+   FIXES DE TERCEIROS
+   ================================================================= */
+
+/* Ko-fi Widget - Remover anomalias visuais */
+div[id^="kofi-widget-overlay"],
+iframe[id^="kofi-widget-overlay"] {
+    background: transparent !important;
+    box-shadow: none !important;
+}

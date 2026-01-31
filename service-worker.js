@@ -1,55 +1,76 @@
-const CACHE_NAME = 'tellstones-v5.1.0';
+const CACHE_NAME = 'tellstones-v6.0.1'; // Bumped for v6.0 ScreenManager
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
     './assets/css/main.css',
-    './assets/css/legacy_style.css',
+    './assets/css/legacy.css',
 
     // Scripts Core
-    './src/core/RoomManager.js',
-    './src/core/GameController.js',
-    './src/core/InputHandler.js',
-    './src/core/GameRules.js',
-    './src/core/AnalyticsManager.js',
-    './src/core/constants.js',
-    './src/core/Network.js',
+    './dist/src/core/RoomManager.js',
+    './dist/src/core/GameController.js',
+    './dist/src/core/InputHandler.js',
+    './dist/src/core/GameRules.js',
+    './dist/src/core/AnalyticsManager.js',
+    './dist/src/core/constants.js',
+    './dist/src/core/Network.js',
+    './dist/src/core/EventBus.js', // NEW v6.0
+    './dist/src/config/GameConfig.js',
+    './dist/src/main.js',
+
+    // Screens (NEW v6.0)
+    './dist/src/screens/ScreenManager.js',
+    './dist/src/screens/MainMenu.js',
+    './dist/src/screens/GameModes.js',
 
     // Utils
-    './src/utils/utils.js',
-    './src/utils/Logger.js',
+    './dist/src/utils/utils.js',
+    './dist/src/utils/Logger.js',
+    './dist/src/utils/DebugLoggerUI.js',
 
     // UI
-    './src/ui/Renderer.js',
-    './src/ui/NotificationManager.js',
-    './src/ui/ChangelogManager.js',
-    './src/ui/AnimationManager.js',
-    './src/ui/effects/Confetti.js',
-    './src/ui/AudioManager.js',
+    './dist/src/ui/Renderer.js',
+    './dist/src/ui/NotificationManager.js',
+    './dist/src/ui/ChangelogManager.js',
+    './dist/src/ui/AnimationManager.js',
+    './dist/src/ui/effects/Confetti.js',
+    './dist/src/ui/CoinFlip.js',
+    './dist/src/ui/AudioManager.js',
 
     // AI
-    './src/ai/BotBrain.js',
+    './dist/src/ai/BotBrain.js',
+    './dist/src/ai/BotMemory.js',
 
     // Modes
-    './src/modes/GameMode.js',
-    './src/modes/MultiplayerMode.js',
-    './src/modes/PvEMode.js',
-    './src/modes/TutorialMode.js',
+    './dist/src/modes/GameMode.js',
+    './dist/src/modes/MultiplayerMode.js',
+    './dist/src/modes/PvEMode.js',
+    './dist/src/modes/TutorialMode.js',
+    './dist/src/modes/TellstonesTutorial.js',
 
     // Images (Critical)
-    './assets/img/logo.webp',
-    './assets/img/Fundo.jpg',
-    './assets/img/Tabuleiro.jpg',
-    './assets/img/Cara.png',
-    './assets/img/Coroa.png',
-    './assets/img/bg_taverna.png'
+    './assets/img/ui/logo.webp',
+    './assets/img/ui/Desafiar.webp',
+    './assets/img/ui/Se_Gabar.webp',
+    './assets/img/ui/notification_icon.png',
+    './assets/img/ui/card_actions.png',
+    './assets/img/ui/Ações.png',
+    './assets/img/backgrounds/Fundo.jpg',
+    './assets/img/tables/classic/Tabuleiro.jpg',
+    './assets/img/coins/classic/Cara.png',
+    './assets/img/coins/classic/Coroa.png',
+    './assets/img/backgrounds/bg_taverna.png'
 ];
 
 self.addEventListener('install', (event) => {
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
-                console.log('[Service Worker] Caching all: app shell and content');
+                console.log('[Service Worker v6.0] Caching assets...');
                 return cache.addAll(ASSETS_TO_CACHE);
+            })
+            .catch((err) => {
+                console.error('[Service Worker] Cache failed:', err);
             })
     );
 });
@@ -63,7 +84,6 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request)
             .then((r) => {
-                // Cache hit - return response
                 if (r) {
                     return r;
                 }
@@ -77,9 +97,13 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((keyList) => {
             return Promise.all(keyList.map((key) => {
                 if (key !== CACHE_NAME) {
+                    console.log('[Service Worker] Removing old cache:', key);
                     return caches.delete(key);
                 }
             }));
+        }).then(() => {
+            console.log('[Service Worker v6.0] Activated');
+            return self.clients.claim();
         })
     );
 });

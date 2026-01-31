@@ -1,0 +1,71 @@
+// =========================
+// Utilidades Gerais do Tellstones (TypeScript)
+// =========================
+
+interface SafeStorage {
+    getItem(key: string): string | null;
+    setItem(key: string, value: string): void;
+    removeItem(key: string): void;
+}
+
+// Safe LocalStorage Wrapper
+export const safeStorage: SafeStorage = {
+    getItem: function (key: string): string | null {
+        try {
+            return localStorage.getItem(key);
+        } catch (e) {
+            console.warn("localStorage access denied:", e);
+            return null;
+        }
+    },
+    setItem: function (key: string, value: string): void {
+        try {
+            localStorage.setItem(key, value);
+        } catch (e) {
+            console.warn("localStorage write failed:", e);
+        }
+    },
+    removeItem: function (key: string): void {
+        try {
+            localStorage.removeItem(key);
+        } catch (e) {
+            console.warn("localStorage remove failed:", e);
+        }
+    }
+};
+
+// Gera um código aleatório para a sala (6 caracteres, letras e números)
+export function gerarCodigoSala(): string {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+// Garante que o valor seja um array (Firebase pode converter para objeto)
+export function garantirArray(val: any): any[] {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+
+    // Tratamento robusto para objetos esparsos (Firebase)
+    // Se chaves são inteiros, reconstrói array respeitando índices
+    if (typeof val === 'object') {
+        const keys = Object.keys(val).map(Number).filter(k => !isNaN(k) && Number.isInteger(k));
+        if (keys.length > 0) {
+            const maxKey = Math.max(...keys);
+            // Heurística: Se maxKey é razoável (ex: < 50), trata como array
+            if (maxKey < 50) {
+                const arr = new Array(maxKey + 1).fill(null);
+                Object.entries(val).forEach(([k, v]) => {
+                    const idx = parseInt(k);
+                    if (!isNaN(idx)) arr[idx] = v;
+                });
+                return arr;
+            }
+        }
+        return Object.values(val);
+    }
+    return [val]; // Fallback single item
+}
+
+// Expose to window for legacy support if needed
+(window as any).safeStorage = safeStorage;
+(window as any).gerarCodigoSala = gerarCodigoSala;
+(window as any).garantirArray = garantirArray;

@@ -19,7 +19,8 @@
     background: #1a5fb4;
 }
 
-#start-screen button {
+#start-screen button,
+#game-modes-screen button {
     margin: 0;
     padding: 10px 20px;
     font-size: 1em;
@@ -33,13 +34,15 @@
     letter-spacing: 1px;
 }
 
-#start-screen button:hover {
+#start-screen button:hover,
+#game-modes-screen button:hover {
     filter: brightness(1.1);
     transform: scale(1.02);
 }
 
-#start-screen #tutorial-btn {
-    background: url("../../img/Borda_Verde.webp?v=4.4") no-repeat center center;
+/* Main menu buttons (new structure) */
+#start-screen #play-btn {
+    background: url("../../img/ui/borders/Borda_Verde.webp?v=4.4") no-repeat center center;
     background-size: 100% 100%;
     width: 300px;
     height: 75px;
@@ -48,8 +51,8 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
-#start-screen #bot-pve-btn {
-    background: url("../../img/Borda_Dourada.webp?v=4.4") no-repeat center center;
+#start-screen #options-btn {
+    background: url("../../img/ui/borders/Borda_Dourada.webp?v=4.4") no-repeat center center;
     background-size: 100% 100%;
     width: 300px;
     height: 75px;
@@ -58,21 +61,94 @@
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
-#start-screen #online-menu-btn {
-    background: url("../../img/Borda_Preta.webp?v=4.4") no-repeat center center;
+#start-screen #customization-btn {
+    background: url("../../img/ui/borders/Borda_Preta.webp?v=4.4") no-repeat center center;
     background-size: 100% 100%;
     width: 300px;
     height: 75px;
     font-size: 1.25em;
     font-weight: bold;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* GameModes screen buttons */
+#game-modes-screen #tutorial-btn {
+    background: url("../../img/ui/borders/Borda_Verde.webp?v=4.4") no-repeat center center;
+    background-size: 100% 100%;
+    width: 300px;
+    height: 75px;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+#game-modes-screen #bot-pve-btn {
+    background: url("../../img/ui/borders/Borda_Dourada.webp?v=4.4") no-repeat center center;
+    background-size: 100% 100%;
+    width: 300px;
+    height: 75px;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+#game-modes-screen #online-menu-btn {
+    background: url("../../img/ui/borders/Borda_Preta.webp?v=4.4") no-repeat center center;
+    background-size: 100% 100%;
+    width: 300px;
+    height: 75px;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+#game-modes-screen #campaign-btn {
+    background: url("../../img/ui/colors/Roxo.webp?v=4.4") no-repeat center center;
+    background-size: 100% 100%;
+    width: 300px;
+    height: 75px;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Back button for GameModes */
+#back-to-menu-btn {
+    position: absolute !important;
+    top: 18% !important;
+    left: calc(50% + 220px) !important;
+    right: auto !important;
+    transform: translateY(-50%);
+    background: none !important;
+    border: none !important;
+    color: #daa520 !important;
+    font-family: sans-serif !important;
+    font-size: 3.5rem !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0 !important;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    box-shadow: none !important;
+}
+
+#back-to-menu-btn:hover {
+    color: #fff !important;
+    transform: translateY(-50%) scale(1.1) !important;
+    filter: brightness(1.2);
 }
 
 /* Side by Side Buttons */
 #start-screen #create-room-btn {
-    background: url("../../img/Laranja.webp?v=4.4") no-repeat center center;
+    background: url("../../img/ui/colors/Laranja.webp?v=4.4") no-repeat center center;
     background-size: 100% 100%;
-    width: 260px;
+    width: 280px;
     height: 65px;
     font-size: 1.15em;
     font-weight: bold;
@@ -80,7 +156,7 @@
 }
 
 #start-screen #join-room-btn {
-    background: url("../../img/Ciano.webp?v=4.4") no-repeat center center;
+    background: url("../../img/ui/colors/Ciano.webp?v=4.4") no-repeat center center;
     background-size: 100% 100%;
     width: 260px;
     height: 65px;
@@ -91,7 +167,7 @@
 
 /* Action Buttons */
 #start-screen #start-game-btn {
-    background: url("../../img/Roxo.webp?v=4.4") no-repeat center center;
+    background: url("../../img/ui/colors/Roxo.webp?v=4.4") no-repeat center center;
     background-size: 100% 100%;
     width: 300px;
     height: 75px;
@@ -111,7 +187,7 @@
 }
 
 #start-screen #enter-room-btn {
-    background: url("../../img/Verde.webp?v=4.4") no-repeat center center;
+    background: url("../../img/ui/colors/Verde.webp?v=4.4") no-repeat center center;
     background-size: 100% 100%;
     width: 300px;
     height: 75px;
@@ -130,9 +206,13 @@
     padding: 0;
 }
 
-#start-screen #tutorial-btn:hover,
-#start-screen #bot-pve-btn:hover,
-#start-screen #online-menu-btn:hover,
+#start-screen #play-btn:hover,
+#start-screen #options-btn:hover,
+#start-screen #customization-btn:hover,
+#game-modes-screen #tutorial-btn:hover,
+#game-modes-screen #bot-pve-btn:hover,
+#game-modes-screen #online-menu-btn:hover,
+#game-modes-screen #campaign-btn:not(:disabled):hover,
 #start-screen #create-room-btn:hover,
 #start-screen #join-room-btn:hover,
 #start-screen #start-game-btn:hover,
@@ -214,7 +294,7 @@
 
 /* --- Custom Button Image Override (Start Screen Specific) --- */
 #start-game-btn {
-    background-image: url('../../img/Verde.webp') !important;
+    background-image: url('../../img/ui/colors/Verde.webp') !important;
     background-size: 100% 100% !important;
     background-repeat: no-repeat !important;
     background-position: center !important;
@@ -241,7 +321,7 @@
 }
 
 #create-room-btn {
-    background-image: url('../../img/Laranja.webp') !important;
+    background-image: url('../../img/ui/colors/Laranja.webp') !important;
     background-size: 100% 100% !important;
     background-repeat: no-repeat !important;
     background-position: center !important;
@@ -268,7 +348,7 @@
 }
 
 #join-room-btn {
-    background-image: url('../../img/Ciano.webp') !important;
+    background-image: url('../../img/ui/colors/Ciano.webp') !important;
     background-size: 100% 100% !important;
     background-repeat: no-repeat !important;
     background-position: center !important;
@@ -353,7 +433,7 @@
     min-width: 0 !important;
     min-height: 0 !important;
     z-index: 2000;
-    display: flex !important;
+    /* display: flex !important; REMOVED to allow JS control */
     align-items: center;
     justify-content: center;
     cursor: pointer;

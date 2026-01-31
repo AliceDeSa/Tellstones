@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>EventBus - Teste Manual</title>
+</head>
+
+<body>
+    <h1>Teste do EventBus</h1>
+    <p>Abra o console (F12) e execute os comandos abaixo:</p>
+
+    <pre>
+// 1. Verificar se EventBus está disponível
+console.log(EventBus);
+
+// 2. Registrar um listener
+const unsub = EventBus.on('GAME:START', (data) => {
+  console.log('🎮 Jogo iniciou!', data);
+});
+
+// 3. Emitir evento
+EventBus.emit('GAME:START', { mode: 'pve' });
+
+// 4. Ver informações de debug
+console.log(EventBus.getDebugInfo());
+
+// 5. Ver histórico
+console.log(EventBus.getHistory());
+
+// 6. Cancelar listener
+unsub();
+  </pre>
+
+    <script type="module" src="../dist/src/core/EventBus.js"></script>
+</body>
+
+</html>
