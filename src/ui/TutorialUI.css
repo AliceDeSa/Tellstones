@@ -1,0 +1,330 @@
+/**
+ * TutorialUI.css - Estilos para interface do tutorial
+ * v6.0: Visual premium com glassmorphism e animações
+ */
+
+/* ========== VARIÁVEIS DE TEMA ========== */
+:root {
+  /* Cores base */
+  --tutorial-bg-start: rgba(24, 28, 36, 0.98);
+  --tutorial-bg-end: rgba(30, 35, 45, 0.98);
+  --tutorial-border: #4caf50;
+  --tutorial-glow: 0 0 20px rgba(76, 175, 80, 0.3);
+  
+  /* Cores de texto */
+  --tutorial-title-color: #4caf50;
+  --tutorial-text-color: #ffffff;
+  --tutorial-action-color: #8ecfff;
+  
+  /* Botão */
+  --tutorial-btn-bg: #4caf50;
+  --tutorial-btn-hover: #66bb6a;
+  --tutorial-btn-disabled: #2d5f2f;
+}
+
+/* ========== CONTAINER PRINCIPAL ========== */
+#tutorial-ui {
+  position: fixed;
+  width: 300px;
+  background: linear-gradient(135deg, var(--tutorial-bg-start), var(--tutorial-bg-end));
+  border: 2px solid var(--tutorial-border);
+  border-radius: 12px;
+  padding: 15px;
+  color: var(--tutorial-text-color);
+  z-index: 100000;
+  
+  /* Sombras e efeitos */
+  box-shadow: 
+    0 4px 25px rgba(0, 0, 0, 0.7),
+    var(--tutorial-glow);
+  backdrop-filter: blur(10px);
+  
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  
+  /* Animação de entrada */
+  animation: tutorial-fade-in 0.5s ease-out;
+}
+
+/* Efeito glassmorphism */
+#tutorial-ui::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  border-radius: 12px 12px 0 0;
+  pointer-events: none;
+}
+
+/* ========== BARRA DE ARRASTAR ========== */
+.tutorial-handle {
+  text-align: center;
+  font-size: 15px;
+  color: var(--tutorial-title-color);
+  cursor: move;
+  margin-bottom: 5px;
+  user-select: none;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.tutorial-handle:hover {
+  background: rgba(76, 175, 80, 0.1);
+}
+
+/* ========== CONTEÚDO ========== */
+.tutorial-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tutorial-title {
+  margin: 0;
+  color: var(--tutorial-title-color);
+  font-size: 1.1em;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.tutorial-message {
+  font-size: 0.9em;
+  margin: 0;
+  line-height: 1.5;
+  color: var(--tutorial-text-color);
+}
+
+.tutorial-action {
+  font-style: italic;
+  color: var(--tutorial-action-color);
+  font-size: 0.85em;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ========== BOTÃO PRÓXIMO ========== */
+.tutorial-btn {
+  background: var(--tutorial-btn-bg);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  align-self: flex-end;
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  
+  /* Sombra sutil */
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.tutorial-btn:hover:not(.disabled) {
+  background: var(--tutorial-btn-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.tutorial-btn:active:not(.disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+}
+
+.tutorial-btn.disabled {
+  background: var(--tutorial-btn-disabled);
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+/* ========== CURSOR TYPEWRITER ========== */
+.typewriter-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--tutorial-title-color);
+  margin-left: 2px;
+  animation: tutorial-cursor-blink 1s step-end infinite;
+  vertical-align: text-bottom;
+}
+
+/* ========== ANIMAÇÕES ========== */
+
+/* Fade In */
+@keyframes tutorial-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Fade Out */
+@keyframes tutorial-fade-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Pulso */
+@keyframes tutorial-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Shake (erro) */
+@keyframes tutorial-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+/* Cursor piscando */
+@keyframes tutorial-cursor-blink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
+}
+
+/* ========== TEMAS ALTERNATIVOS ========== */
+
+/* Tema Dark */
+#tutorial-ui.theme-dark {
+  --tutorial-bg-start: rgba(15, 15, 20, 0.98);
+  --tutorial-bg-end: rgba(20, 20, 28, 0.98);
+  --tutorial-border: #616161;
+  --tutorial-glow: 0 0 20px rgba(97, 97, 97, 0.3);
+  --tutorial-title-color: #90caf9;
+}
+
+/* Tema Premium */
+#tutorial-ui.theme-premium {
+  --tutorial-bg-start: rgba(18, 18, 25, 0.98);
+  --tutorial-bg-end: rgba(25, 25, 35, 0.98);
+  --tutorial-border: linear-gradient(135deg, #4caf50, #2196f3);
+  
+  border-image: linear-gradient(135deg, #4caf50, #2196f3) 1;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.8),
+    0 0 30px rgba(76, 175, 80, 0.4),
+    0 0 20px rgba(33, 150, 243, 0.3);
+}
+
+/* ========== RESPONSIVIDADE ========== */
+
+/* Telas menores */
+@media (max-width: 768px) {
+  #tutorial-ui {
+    width: 280px;
+    padding: 12px;
+    font-size: 14px;
+    top: 10px !important;
+    right: 10px !important;
+  }
+  
+  .tutorial-title {
+    font-size: 1em;
+  }
+  
+  .tutorial-message {
+    font-size: 0.85em;
+  }
+  
+  .tutorial-action {
+    font-size: 0.8em;
+  }
+  
+  .tutorial-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Telas muito pequenas */
+@media (max-width: 480px) {
+  #tutorial-ui {
+    width: calc(100% - 20px);
+    max-width: 320px;
+    left: 10px !important;
+    right: 10px !important;
+  }
+}
+
+/* ========== ESTADOS ESPECIAIS ========== */
+
+/* Quando está sendo arrastado */
+#tutorial-ui.dragging {
+  cursor: move;
+  user-select: none;
+  box-shadow: 
+    0 8px 40px rgba(0, 0, 0, 0.9),
+    var(--tutorial-glow);
+}
+
+/* Quando há erro */
+#tutorial-ui.error {
+  border-color: #f44336;
+  --tutorial-glow: 0 0 20px rgba(244, 67, 54, 0.4);
+}
+
+/* ========== ACESSIBILIDADE ========== */
+
+/* Foco para navegação por teclado */
+.tutorial-btn:focus {
+  outline: 2px solid var(--tutorial-title-color);
+  outline-offset: 2px;
+}
+
+/* Alto contraste */
+@media (prefers-contrast: high) {
+  #tutorial-ui {
+    border-width: 3px;
+  }
+  
+  .tutorial-title,
+  .tutorial-message,
+  .tutorial-action {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* Redução de movimento */
+@media (prefers-reduced-motion: reduce) {
+  #tutorial-ui,
+  .tutorial-btn,
+  .typewriter-cursor {
+    animation: none !important;
+    transition: none !important;
+  }
+}

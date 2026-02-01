@@ -1,0 +1,212 @@
+{
+    "menu": {
+        "play": "JOGAR",
+        "options": "OPÇÕES",
+        "customization": "PERSONALIZAÇÃO",
+        "gameModes": "Modos de Jogo",
+        "tutorial": "Tutorial",
+        "tutorialDesc": "Aprenda as regras do jogo",
+        "pve": "Jogar vs Bot",
+        "pveDesc": "Desafie a inteligência artificial",
+        "online": "Online",
+        "onlineDesc": "Jogue com amigos pela internet",
+        "campaign": "Campanha",
+        "campaignDesc": "Em breve: Aventura épica",
+        "createRoom": "Criar Sala",
+        "joinRoom": "Entrar na Sala",
+        "backToMenu": "Voltar ao Menu",
+        "patchNotes": "Notas de Atualização"
+    },
+    "gameModes": {
+        "tutorial": "Tutorial",
+        "pve": "Jogo PvE",
+        "online": "Jogo Online",
+        "campaign": "Campanha"
+    },
+    "settings": {
+        "title": "Configurações",
+        "music": "Música",
+        "sfx": "Efeitos Sonoros",
+        "language": "Idioma",
+        "save": "Salvar",
+        "reset": "Resetar",
+        "saved": "Salvo!"
+    },
+    "customization": {
+        "subtitle": "Escolha o tema visual do seu tabuleiro",
+        "active": "Ativo",
+        "locked": "Bloqueado"
+    },
+    "game": {
+        "yourTurn": "Sua vez",
+        "botTurn": "Vez do Bot",
+        "playerWins": "Você venceu!",
+        "botWins": "Bot venceu!",
+        "draw": "Empate!",
+        "challenge": "Desafiar",
+        "boast": "Se Gabar",
+        "selectStoneChallenge": "Selecione uma pedra virada para desafiar.",
+        "guessChallengeTitle": "Adivinhe a peça do desafio!",
+        "proveTitle": "Prove! Qual é a {ordinal}ª pedra virada?",
+        "actions": {
+            "place": "Colocar",
+            "hide": "Esconder",
+            "swap": "Trocar",
+            "peek": "Espiar",
+            "challenge": "Desafiar",
+            "boast": "Se Gabar",
+            "title": "Ações Possíveis",
+            "placeDesc": "Adiciona pedra à mesa.",
+            "hideDesc": "Vira uma pedra para baixo.",
+            "swapDesc": "Troca duas pedras de lugar.",
+            "peekDesc": "Olha uma pedra virada.",
+            "challengeDesc": "Testa o oponente sobre uma pedra virada.",
+            "boastIntro": "Afirma saber todas as posições. O oponente pode responder com:",
+            "believe": "Acreditar",
+            "believeDesc": "O jogador que fez a ação ganha 1 ponto.",
+            "doubt": "Duvidar",
+            "doubtDesc": "O jogador deve provar que sabe a combinação das peças.",
+            "doubtWin": "Se conseguir, <u>vence</u> o jogo <u>imediatamente</u>.",
+            "doubtLose": "Se errar qualquer pedra, o oponente vence.",
+            "boastReplyDesc": "O oponente diz que também sabe onde estão todas as peças.",
+            "boastToo": "Se Gabar Também"
+        },
+        "stones": {
+            "Crown": "Coroa",
+            "Shield": "Escudo",
+            "Sword": "Espada",
+            "Hammer": "Martelo",
+            "Flag": "Bandeira",
+            "Scales": "Balança",
+            "Horse": "Cavalo",
+            "Coroa": "Coroa",
+            "Escudo": "Escudo",
+            "Espada": "Espada",
+            "Martelo": "Martelo",
+            "Bandeira": "Bandeira",
+            "Balança": "Balança",
+            "Cavalo": "Cavalo"
+        },
+        "coinFlip": {
+            "choose": "Escolha: Cara ou Coroa ?",
+            "heads": "Cara",
+            "tails": "Coroa",
+            "youWon": "<span style='font-size:1.2em;'>Você ganhou o sorteio! Você começa.</span>",
+            "botWon": "<span style='font-size:1.2em;'>O Bot ganhou o sorteio! Ele começa.</span>",
+            "youGot": "Você ficou com: <b>{side}</b>",
+            "waiting": "Aguarde o sorteio da moeda..."
+        },
+        "victory": "Vitória!",
+        "quit": "Sair da Partida",
+        "tooltips": {
+            "hiddenStone": "Pedra Escondida",
+            "dragToTable": "Arraste para o Tabuleiro",
+            "waitAlignment": "Aguarde o alinhamento",
+            "waitTurn": "Aguarde sua vez"
+        }
+    },
+    "bot": {
+        "guess": "Eu digo que é... {stone}!",
+        "believe": "Hmm... Eu acredito.",
+        "doubt": "Prove então!"
+    },
+    "tutorial": {
+        "welcome": "Bem-vindo ao Tellstones!",
+        "skip": "Pular Tutorial",
+        "next": "Próximo >>",
+        "complete": "Completar",
+        "completeAux": "Complete a ação primeiro!",
+        "waitingAction": "Aguardando ação...",
+        "finishedTitle": "🎉 Tutorial Finalizado!",
+        "finishedMsg": "Parabéns! Você completou o tutorial básico do Tellstones.",
+        "finishedSub": "Agora você está pronto para jogar partidas completas!",
+        "steps": [
+            {
+                "title": "Bem-vindo ao Tellstones",
+                "msg": "Tellstones é um jogo de memória e blefe. Vamos aprender o básico em poucos passos.",
+                "action": "Clique em 'Próximo' para começar."
+            },
+            {
+                "title": "Colocando Pedras",
+                "msg": "Você e o oponente (Mestre) se revezam colocando pedras na mesa. A pedra central (neutra) já está lá.",
+                "action": "Arraste uma pedra da sua reserva (esquerda) para qualquer espaço vazio no tabuleiro."
+            },
+            {
+                "title": "Escondendo a Informação",
+                "msg": "Depois que todas as pedras são colocadas (ou quando você quiser), você pode virar uma pedra para baixo para escondê-la.",
+                "action": "Dê um DUPLO CLIQUE na pedra que você acabou de colocar para escondê-la."
+            },
+            {
+                "title": "Espiando Pedras (Virar)",
+                "msg": "A qualquer momento, você pode conferir uma pedra escondida (virada para baixo) para lembrar o símbolo. Só você verá.",
+                "action": "Dê um DUPLO CLIQUE em uma pedra virada para baixo para olhá-la (ela virará momentaneamente)."
+            },
+            {
+                "title": "Trocando Pedras",
+                "msg": "Você pode trocar duas pedras de lugar para confundir o oponente.",
+                "action": "Clique e arraste uma pedra da mesa sobre outra pedra para trocá-las de posição."
+            },
+            {
+                "title": "Desafiando o Oponente",
+                "msg": "Se você acha que o oponente não sabe qual pedra é qual, você pode desafiá-lo. Ele terá que acertar ou perderá o ponto.",
+                "action": "Clique no botão 'Desafiar' e se prepare para testar o Mestre."
+            },
+            {
+                "title": "Respondendo ao Desafio",
+                "msg": "Agora inverta os papéis. O Mestre vai te desafiar! Você precisa provar que sabe qual é a pedra.",
+                "action": "O Mestre vai te desafiar agora. Selecione a pedra correta quando solicitado."
+            },
+            {
+                "title": "Se Gabar",
+                "msg": "Se você sabe TODAS as pedras viradas, você pode 'Se Gabar'. Isso é um movimento arriscado para ganhar o jogo instantaneamente.",
+                "action": "Clique no botão 'Se Gabar'."
+            },
+            {
+                "title": "Defendendo contra 'Se Gabar'",
+                "msg": "O Mestre diz que sabe tudo! Ele vai se gabar. Você pode Duvidar (ele tem que provar), Acreditar (ele ganha 1 ponto) ou Se Gabar também.",
+                "action": "Responda ao 'Se Gabar' do Mestre."
+            },
+            {
+                "title": "Provando seu Conhecimento",
+                "msg": "Agora é sua vez! O Mestre duvidou de você (ou você escolheu atacar). Prove que você sabe onde estão as pedras.",
+                "action": "Clique nas opções para identificar cada pedra sequencialmente."
+            },
+            {
+                "title": "Tutorial Finalizado",
+                "msg": "Parabéns! Você completou o tutorial básico.",
+                "action": "Agora você pode jogar partidas completas."
+            }
+        ]
+    },
+    "online": {
+        "nickname": "Seu apelido",
+        "roomCode": "Código da sala",
+        "player": "Jogador",
+        "spectator": "Espectador",
+        "enter": "Entrar",
+        "createLobby": "Criar Lobby",
+        "waiting": "Aguardando jogadores...",
+        "backToLobby": "Voltar ao Lobby"
+    },
+    "common": {
+        "yes": "Sim",
+        "no": "Não",
+        "ok": "OK",
+        "cancel": "Cancelar",
+        "close": "Fechar",
+        "back": "Voltar",
+        "confirm": "Confirmar"
+    },
+    "custom": {
+        "title": "Customização",
+        "mats": "Tapete de Jogo",
+        "stones": "Conjunto de Pedras"
+    },
+    "lobby": {
+        "createRoomTitle": "Criar Nova Sala",
+        "duel": "1x1 (Duelo)",
+        "doubles": "2x2 (Duplas)",
+        "createLobby": "Criar Lobby",
+        "back": "Voltar"
+    }
+}

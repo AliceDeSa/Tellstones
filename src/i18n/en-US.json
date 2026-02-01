@@ -1,0 +1,212 @@
+{
+    "menu": {
+        "play": "PLAY",
+        "options": "OPTIONS",
+        "customization": "CUSTOMIZATION",
+        "gameModes": "Game Modes",
+        "tutorial": "Tutorial",
+        "tutorialDesc": "Learn the rules of the game",
+        "pve": "Play vs Bot",
+        "pveDesc": "Challenge the artificial intelligence",
+        "online": "Online",
+        "onlineDesc": "Play with friends over the internet",
+        "campaign": "Campaign",
+        "campaignDesc": "Coming soon: Epic adventure",
+        "createRoom": "Create Room",
+        "joinRoom": "Join Room",
+        "backToMenu": "Back to Menu",
+        "patchNotes": "Patch Notes"
+    },
+    "gameModes": {
+        "tutorial": "Tutorial",
+        "pve": "PvE Game",
+        "online": "Online Game",
+        "campaign": "Campaign"
+    },
+    "settings": {
+        "title": "Settings",
+        "music": "Music",
+        "sfx": "Sound Effects",
+        "language": "Language",
+        "save": "Save",
+        "reset": "Reset",
+        "saved": "Saved!"
+    },
+    "customization": {
+        "subtitle": "Choose your board's visual theme",
+        "active": "Active",
+        "locked": "Locked"
+    },
+    "game": {
+        "yourTurn": "Your Turn",
+        "botTurn": "Bot's Turn",
+        "playerWins": "You Won!",
+        "botWins": "Bot Won!",
+        "draw": "Draw!",
+        "challenge": "Challenge",
+        "boast": "Boast",
+        "selectStoneChallenge": "Select a hidden stone to challenge.",
+        "guessChallengeTitle": "Guess the challenge stone!",
+        "proveTitle": "Prove it! Which is the {ordinal} hidden stone?",
+        "actions": {
+            "place": "Place",
+            "hide": "Hide",
+            "swap": "Swap",
+            "peek": "Peek",
+            "challenge": "Challenge",
+            "boast": "Boast",
+            "title": "Possible Actions",
+            "placeDesc": "Adds a stone to the table.",
+            "hideDesc": "Turns a stone face down.",
+            "swapDesc": "Swaps two stones.",
+            "peekDesc": "Peeks at a face-down stone.",
+            "challengeDesc": "Tests the opponent on a face-down stone.",
+            "boastIntro": "Claims to know all positions. Opponent can reply with:",
+            "believe": "Believe",
+            "believeDesc": "The player who took the action gets 1 point.",
+            "doubt": "Doubt",
+            "doubtDesc": "The player must prove they know the stone combination.",
+            "doubtWin": "If successful, <u>wins</u> the game <u>immediately</u>.",
+            "doubtLose": "If any stone is wrong, the opponent wins.",
+            "boastReplyDesc": "The opponent says they also know where all pieces are.",
+            "boastToo": "Boast too"
+        },
+        "stones": {
+            "Crown": "Crown",
+            "Shield": "Shield",
+            "Sword": "Sword",
+            "Hammer": "Hammer",
+            "Flag": "Flag",
+            "Scales": "Scales",
+            "Horse": "Horse",
+            "Coroa": "Crown",
+            "Escudo": "Shield",
+            "Espada": "Sword",
+            "Martelo": "Hammer",
+            "Bandeira": "Flag",
+            "Balança": "Scales",
+            "Cavalo": "Horse"
+        },
+        "coinFlip": {
+            "choose": "Choose: Heads or Tails?",
+            "heads": "Heads",
+            "tails": "Tails",
+            "youWon": "<span style='font-size:1.2em;'>You won the toss! You start.</span>",
+            "botWon": "<span style='font-size:1.2em;'>Bot won the toss! It starts.</span>",
+            "youGot": "You got: <b>{side}</b>",
+            "waiting": "Waiting for coin flip..."
+        },
+        "victory": "Victory!",
+        "quit": "Quit Match",
+        "tooltips": {
+            "hiddenStone": "Hidden Stone",
+            "dragToTable": "Drag to Board",
+            "waitAlignment": "Wait for alignment",
+            "waitTurn": "Wait for turn"
+        }
+    },
+    "bot": {
+        "guess": "I say it is... {stone}!",
+        "believe": "Hmm... I believe you.",
+        "doubt": "Prove it then!"
+    },
+    "tutorial": {
+        "welcome": "Welcome to Tellstones!",
+        "skip": "Skip Tutorial",
+        "next": "Next >>",
+        "complete": "Complete",
+        "completeAux": "Complete the action first!",
+        "waitingAction": "Waiting for action...",
+        "finishedTitle": "🎉 Tutorial Finished!",
+        "finishedMsg": "Congratulations! You completed the basic Tellstones tutorial.",
+        "finishedSub": "You are now ready to play full matches!",
+        "steps": [
+            {
+                "title": "Welcome to Tellstones",
+                "msg": "Tellstones is a game of memory and bluffing. Let's learn the basics in a few steps.",
+                "action": "Click 'Next' to start."
+            },
+            {
+                "title": "Placing Stones",
+                "msg": "You and the opponent (Master) take turns placing stones on the table. The central stone (neutral) is already there.",
+                "action": "Drag a stone from your reserve (left) to any empty space on the board."
+            },
+            {
+                "title": "Hiding Information",
+                "msg": "After all stones are placed (or whenever you want), you can flip a stone face down to hide it.",
+                "action": "DOUBLE CLICK on the stone you just placed to hide it."
+            },
+            {
+                "title": "Peeking at Stones",
+                "msg": "At any time, you can check a hidden stone (face down) to remember the symbol. Only you will see it.",
+                "action": "DOUBLE CLICK on a face-down stone to peek at it (it will flip momentarily)."
+            },
+            {
+                "title": "Swapping Stones",
+                "msg": "You can swap two stones to confuse the opponent.",
+                "action": "Click and drag a stone from the table over another stone to swap their positions."
+            },
+            {
+                "title": "Challenging the Opponent",
+                "msg": "If you think the opponent doesn't know which stone is which, you can challenge them. They will have to guess correctly or lose the point.",
+                "action": "Click the 'Challenge' button and prepare to test the Master."
+            },
+            {
+                "title": "Answering the Challenge",
+                "msg": "Now reverse roles. The Master will challenge you! You need to prove you know what the stone is.",
+                "action": "The Master will challenge you now. Select the correct stone when prompted."
+            },
+            {
+                "title": "Boasting",
+                "msg": "If you know ALL the face-down stones, you can 'Boast'. This is a risky move to win the game instantly.",
+                "action": "Click the 'Boast' button."
+            },
+            {
+                "title": "Defending against 'Boast'",
+                "msg": "The Master says they know everything! They are boasting. You can Doubt (they have to prove it), Believe (they get 1 point) or Boast as well.",
+                "action": "Respond to the Master's 'Boast'."
+            },
+            {
+                "title": "Proving your Knowledge",
+                "msg": "Now it's your turn! The Master doubted you (or you chose to attack). Prove you know where the stones are.",
+                "action": "Click on the options to identify each stone sequentially."
+            },
+            {
+                "title": "Tutorial Finished",
+                "msg": "Congratulations! You completed the basic tutorial.",
+                "action": "Now you can play full matches."
+            }
+        ]
+    },
+    "online": {
+        "nickname": "Your nickname",
+        "roomCode": "Room code",
+        "player": "Player",
+        "spectator": "Spectator",
+        "enter": "Enter",
+        "createLobby": "Create Lobby",
+        "waiting": "Waiting for players...",
+        "backToLobby": "Back to Lobby"
+    },
+    "common": {
+        "yes": "Yes",
+        "no": "No",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "close": "Close",
+        "back": "Back",
+        "confirm": "Confirm"
+    },
+    "custom": {
+        "title": "Customization",
+        "mats": "Game Mat",
+        "stones": "Stone Set"
+    },
+    "lobby": {
+        "createRoomTitle": "Create New Room",
+        "duel": "1x1 (Duel)",
+        "doubles": "2x2 (Doubles)",
+        "createLobby": "Create Lobby",
+        "back": "Back"
+    }
+}

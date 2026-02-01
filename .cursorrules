@@ -1,34 +1,220 @@
-# Tellstones Project Rules
+# Tellstones Project Rules (v6.0)
 
-## Code Style
-- **Language**: Respond and comment in **Portuguese (PT-BR)**.
-- **Structure**: Maintain the modular structure (src/core, src/ui, etc.). Do not regress to monolithic files.
+## 🎯 Princípio Fundamental: Isolamento de Módulos
 
-## File Organization
-- **Root**: Configuration (`package.json`, `.cursorrules`), Logic Entry (`index.html`), and Documentation.
-- **src/**: Application Logic.
-  - `core/`: State management and GameController.
-  - `modes/`: Game loop logic (PvP, PvE).
-  - `ai/`: Bot behavioral logic.
-  - `ui/`: Rendering and visual managers.
-  - `utils/`: Shared helpers.
-- **assets/**: Static resources (Images, Audio) and Styles (`css/`).
-- **tests/**: Automated testing scripts.
+> **Regra de Ouro:** Cada módulo faz UMA coisa e não acessa outros módulos diretamente.
 
-## Versioning & Documentation
-- **CHANGELOG**: Whenever there is a medium or large update, save a brief description in `CHANGELOG.md`.
-- **Version Info**: For *every* code update, update the version number in the `#version-info` element and provide a simple description in `#sub-info` (inside `index.html`).
-- **UI Sync**: Always update the `#changelog-box` in `index.html` when `CHANGELOG.md` is modified.
+- **NÃO** importe um modo de jogo dentro de outro
+- **NÃO** acesse variáveis internas de outros módulos
+- **USE** o EventBus para comunicação entre módulos
+- **SIGA** os contratos de interface definidos
 
-## Specific Components
-- **Buttons**: Main action buttons should usually be `320px x 80px` (or scaled proportionally) with the custom border backgrounds.
-- **Mobile**: Ensure `#start-screen` does not scroll on mobile (`position: fixed`, `overflow: hidden`).
+---
 
-## Z-Index Policy (Standardized Layers)
-- **Base (100)**: Game Board, Stones (z-index: 100).
-- **Active (150)**: Draggable items, Coin Button (z-index: 150).
-- **UI (250)**: HUD, Score markers, Side Buttons (z-index: 250).
-- **Modals (1000)**: Action Card, Rules Popup (z-index: 1000).
-- **Overlay (1050)**: Floating Icons, Close Buttons (z-index: 1050).
-- **Critical (2100)**: Toasts, Victory/Defeat Screens (z-index: 2100).
-- **Avoid**: Do NOT use magic numbers like `99999` or `10005`. Stick to the tier system.
+## 🌐 Idioma e Código
+
+- **Idioma**: Responda e comente em **Português (PT-BR)**.
+- **Linguagem**: Todo código novo deve ser **TypeScript** (strict mode).
+- **Estrutura**: Mantenha a arquitetura modular. NUNCA regresse a arquivos monolíticos.
+
+---
+
+## 📁 Organização de Pastas
+
+```
+src/
+├── core/           # Núcleo (EventBus, GameRules, GameState, GameController)
+├── screens/        # Telas (MainMenu, GameModes, Settings, Customization, Shop)
+├── modes/          # Modos de Jogo (ISOLADOS!)
+│   ├── tutorial/   # Lógica exclusiva do tutorial
+│   ├── pve/        # Lógica exclusiva do PvE
+│   ├── campaign/   # Lógica exclusiva da campanha
+│   └── online/     # Lógica exclusiva do online
+├── ai/             # IA (BotBrain, BotMemory, DummyBot)
+├── ui/             # Interface (Renderer, ThemeManager, AnimationManager)
+├── data/           # Persistência (SaveManager, SettingsManager)
+├── economy/        # Sistema econômico (CurrencyManager, ShopManager)
+├── i18n/           # Internacionalização (pt-BR.json, en-US.json)
+└── utils/          # Utilitários (Logger, helpers)
+
+themes/             # Temas visuais (cada pasta = 1 tema)
+assets/             # Recursos estáticos (img, audio, css)
+tests/              # Testes automatizados
+docs/               # Documentação
+```
+
+---
+
+## 🔌 Comunicação Entre Módulos
+
+### EventBus (Obrigatório)
+Todos os módulos se comunicam via EventBus. NUNCA chame métodos de outro módulo diretamente.
+
+```typescript
+// ✅ CORRETO
+EventBus.emit('GAME:START', { mode: 'pve' });
+
+// ❌ ERRADO
+pveMode.start();
+```
+
+### Eventos Padrão
+
+| Evento | Descrição |
+|--------|-----------|
+| `SCREEN:CHANGE` | Troca de tela |
+| `GAME:START` | Jogo iniciou |
+| `GAME:END` | Jogo terminou |
+| `TURN:CHANGE` | Turno mudou |
+| `SETTINGS:UPDATE` | Configuração alterada |
+| `THEME:CHANGE` | Tema visual mudou |
+
+---
+
+## 📝 Contratos de Interface
+
+### Todo Modo de Jogo DEVE implementar:
+
+```typescript
+interface GameMode {
+  start(): void;
+  stop(): void;
+  handlePlayerAction(action: PlayerAction): void;
+  getState(): GameState;
+  cleanup(): void;
+}
+```
+
+### Todo Bot DEVE implementar:
+
+```typescript
+interface BotInterface {
+  decideMove(state: GameState): BotAction;
+  calculateThinkTime(state: GameState): number;
+  predictStone(slot: number, state: GameState): string;
+  decideBoastResponse(state: GameState): 'acreditar' | 'duvidar';
+}
+```
+
+### Toda Tela DEVE implementar:
+
+```typescript
+interface Screen {
+  show(): void;
+  hide(): void;
+  update(): void;
+  destroy(): void;
+}
+```
+
+---
+
+## 🚫 Regras de Dependência
+
+```
+PERMITIDO:
+─────────────────────────────────
+Screens → EventBus ✅
+Modes → EventBus ✅
+Modes → GameRules ✅
+Modes → BotBrain ✅ (via interface)
+UI → EventBus ✅
+
+PROIBIDO:
+─────────────────────────────────
+Tutorial → PvEMode ❌
+PvEMode → CampaignMode ❌
+Screen → GameController diretamente ❌
+Qualquer módulo → variável interna de outro ❌
+```
+
+---
+
+## 🎨 Z-Index Policy (Camadas Visuais)
+
+| Camada | Z-Index | Uso |
+|--------|---------|-----|
+| Base | 100 | Tabuleiro, Pedras |
+| Active | 150 | Itens arrastáveis, Moeda |
+| UI | 250 | HUD, Placares, Botões laterais |
+| Modals | 1000 | Card de ações, Popup de regras |
+| Overlay | 1050 | Ícones flutuantes, Botões de fechar |
+| Critical | 2100 | Toasts, Telas de vitória/derrota |
+| Debug | 9000+ | Dev Tools, Logger |
+
+**PROIBIDO:** Números mágicos como `99999` ou `10005`.
+
+---
+
+## 📋 Logging & Debug
+
+### Usar Logger (OBRIGATÓRIO)
+
+```typescript
+// ✅ CORRETO
+Logger.sys('Inicialização completa');
+Logger.game('Turno avançou');
+Logger.ai('Bot decidiu: place');
+
+// ❌ ERRADO
+console.log('debug');
+```
+
+### Categorias
+
+| Método | Uso |
+|--------|-----|
+| `Logger.sys()` | Sistema, inicialização, erros críticos |
+| `Logger.game()` | Regras, turnos, jogadas |
+| `Logger.ai()` | Decisões e lógica do bot |
+| `Logger.net()` | Eventos de rede/multiplayer |
+| `Logger.ui()` | Atualizações visuais |
+
+---
+
+## 📖 Versionamento & Documentação
+
+- **CHANGELOG.md**: Atualizar em toda mudança média/grande
+- **ChangelogManager.ts**: Sincronizar com CHANGELOG.md
+- **index.html**: Atualizar `#version-info` e `#sub-info`
+- **README.md**: Manter atualizado com features principais
+
+---
+
+## 📱 UI & Mobile
+
+- **Botões principais**: 320px x 80px (ou proporcional)
+- **Tela inicial**: `position: fixed`, `overflow: hidden` (sem scroll no mobile)
+- **Responsivo**: Testar em mobile landscape e portrait
+- **Touch**: Todos os elementos interativos devem funcionar com toque
+
+---
+
+## ✅ Checklist de Validação (Antes de Commit)
+
+Antes de finalizar qualquer mudança, verificar:
+
+- [ ] Tutorial ainda funciona?
+- [ ] PvE ainda funciona?
+- [ ] Online ainda funciona?
+- [ ] Navegação de menus funciona?
+- [ ] Nenhum erro no console?
+- [ ] EventBus usado (não chamadas diretas)?
+- [ ] Contratos respeitados?
+- [ ] Logger usado (não console.log)?
+
+---
+
+## 🔧 Processo para Novos Módulos
+
+1. Criar pasta em local apropriado (`src/modes/novo/`)
+2. Implementar contrato de interface
+3. Registrar no EventBus
+4. Adicionar rota no ScreenManager (se for tela)
+5. Testar isoladamente
+6. Verificar que NÃO quebrou outros módulos
+7. Documentar mudanças
+
+---
+
+> **Lembre-se:** Se uma mudança em um módulo quebra outro módulo, você violou o princípio de isolamento!

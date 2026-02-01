@@ -31,6 +31,18 @@ h1 {
     font-weight: 400;
 }
 
+#slogan-game-modes {
+    font-family: "Cinzel", serif;
+    font-size: 1.1em;
+    letter-spacing: 4px;
+    color: #8ecfff;
+    margin-top: 4px;
+    margin-bottom: 28px;
+    text-transform: uppercase;
+    text-shadow: 0 0 12px rgba(142, 207, 255, 0.6);
+    font-weight: 400;
+}
+
 #version-info {
     font-family: "Cinzel", serif;
     font-size: 0.75em;

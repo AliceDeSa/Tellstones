@@ -13,22 +13,36 @@
   <!-- Social Media Preview (Open Graph) -->
   <meta property="og:title" content="Tellstones">
   <meta property="og:description" content="Memorize. Blefe. Desafie. Jogue Tellstones contra o Bot ou online!">
-  <meta property="og:image" content="assets/img/og-social-card.png">
+  <meta property="og:image" content="assets/img/ui/og-social-card.png">
   <meta property="og:image:width" content="1280">
   <meta property="og:image:height" content="640">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="stylesheet" href="assets/css/main.css?v=5.2.0">
-  <link rel="icon" type="image/webp" href="assets/img/logo.webp">
+  <link rel="stylesheet" href="assets/css/main.css?v=5.4.5">
+  <link rel="stylesheet" href="assets/css/legacy.css?v=5.4.5">
+  <link rel="icon" type="image/webp" href="assets/img/ui/logo.webp">
   <link rel="stylesheet" href="assets/fonts/fonts.css">
+  <!-- UI Design System -->
+  <link rel="stylesheet" href="assets/css/ui-system.css?v=6.0.0">
+  <link rel="stylesheet" href="assets/css/ui-components.css?v=6.0.0">
+
+  <!-- FIX VISUAL KO-FI (Fallback) -->
+  <style>
+    div[id^="kofi-widget-overlay"],
+    iframe[id^="kofi-widget-overlay"] {
+      background: transparent !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+  </style>
 
   <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="assets/manifest.json">
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js')
-          .then(req => console.log('Service Worker Registrado!', req))
-          .catch(err => console.log('Service Worker Falhou', err));
+        navigator.serviceWorker.register('./service-worker.js?v=5.3.5')
+          .then((reg) => console.log('Service Worker Registrado!', reg))
+          .catch((err) => console.log('Falha no SW:', err));
       });
     }
   </script>
@@ -43,17 +57,6 @@
 </head>
 
 <body>
-  <!-- ================= PARALLAX BACKGROUND (DISABLED) ================= -->
-  <!--
-  <div id="parallax-container">
-    <div class="parallax-layer layer-1" style="background-image: url('assets/img/bg_taverna.png');"></div>
-    <div class="parallax-layer layer-2" style="background-image: url('assets/img/bg_plateia.png');"></div>
-    <div class="parallax-layer layer-3" style="background-image: url('assets/img/bg_guereira.png');"></div>
-    <div class="parallax-layer layer-3b" style="background-image: url('assets/img/bg_genneral.png');"></div>
-    <div class="parallax-layer layer-4" style="background-image: url('assets/img/bg_mesa.png');"></div>
-    <div class="parallax-overlay"></div>
-  </div>
-  -->
   <!-- ================= OVERLAY GIRAR TELA ================= -->
   <div id="rotate-device-overlay"
     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#181c24; z-index:999999; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:20px;">
@@ -79,26 +82,30 @@
     🔊
   </button>
 
-  <!-- ================= TELA INICIAL ================= -->
+
+
+
+  <!-- ================= TELA INICIAL (MAIN MENU) ================= -->
   <div id="start-screen" class="active">
     <!-- Título e slogan -->
     <h1>TellStones</h1>
     <h2 id="slogan-main">Memorize. Blefe. Desafie.</h2>
 
-    <!-- Botões principais -->
+    <!-- Botões principais (3 botões) -->
     <div id="main-menu-btns" style="display:flex; flex-direction:column; gap:-5px; align-items:center;">
-      <button id="tutorial-btn">Tutorial</button>
-      <button id="bot-pve-btn">Jogo PvE</button>
-      <button id="online-menu-btn">Jogo Online</button>
+      <button id="play-btn" data-i18n="menu.play">JOGAR</button>
+      <button id="options-btn" data-i18n="menu.options">OPÇÕES</button>
+      <button id="customization-btn" data-i18n="menu.customization">PERSONALIZAÇÃO</button>
     </div>
-    <!-- Menu Online (Moved Inside start-screen) -->
+
+    <!-- Menu Online (Inside start-screen) -->
     <div id="online-menu" style="display:none; flex-direction:column; gap:0px; align-items:center;">
       <button id="back-to-main-btn">&#8617;</button>
 
       <!-- Tabs (Buttons Fixed) -->
-      <div id="online-tabs-container" style="display:flex; gap:20px; margin-bottom: 20px;">
-        <button id="create-room-btn">Criar Sala</button>
-        <button id="join-room-btn">Entrar em Sala</button>
+      <div id="online-tabs-container" style="display:flex; gap:10px; margin-bottom: 20px;">
+        <button id="create-room-btn" data-i18n="menu.createRoom">Criar Sala</button>
+        <button id="join-room-btn" data-i18n="menu.joinRoom">Entrar em Sala</button>
       </div>
 
       <!-- Content Area -->
@@ -117,8 +124,85 @@
               <input type="radio" name="mode" value="2x2"> 2x2 (Duplas)
             </label>
           </div>
-          <input type="text" id="nome-criar" placeholder="Seu apelido" maxlength="20" style="margin:10px 0;width:300px">
-          <button id="start-game-btn">Criar Lobby</button>
+          <input type="text" id="nome-criar" placeholder="Seu apelido" data-i18n-placeholder="online.nickname"
+            maxlength="20" style="margin:10px 0;width:300px">
+          <button id="start-game-btn" data-i18n="online.createLobby">Criar Lobby</button>
+        </div>
+
+        <!-- Opções para entrar em sala existente -->
+        <div id="join-room" style="display:none; flex-direction: column; align-items: center;">
+          <h3 style="color:#daa520; font-family:'Cinzel Decorative'; margin-bottom:15px; display:none;">Entrar em Sala
+          </h3>
+          <div style="display:flex; gap:20px; margin-bottom:10px;">
+            <label>
+              <input type="radio" name="role" value="player" checked> <span data-i18n="online.player">Jogador</span>
+            </label>
+            <label>
+              <input type="radio" name="role" value="spectator"> <span data-i18n="online.spectator">Espectador</span>
+            </label>
+          </div>
+          <input type="text" id="nome-entrar" placeholder="Seu apelido" data-i18n-placeholder="online.nickname"
+            maxlength="20" style="margin:10px 0;width:300px">
+          <input type="text" id="codigo-sala" placeholder="Código da sala" data-i18n-placeholder="online.roomCode"
+            maxlength="20" style="margin:10px 0;width:300px">
+          <button id="enter-room-btn" data-i18n="online.enter">Entrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GAME MODES (SELEÇÃO DE MODO) ================= -->
+  <div id="game-modes-screen"
+    style="display:none; position:absolute; top:40%; left:50%; transform:translate(-50%,-50%); max-width:400px; padding:30px; background:transparent; text-align:center; z-index:3100;">
+    <!-- Botão Voltar (mesmo estilo do online) -->
+    <button id="back-to-menu-btn" title="Voltar ao Menu">&#8617;</button>
+
+    <!-- Título -->
+    <h1>TellStones</h1>
+    <h2 id="slogan-game-modes">Modos de Jogo</h2>
+
+    <!-- Botões de modos -->
+    <div id="game-modes-btns" style="display:flex; flex-direction:column; gap:-5px; align-items:center;">
+      <button id="tutorial-btn" data-i18n="gameModes.tutorial">Tutorial</button>
+      <button id="bot-pve-btn" data-i18n="gameModes.pve">Jogo PvE</button>
+      <button id="online-menu-btn" data-i18n="gameModes.online">Jogo Online</button>
+      <button id="campaign-btn" disabled style="opacity:0.5; cursor:not-allowed;" title="Em breve"
+        data-i18n="gameModes.campaign">Campanha</button>
+    </div>
+  </div>
+
+  <!-- ================= MENU ONLINE (Mantido para compatibilidade) ================= -->
+  <div id="online-menu-container" style="display:none;">
+    <!-- Menu Online (Moved Inside start-screen) -->
+    <div id="online-menu" style="display:flex; flex-direction:column; gap:0px; align-items:center;">
+      <button id="back-to-main-btn">&#8617;</button>
+
+      <!-- Tabs (Buttons Fixed) -->
+      <div id="online-tabs-container" style="display:flex; gap:10px; margin-bottom: 20px;">
+        <button id="create-room-btn">Criar Sala</button>
+        <button id="join-room-btn">Entrar em Sala</button>
+      </div>
+
+      <!-- Content Area -->
+      <div id="online-content-area"
+        style="width: 100%; display: flex; justify-content: center; height: 280px; align-items: flex-start;">
+
+        <!-- Opções para criar sala/lobby -->
+        <div id="room-options" style="display:none; flex-direction: column; align-items: center;">
+          <h3 style="color:#daa520; font-family:'Cinzel Decorative'; margin-bottom:15px; display:none;"
+            data-i18n="lobby.createRoomTitle">Criar Nova Sala
+          </h3>
+          <div style="display:flex; gap:20px; margin-bottom:10px;">
+            <label>
+              <input type="radio" name="mode" value="1x1" checked> <span data-i18n="lobby.duel">1x1 (Duelo)</span>
+            </label>
+            <label>
+              <input type="radio" name="mode" value="2x2"> <span data-i18n="lobby.doubles">2x2 (Duplas)</span>
+            </label>
+          </div>
+          <input type="text" id="nome-criar" placeholder="Seu apelido" data-i18n-placeholder="online.nickname"
+            maxlength="20" style="margin:10px 0;width:300px">
+          <button id="start-game-btn" data-i18n="lobby.createLobby">Criar Lobby</button>
           <div id="codigo-sala-criada" style="margin-top:10px;color:#8ecfff;font-weight:bold;"></div>
         </div>
 
@@ -147,6 +231,29 @@
 
   <div id="changelog-box"></div>
 
+  <!-- CUSTOMIZATION SCREEN -->
+  <div id="customization-screen" style="display: none;" class="modal-overlay">
+    <div class="modal-content large">
+      <h2 data-i18n="custom.title">Customização</h2>
+
+      <div class="cust-section">
+        <h3 data-i18n="custom.mats">Tapete de Jogo</h3>
+        <div class="options-grid" id="mat-options">
+          <!-- Gerado via JS -->
+        </div>
+      </div>
+
+      <div class="cust-section">
+        <h3 data-i18n="custom.stones">Conjunto de Pedras</h3>
+        <div class="options-grid" id="stone-options">
+          <!-- Gerado via JS -->
+        </div>
+      </div>
+
+      <button id="btn-close-cust" class="close-btn" data-i18n="lobby.back">Voltar</button>
+    </div>
+  </div>
+
 
   <!-- ================= LOBBY ================= -->
   <div id="lobby">
@@ -171,13 +278,14 @@
   <div id="game">
     <!-- ======= INFORMAÇÕES DA SALA E ESPECTADORES ======= -->
     <div id="info-sala">
-      <div id="codigo-sala">Código: <span id="codigo-sala-valor"></span></div>
-      <div id="espectadores">Espectadores: <span id="lista-espectadores"></span></div>
+      <div id="codigo-sala"><span data-i18n="online.roomCode">Código</span>: <span id="codigo-sala-valor"></span></div>
+      <div id="espectadores"><span data-i18n="online.spectator">Espectadores</span>: <span
+          id="lista-espectadores"></span></div>
     </div>
     <!-- ======= BOTÕES DE AÇÕES LATERAIS RESTORED TO GAME ======= -->
     <div id="botoes-acoes-laterais">
-      <button id="btn-desafiar">Desafiar</button>
-      <button id="btn-segabar">Se Gabar</button>
+      <button id="btn-desafiar" data-i18n="game.challenge">Desafiar</button>
+      <button id="btn-segabar" data-i18n="game.boast">Se Gabar</button>
     </div>
     <!-- ======= ÍCONE DE AÇÕES ======= -->
     <!-- Ícone de ações removido daqui e movido para o body para corrigir z-index -->
@@ -211,7 +319,7 @@
         <!-- pedras renderizadas via JS -->
       </div>
       <div id="tabuleiro-wrapper" style="width:740px;height:320px;position:relative;display:inline-block;">
-        <img id="tabuleiro" src="assets/img/Tabuleiro.jpg" alt="Tabuleiro Tellstones"
+        <img id="tabuleiro" src="assets/img/tables/classic/Tabuleiro.jpg" alt="Tabuleiro Tellstones"
           style="width:740px;height:320px;object-fit:contain;" />
         <div id="pedras-mesa"></div>
         <!-- Marcadores de ponto à esquerda (Jogador 1 ou Dupla 1) -->
@@ -223,7 +331,7 @@
         <div class="marcador-ponto marcador-direita" data-idx="1"></div>
         <div class="marcador-ponto marcador-direita" data-idx="2"></div>
         <div id="info-sala-local" style="position: absolute; top: 10px; right: 10px; z-index: 100;">
-          <button id="btn-sair-partida"
+          <button id="btn-sair-partida" data-i18n="game.quit"
             style="background:#f44336; color:white; border:none; border-radius:4px; padding:8px 12px; cursor:pointer; font-weight:bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">Sair
             da Partida</button>
         </div>
@@ -232,9 +340,9 @@
           style="background:none;border:none;outline:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;width:auto;height:auto;display:none;">
           <span id="moeda-animada"
             style="display:inline-block;width:80px;height:80px;position:relative;perspective:300px;">
-            <img id="moeda-frente" src="assets/img/Cara.png"
+            <img id="moeda-frente" src="assets/img/coins/classic/Cara.png"
               style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
-            <img id="moeda-verso" src="assets/img/Coroa.png"
+            <img id="moeda-verso" src="assets/img/coins/classic/Coroa.png"
               style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transform:rotateY(180deg);transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
           </span>
         </button>
@@ -249,12 +357,12 @@
   <!-- Movido para fora de #game para garantir z-index superior ao card -->
   <div id="icone-acoes" title="Ações"
     style="padding:0;width:60px;height:60px;display:none;align-items:center;justify-content:center;background:none;border:none;">
-    <img src="assets/img/Ações.png" alt="Ações" style="width:54px;height:54px;object-fit:contain;display:block;" />
+    <img src="assets/img/ui/Ações.png" alt="Ações" style="width:54px;height:54px;object-fit:contain;display:block;" />
   </div>
 
   <!-- ================= CARTA DE AÇÕES ================= -->
   <div id="carta-acoes" style="display:none;">
-    <img src="assets/img/ad5d0fc0-caaf-424b-b71c-4334c8e62921.png" alt="Carta de Ações" id="img-carta-acoes" />
+    <img src="assets/img/ui/card_actions.png" alt="Carta de Ações" id="img-carta-acoes" />
     <div id="conteudo-acoes">
       <!-- As ações serão renderizadas aqui via JS -->
     </div>
@@ -269,18 +377,18 @@
     style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); z-index:4000; align-items:center; justify-content:center;">
     <div
       style="background:#222; padding:32px 40px; border-radius:16px; box-shadow:0 4px 32px #000a; text-align:center;">
-      <h2>Escolha: Cara ou Coroa ?</h2>
+      <h2 data-i18n="game.coinFlip.choose">Escolha: Cara ou Coroa ?</h2>
       <button id="btn-cara"
         style="margin:12px 24px; font-size:1.2em; display:inline-flex; flex-direction:column; align-items:center;">
-        <img src="assets/img/Cara.png" alt="Cara"
+        <img src="assets/img/coins/classic/Cara.png" alt="Cara"
           style="width:48px;height:48px;border-radius:50%;margin-bottom:6px;box-shadow:0 2px 8px #0007;" />
-        Cara
+        <span data-i18n="game.coinFlip.heads">Cara</span>
       </button>
       <button id="btn-coroa"
         style="margin:12px 24px; font-size:1.2em; display:inline-flex; flex-direction:column; align-items:center;">
-        <img src="assets/img/Coroa.png" alt="Coroa"
+        <img src="assets/img/coins/classic/Coroa.png" alt="Coroa"
           style="width:48px;height:48px;border-radius:50%;margin-bottom:6px;box-shadow:0 2px 8px #0007;" />
-        Coroa
+        <span data-i18n="game.coinFlip.tails">Coroa</span>
       </button>
     </div>
   </div>
@@ -290,9 +398,9 @@
     style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:99999; align-items:center; justify-content:center; flex-direction:column;">
     <div id="tela-vitoria-conteudo"
       style="background:#232942; color:#fff; padding:48px 60px; border-radius:18px; box-shadow:0 4px 32px #000a; text-align:center; max-width:90vw;">
-      <h2 id="tela-vitoria-titulo">Vitória!</h2>
-      <p id="tela-vitoria-msg">Parabéns, você venceu!</p>
-      <button id="btn-voltar-lobby"
+      <h2 id="tela-vitoria-titulo" data-i18n="game.victory">Vitória!</h2>
+      <p id="tela-vitoria-msg" data-i18n="game.playerWins">Parabéns, você venceu!</p>
+      <button id="btn-voltar-lobby" data-i18n="online.backToLobby"
         style="margin-top:32px; font-size:1.1em; padding:12px 32px; border-radius:8px; background:#2d8cff; color:#fff; border:none; cursor:pointer;">Voltar
         ao Lobby</button>
     </div>
@@ -311,54 +419,70 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-  <script src="src/core/constants.js"></script>
-  <script src="src/utils/Logger.js"></script>
-  <script src="src/utils/utils.js"></script>
-  <script src="src/config/firebase-config.js"></script>
-  <script src="src/core/Network.js"></script>
-  <script src="src/core/GameRules.js"></script>
-  <script src="src/config/GameConfig.js"></script>
-  <script src="src/ui/AnimationManager.js"></script>
-  <script src="src/ui/effects/Confetti.js?v=5.0.1"></script>
-  <script src="src/ui/Renderer.js"></script>
-  <script src="src/ui/ChangelogManager.js"></script>
-  <script src="src/core/InputHandler.js"></script>
-  <script src="src/core/AnalyticsManager.js?v=5.0.2"></script>
-  <script src="src/core/RoomManager.js?v=5.0.1"></script>
-  <script src="src/core/GameController.js"></script>
-  <script src="src/ui/MouseTrail.js"></script>
-  <script src="src/ui/AudioManager.js?v=5.0.1"></script>
-  <script src="src/ui/NotificationManager.js"></script>
+  <script type="module" src="dist/src/core/constants.js"></script>
+  <!-- Core System (NEW - v6.0) -->
+  <script type="module" src="dist/src/core/EventBus.js"></script>
+
+  <!-- Screens (NEW - v6.0) -->
+  <script type="module" src="dist/src/screens/ScreenManager.js"></script>
+  <script type="module" src="dist/src/screens/MainMenu.js"></script>
+  <script type="module" src="dist/src/screens/GameModes.js"></script>
+  <script type="module" src="dist/src/test-screens.js"></script>
+
+  <!-- State Manager (NEW - v6.0) -->
+  <script type="module" src="dist/src/state/GameStateManager.js"></script>
+  <script type="module" src="dist/src/modes/tutorial/TutorialStateManager.js"></script>
+
+  <!-- Tutorial UI (NEW - v6.0 Fase 4.3) -->
+  <link rel="stylesheet" href="src/ui/TutorialUI.css">
+  <script type="module" src="dist/src/ui/TutorialUI.js"></script>
+
+  <!-- i18n (NEW - v6.0) -->
+  <script type="module" src="dist/src/data/LocaleManager.js"></script>
+
+  <!-- Customization (NEW - v6.0 Fase 6) -->
+  <link rel="stylesheet" href="assets/css/customization.css">
+  <script type="module" src="dist/src/ui/ThemeManager.js"></script>
+  <script type="module" src="dist/src/screens/Customization.js"></script>
+
+  <!-- Utilities -->
+  <script type="module" src="dist/src/utils/Logger.js"></script>
+  <script type="module" src="dist/src/utils/utils.js"></script>
+  <script type="module" src="dist/src/config/firebase-config.js"></script>
+  <script type="module" src="dist/src/core/Network.js"></script>
+  <script type="module" src="dist/src/core/GameRules.js"></script>
+  <script type="module" src="dist/src/config/GameConfig.js"></script>
+  <script type="module" src="dist/src/ui/AnimationManager.js"></script>
+  <script type="module" src="dist/src/ui/effects/Confetti.js?v=5.0.1"></script>
+  <script type="module" src="dist/src/ui/Renderer.js?v=5.3.6"></script>
+  <script type="module" src="dist/src/ui/ChangelogManager.js"></script>
+  <script type="module" src="dist/src/core/InputHandler.js"></script>
+  <script type="module" src="dist/src/core/AnalyticsManager.js?v=5.0.2"></script>
+  <script type="module" src="dist/src/core/RoomManager.js?v=5.0.1"></script>
+  <script type="module" src="dist/src/core/GameController.js"></script>
+  <script type="module" src="dist/src/ui/MouseTrail.js"></script>
+  <script type="module" src="dist/src/ui/AudioManager.js?v=5.0.1"></script>
+  <script type="module" src="dist/src/ui/NotificationManager.js"></script>
 
   <!-- AI -->
-  <script src="src/ai/BotBrain.js"></script>
+  <script type="module" src="dist/src/ai/BotMemory.js"></script>
+  <script type="module" src="dist/src/ai/BotBrain.js"></script>
+  <script type="module" src="dist/src/ai/DummyBot.js"></script>
 
   <!-- Game Modes -->
-  <script src="src/modes/GameMode.js?v=v4_alpha_1"></script>
-  <script src="src/modes/MultiplayerMode.js?v=v4_alpha_1"></script>
-  <script src="src/modes/PvEMode.js?v=v4_alpha_1"></script>
-  <script src="src/modes/TellstonesTutorial.js"></script>
-  <script src="src/modes/TutorialMode.js?v=v4_alpha_1"></script>
+  <script type="module" src="dist/src/modes/GameMode.js?v=v4_alpha_1"></script>
+  <script type="module" src="dist/src/modes/MultiplayerMode.js?v=v4_alpha_1"></script>
+  <script type="module" src="dist/src/modes/PvEMode.js?v=v4_alpha_1"></script>
+  <script type="module" src="dist/src/modes/TellstonesTutorial.js"></script>
+  <script type="module" src="dist/src/modes/TutorialMode.js?v=v4_alpha_1"></script>
 
-  <script src="src/main.js?v=5.0.1"></script>
+  <script type="module" src="dist/src/main.js?v=5.0.1"></script>
 
   <!-- Debug / Automation -->
-  <script src="src/debug/TutorialAutomator.js"></script>
-  <script src="src/debug/PvEAutomator.js"></script>
+  <script type="module" src="dist/src/debug/TutorialAutomator.js"></script>
+  <script type="module" src="dist/src/debug/PvEAutomator.js"></script>
   <!-- Dev Tools (Restricted) -->
   <div id="dev-tools-container" style="display:none;">
-    <button id="btn-dev-automator" onclick="if(window.TutorialAutomator) window.TutorialAutomator.run()"
-      style="position:fixed; bottom:10px; right:120px; z-index:999999; background:#4caf50; color:white; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer; opacity:0.7;">
-      🐞 Test Tutorial
-    </button>
-    <button id="btn-dev-bot-match"
-      style="position:fixed; bottom:10px; right:10px; z-index:999999; background:#54388e; color:white; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer; opacity:0.7;">
-      🤖 Bot vs Bot (Demo)
-    </button>
-    <button id="btn-dev-bot-profile"
-      style="position:fixed; bottom:50px; right:10px; z-index:999999; background:#9c27b0; color:white; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer; opacity:0.7;">
-      🧠 Bot: Random
-    </button>
   </div>
   <script>
     (function () {
@@ -374,29 +498,7 @@
       if (localStorage.getItem('tellstones_dev_mode') === 'true') {
         const devContainer = document.getElementById('dev-tools-container');
         if (devContainer) devContainer.style.display = 'block';
-
-        // Bot Profile cycler
-        const profiles = ['logical', 'trickster', 'aggressive', 'random'];
-        let currentIdx = 3; // Start at random
-        const btn = document.getElementById('btn-dev-bot-profile');
-        btn.onclick = function () {
-          currentIdx = (currentIdx + 1) % profiles.length;
-          const next = profiles[currentIdx];
-          btn.innerText = `🧠 Bot: ${next.charAt(0).toUpperCase() + next.slice(1)}`;
-          localStorage.setItem('tellstones_dev_bot_profile', next);
-
-          // Apply if game is running
-          if (window.currentGameMode && window.currentGameMode.setBotProfile) {
-            window.currentGameMode.setBotProfile(next);
-          }
-        };
-
-        // Initialize button text from LocalStorage
-        const saved = localStorage.getItem('tellstones_dev_bot_profile');
-        if (saved && profiles.includes(saved)) {
-          currentIdx = profiles.indexOf(saved);
-          btn.innerText = `🧠 Bot: ${saved.charAt(0).toUpperCase() + saved.slice(1)}`;
-        }
+        // Note: Floating button logic moved to DebugLoggerUI.ts
       }
     })();
   </script>
@@ -411,6 +513,19 @@
         'floating-chat.donateButton.background-color': '#794bc4',
         'floating-chat.donateButton.text-color': '#fff'
       });
+
+      // Fix visual minimalista (inclui correção para floatingchat-container)
+      const _fixKofi = () => {
+        const els = document.querySelectorAll('[id*="kofi-widget-overlay"], .floatingchat-container, .floating-chat-kofi-popup-iframe');
+        els.forEach(el => {
+          el.style.setProperty('background', 'transparent', 'important');
+          el.style.setProperty('box-shadow', 'none', 'important');
+          // Tentar remover bordas tb
+          el.style.setProperty('border', 'none', 'important');
+        });
+      };
+      setTimeout(_fixKofi, 1000);
+      setTimeout(_fixKofi, 3000);
     }
   </script>
 
