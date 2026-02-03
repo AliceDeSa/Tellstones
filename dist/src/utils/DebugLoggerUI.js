@@ -284,6 +284,9 @@ export class DebugLoggerUI {
             case 'NET': return '#5dade2';
             case 'GAME': return '#f39c12';
             case 'UI': return '#f06292';
+            case 'AUTH': return '#16a085';
+            case 'TUT': return '#f39c12';
+            case 'I18N': return '#8e44ad';
             default: return '#bdc3c7';
         }
     }

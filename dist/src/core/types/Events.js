@@ -49,6 +49,22 @@ export var EventType;
     EventType["BOT_THINKING"] = "BOT:THINKING";
     EventType["BOT_ACTION"] = "BOT:ACTION";
     EventType["BOT_RESPONSE"] = "BOT:RESPONSE";
+    EventType["BOT_SPEECH"] = "BOT:SPEECH";
+    // PvE Mode Specific
+    EventType["PVE_GAME_INIT"] = "PVE:GAME:INIT";
+    EventType["PVE_STATE_PERSIST"] = "PVE:STATE:PERSIST";
+    EventType["PVE_SWAP_ANIMATION_COMPLETE"] = "PVE:SWAP:ANIMATION:COMPLETE";
+    EventType["PVE_RENDER_REQUEST"] = "PVE:RENDER:REQUEST";
+    // Multiplayer Mode Specific
+    EventType["MULTIPLAYER_STATE_UPDATE"] = "MULTIPLAYER:STATE:UPDATE";
+    EventType["MULTIPLAYER_ROOM_JOIN"] = "MULTIPLAYER:ROOM:JOIN";
+    EventType["MULTIPLAYER_LOBBY_UPDATE"] = "MULTIPLAYER:LOBBY:UPDATE";
+    EventType["MULTIPLAYER_VICTORY"] = "MULTIPLAYER:VICTORY";
+    EventType["MULTIPLAYER_GAME_START"] = "MULTIPLAYER:GAME:START";
+    // Room Management
+    EventType["ROOM_FETCH_STATE"] = "ROOM:FETCH:STATE";
+    EventType["ROOM_LIST_UPDATE"] = "ROOM:LIST:UPDATE";
+    EventType["ROOM_CREATED"] = "ROOM:CREATED";
     // Tutorial
     EventType["TUTORIAL_START"] = "TUTORIAL:START";
     EventType["TUTORIAL_END"] = "TUTORIAL:END";

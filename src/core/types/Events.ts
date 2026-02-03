@@ -58,6 +58,25 @@ export enum EventType {
     BOT_THINKING = 'BOT:THINKING',
     BOT_ACTION = 'BOT:ACTION',
     BOT_RESPONSE = 'BOT:RESPONSE',
+    BOT_SPEECH = 'BOT:SPEECH',
+
+    // PvE Mode Specific
+    PVE_GAME_INIT = 'PVE:GAME:INIT',
+    PVE_STATE_PERSIST = 'PVE:STATE:PERSIST',
+    PVE_SWAP_ANIMATION_COMPLETE = 'PVE:SWAP:ANIMATION:COMPLETE',
+    PVE_RENDER_REQUEST = 'PVE:RENDER:REQUEST',
+
+    // Multiplayer Mode Specific
+    MULTIPLAYER_STATE_UPDATE = 'MULTIPLAYER:STATE:UPDATE',
+    MULTIPLAYER_ROOM_JOIN = 'MULTIPLAYER:ROOM:JOIN',
+    MULTIPLAYER_LOBBY_UPDATE = 'MULTIPLAYER:LOBBY:UPDATE',
+    MULTIPLAYER_VICTORY = 'MULTIPLAYER:VICTORY',
+    MULTIPLAYER_GAME_START = 'MULTIPLAYER:GAME:START',
+
+    // Room Management
+    ROOM_FETCH_STATE = 'ROOM:FETCH:STATE',
+    ROOM_LIST_UPDATE = 'ROOM:LIST:UPDATE',
+    ROOM_CREATED = 'ROOM:CREATED',
 
     // Tutorial
     TUTORIAL_START = 'TUTORIAL:START',
@@ -161,7 +180,7 @@ export interface EventData {
 
     // UI Events
     [EventType.UI_UPDATE]: { component: string; data: any };
-    [EventType.UI_NOTIFICATION]: { message: string; type: 'info' | 'success' | 'error' };
+    [EventType.UI_NOTIFICATION]: { message: string; type: 'info' | 'success' | 'error' | 'warning' };
     [EventType.UI_ANIMATION]: { animation: string; target: string };
 
     // Economy Events
@@ -173,6 +192,25 @@ export interface EventData {
     [EventType.BOT_THINKING]: { thinking: boolean };
     [EventType.BOT_ACTION]: { action: any };
     [EventType.BOT_RESPONSE]: { response: any };
+    [EventType.BOT_SPEECH]: { message: string; duration?: number };
+
+    // PvE Events
+    [EventType.PVE_GAME_INIT]: { players: { nome: string; id: string; pontos: number }[] };
+    [EventType.PVE_STATE_PERSIST]: {};
+    [EventType.PVE_SWAP_ANIMATION_COMPLETE]: { from: number; to: number; player: string };
+    [EventType.PVE_RENDER_REQUEST]: { components: string[] };
+
+    // Multiplayer Events
+    [EventType.MULTIPLAYER_STATE_UPDATE]: { state: any };
+    [EventType.MULTIPLAYER_ROOM_JOIN]: { roomCode: string; playerName: string; type: 'jogador' | 'espectador' };
+    [EventType.MULTIPLAYER_LOBBY_UPDATE]: { roomCode: string; players: any[]; spectators: any[] };
+    [EventType.MULTIPLAYER_VICTORY]: { winner: any; isLocalPlayer: boolean };
+    [EventType.MULTIPLAYER_GAME_START]: { roomCode: string; players: any[]; spectators: any[] };
+
+    // Room Management Events
+    [EventType.ROOM_FETCH_STATE]: { roomCode: string };
+    [EventType.ROOM_LIST_UPDATE]: { rooms: any[] };
+    [EventType.ROOM_CREATED]: { roomCode: string; config: any };
 
     // Tutorial Events
     [EventType.TUTORIAL_START]: {};

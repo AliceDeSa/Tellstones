@@ -1355,4 +1355,17 @@ const Renderer = {
         return btn;
     }
 };
-window.Renderer = Renderer;
+
+// =========================
+// ✅ REFATORADO v6.0: EventBus Listeners
+// =========================
+import { EventBus } from '../core/EventBus.js';
+import { EventType } from '../core/types/Events.js';
+
+EventBus.on(EventType.BOT_SPEECH, (data) => {
+    Renderer.mostrarFalaBot(data.message);
+});
+
+// Export
+export default Renderer;
+(window as any).Renderer = Renderer;

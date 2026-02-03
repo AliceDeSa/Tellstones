@@ -37,10 +37,13 @@ src/
 ├── i18n/           # Internacionalização (pt-BR.json, en-US.json)
 └── utils/          # Utilitários (Logger, helpers)
 
-themes/             # Temas visuais (cada pasta = 1 tema)
-assets/             # Recursos estáticos (img, audio, css)
+config/             # Configurações (firebase-rules, etc)
+docs/               # Documentação e Guias
+archive/            # Arquivos antigos/obsoletos
+scripts/            # Scripts de desenvolvimento
+themes/             # Temas visuais
+assets/             # Recursos estáticos
 tests/              # Testes automatizados
-docs/               # Documentação
 ```
 
 ---
@@ -174,9 +177,7 @@ console.log('debug');
 
 ## 📖 Versionamento & Documentação
 
-- **CHANGELOG.md**: Atualizar em toda mudança média/grande
-- **ChangelogManager.ts**: Sincronizar com CHANGELOG.md
-- **index.html**: Atualizar `#version-info` e `#sub-info`
+- **CHANGELOG.md**: OBRIGATÓRIO: Cada Task Finalizada DEVE criar um registro em `docs/CHANGELOG.md`.
 - **README.md**: Manter atualizado com features principais
 
 ---

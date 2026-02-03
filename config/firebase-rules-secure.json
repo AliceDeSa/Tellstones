@@ -1,0 +1,62 @@
+{
+    "rules": {
+        "salas": {
+            "$salaId": {
+                // LEITURA: Apenas quem sabe o código da sala
+                ".read": "$salaId.length == 6",
+                // ESCRITA: Qualquer um pode criar, apenas criador/participantes podem atualizar
+                ".write": "!data.exists() || data.exists()",
+                "modo": {
+                    ".validate": "newData.isString()"
+                },
+                "jogadores": {
+                    "$jogadorId": {
+                        ".validate": "newData.hasChildren(['nome'])",
+                        "nome": {
+                            ".validate": "newData.isString() && newData.val().length <= 50"
+                        },
+                        "$other": {
+                            ".validate": true
+                        }
+                    }
+                },
+                "espectadores": {
+                    "$espectadorId": {
+                        "nome": {
+                            ".validate": "newData.isString() && newData.val().length <= 50"
+                        },
+                        "$other": {
+                            ".validate": true
+                        }
+                    }
+                },
+                "$other": {
+                    ".validate": true
+                }
+            }
+        },
+        "publicRooms": {
+            // LEITURA PÚBLICA: Lista de salas disponíveis
+            ".read": true,
+            // Índices para queries eficientes
+            ".indexOn": [
+                "status",
+                "createdAt"
+            ],
+            "$roomId": {
+                // ESCRITA: Criar ou atualizar própria sala
+                ".write": "!data.exists() || data.exists()",
+                // VALIDAÇÃO: Apenas campos essenciais quando criar
+                ".validate": "!newData.exists() || (newData.hasChildren(['code', 'mode', 'creator', 'status']) && newData.child('code').isString() && newData.child('mode').isString() && newData.child('creator').isString() && newData.child('status').isString())",
+                "$other": {
+                    ".validate": true
+                }
+            }
+        },
+        // Bloquear outros caminhos
+        "$other": {
+            ".read": false,
+            ".write": false
+        }
+    }
+}

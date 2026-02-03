@@ -4,6 +4,8 @@ import { PvETurnManager, TurnAction } from "./PvETurnManager.js";
 import { MatchManager, MatchState, ActionType, GameAction } from "../core/MatchManager.js";
 import { ChallengeResolver, ResponseType, ResolverState } from "../core/ChallengeResolver.js";
 import LocaleManager from "../data/LocaleManager.js";
+import { EventBus } from "../core/EventBus.js";
+import { EventType } from "../core/types/Events.js";
 
 // Garantir que tipos globais sejam reconhecidos ou redeclarados localmente se necessário
 // Assumindo que BotBrain e outros estão globais, referenciados via window
@@ -179,8 +181,8 @@ export class PvEMode extends GameMode {
             { nome: "Bot", id: "p2", pontos: 0 }
         ];
 
-        // Cria e Salva estado inicial via LocalDB
-        (window as any).GameController.inicializarJogo(jogadores);
+        // ✅ REFATORADO: Emitir evento ao invés de chamar GameController diretamente
+        EventBus.emit(EventType.PVE_GAME_INIT, { players: jogadores });
 
         // Inicia Listeners
         this.listenToState();
@@ -365,7 +367,7 @@ export class PvEMode extends GameMode {
 
                 if (estado.vencedor) {
                     const msg = `Vencedor: ${estado.vencedor.nomes ? estado.vencedor.nomes.join(', ') : 'Desconhecido'}`;
-                    console.log("[PvE] " + msg);
+                    Logger.game(`[PvE] ${msg}`);
                     if ((window as any).notificationManager) (window as any).notificationManager.showGlobal(msg);
 
                     if ((window as any).AnalyticsManager) {
@@ -415,9 +417,8 @@ export class PvEMode extends GameMode {
             if (!this.turnManager.isBotThinking()) {
                 this.processingReactiveResponse = true;
                 this.turnManager.setBotThinking(true);
-                if ((window as any).Renderer && (window as any).Renderer.mostrarFalaBot) {
-                    (window as any).Renderer.mostrarFalaBot("Hm... deixe-me pensar.");
-                }
+                // ✅ REFATORADO: Emitir evento ao invés de chamar Renderer diretamente
+                EventBus.emit(EventType.BOT_SPEECH, { message: LocaleManager.t('bot.thinking') });
 
                 // ✅ USAR TURNMANAGER para resposta reativa
                 setTimeout(async () => {
@@ -597,9 +598,8 @@ export class PvEMode extends GameMode {
                     // Limpar estado do desafio para continuar
                     Logger.game("Desafio do Bot resolvido. Limpando estado...");
                     estado.desafio = null;
-                    if ((window as any).GameController?.persistirEstado) {
-                        (window as any).GameController.persistirEstado();
-                    }
+                    // ✅ REFATORADO: Emitir evento ao invés de chamar GameController diretamente
+                    EventBus.emit(EventType.PVE_STATE_PERSIST, {});
                     // Não retornar - deixar turno continuar
                 }
 
@@ -691,7 +691,8 @@ export class PvEMode extends GameMode {
 
             if (!decision) {
                 Logger.warn(LogCategory.AI, "Bot não retornou decisão válida. Avançando turno.");
-                if ((window as any).avancarTurno) (window as any).avancarTurno();
+                // ✅ REFATORADO: Emitir evento ao invés de chamar função global
+                EventBus.emit(EventType.TURN_ADVANCE, {});
                 this.turnManager.setBotThinking(false);
                 return;
             }
@@ -704,7 +705,8 @@ export class PvEMode extends GameMode {
 
         } catch (err) {
             Logger.error(LogCategory.AI, "executeBotTurn crasheou:", err);
-            if ((window as any).avancarTurno) (window as any).avancarTurno();
+            // ✅ REFATORADO: Emitir evento ao invés de chamar função global
+            EventBus.emit(EventType.TURN_ADVANCE, {});
             this.turnManager.setBotThinking(false);
         }
     }
@@ -733,7 +735,8 @@ export class PvEMode extends GameMode {
 
                 estado.desafio.resposta = playerAnswer;
                 estado.desafio.status = 'resolvido';
-                (window as any).GameController.persistirEstado();
+                // ✅ REFATORADO: Emitir evento ao invés de chamar GameController diretamente
+                EventBus.emit(EventType.PVE_STATE_PERSIST, {});
             }
             return;
         }
@@ -741,7 +744,8 @@ export class PvEMode extends GameMode {
         // CASO 2: Jogador Desafiou -> Bot está Adivinhando
         if (!estado.mesa[idxDeduzido]) return;
 
-        if ((window as any).Renderer && (window as any).Renderer.mostrarFalaBot) (window as any).Renderer.mostrarFalaBot("Um momento...");
+        // ✅ REFATORADO: Emitir evento ao invés de chamar Renderer diretamente
+        EventBus.emit(EventType.BOT_SPEECH, { message: LocaleManager.t('bot.thinking2') });
 
         setTimeout(() => {
             try {
@@ -758,7 +762,8 @@ export class PvEMode extends GameMode {
                 setTimeout(() => {
                     try {
                         estado.mesa[idxDeduzido].virada = false;
-                        (window as any).GameController.persistirEstado();
+                        // ✅ REFATORADO: Emitir evento ao invés de chamar GameController diretamente
+                        EventBus.emit(EventType.PVE_STATE_PERSIST, {});
 
                         let vencedor = null;
 
@@ -787,8 +792,8 @@ export class PvEMode extends GameMode {
 
                             const chat = brain.getChatter('winning');
                             if (chat) setTimeout(() => {
-                                if ((window as any).Renderer && (window as any).Renderer.mostrarFalaBot) (window as any).Renderer.mostrarFalaBot(chat);
-                                else if ((window as any).notificationManager) (window as any).notificationManager.showInternal(`Bot: "${chat}"`);
+                                // ✅ REFATORADO: Emitir evento de fala do bot
+                                EventBus.emit(EventType.BOT_SPEECH, { message: chat });
                             }, 2000);
                         } else {
                             if ((window as any).notificationManager) (window as any).notificationManager.showInternal(LocaleManager.t('pve.botWrong'));
@@ -797,8 +802,8 @@ export class PvEMode extends GameMode {
 
                             const chat = brain.getChatter('losing');
                             if (chat) setTimeout(() => {
-                                if ((window as any).Renderer && (window as any).Renderer.mostrarFalaBot) (window as any).Renderer.mostrarFalaBot(chat);
-                                else if ((window as any).notificationManager) (window as any).notificationManager.showInternal(`Bot: "${chat}"`);
+                                // ✅ REFATORADO: Emitir evento de fala do bot
+                                EventBus.emit(EventType.BOT_SPEECH, { message: chat });
                             }, 2000);
                         }
 

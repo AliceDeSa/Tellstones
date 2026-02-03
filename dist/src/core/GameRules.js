@@ -1,8 +1,7 @@
-"use strict";
 // =========================
 // Regras e Lógica Pura do Jogo
 // =========================
-const GameRules = {
+export const GameRules = {
     // Cria o estado inicial do jogo
     createInitialState: function (jogadores, pedrasOficiais) {
         // Embaralhar as pedras da reserva a cada partida
@@ -53,6 +52,7 @@ if (typeof window !== 'undefined') {
     window.GameRules = GameRules;
 }
 // Export for Node/Jest environment
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = GameRules;
-}
+// Export for Node/Jest environment
+// if (typeof module !== 'undefined' && module.exports) {
+//     module.exports = GameRules;
+// }

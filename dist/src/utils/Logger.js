@@ -18,6 +18,9 @@ export var LogCategory;
     LogCategory["UI"] = "UI";
     LogCategory["NETWORK"] = "NET";
     LogCategory["AUDIO"] = "SND";
+    LogCategory["AUTH"] = "AUTH";
+    LogCategory["TUTORIAL"] = "TUT";
+    LogCategory["I18N"] = "I18N";
 })(LogCategory || (LogCategory = {}));
 class LoggerService {
     constructor() {
@@ -171,6 +174,15 @@ class LoggerService {
             case LogCategory.SYSTEM:
                 color = '#1abc9c';
                 break; // Teal
+            case LogCategory.AUTH:
+                color = '#16a085';
+                break; // Green
+            case LogCategory.TUTORIAL:
+                color = '#f39c12';
+                break; // Yellow
+            case LogCategory.I18N:
+                color = '#8e44ad';
+                break; // Dark Purple
         }
         // Level Overrides
         if (level === LogLevel.ERROR)

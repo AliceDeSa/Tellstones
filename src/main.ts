@@ -6,6 +6,9 @@
 import { safeStorage } from "./utils/utils.js";
 import { CoinFlip } from "./ui/CoinFlip.js";
 import LocaleManager from './data/LocaleManager.js';
+import { RoomListScreen } from './ui/RoomListScreen.js';
+import './modes/multiplayer/RoomListManager.js';
+import './core/StatsManager.js';
 
 declare global {
     interface Window {
@@ -22,7 +25,7 @@ declare global {
         tocarSomClick: () => void;
         showToastInterno: (msg: any) => void;
         showToast: (msg: any) => void;
-        criarSala: (modo: any) => any;
+        criarSala: (modo: any, publicRoom?: boolean) => any;
         entrarSala: (codigo: any, nome: any, tipo: any) => void;
         mostrarLobby: (codigo: any, nome: any, criador?: boolean) => void;
         sairPartida: () => void;
@@ -70,9 +73,9 @@ window.showToast = function (msg) {
 // =========================
 // Lobby & Room Logic Handlers
 // =========================
-window.criarSala = function (modo) {
+window.criarSala = function (modo, publicRoom) {
     if (window.RoomManager) {
-        return window.RoomManager.criarSala(modo);
+        return window.RoomManager.criarSala(modo, publicRoom);
     }
     else {
         console.error("RoomManager not loaded!");
@@ -276,7 +279,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 return alert("Digite seu nome!");
             safeStorage.setItem("tellstones_playerName", nome);
             // Logic
-            const codigo = window.criarSala(modo);
+            const isPublic = (document.getElementById("check-public-room") as HTMLInputElement)?.checked || false;
+            const codigo = window.criarSala(modo, isPublic);
             if (window.RoomManager) {
                 window.RoomManager.entrarSala(codigo, nome, "jogador");
                 window.RoomManager.mostrarLobby(codigo, nome, true);
@@ -735,6 +739,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Online Menu Toggle
     const btnOnline = document.getElementById("online-menu-btn");
     const onlineMenu = document.getElementById("online-menu");
+    const onlineMenuContainer = document.getElementById("online-menu-container");
     const mainMenuBtns = document.getElementById("main-menu-btns");
     const gameModesScreen = document.getElementById("game-modes-screen");
     const btnBack = document.getElementById("back-to-main-btn");
@@ -748,6 +753,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const startScreen = document.getElementById("start-screen");
             if (startScreen) startScreen.style.display = "block";
             mainMenuBtns.style.display = "none";
+
+            if (onlineMenuContainer) onlineMenuContainer.style.display = "block";
             onlineMenu.style.display = "flex";
         };
     }
@@ -757,6 +764,7 @@ document.addEventListener("DOMContentLoaded", function () {
             window.tocarSomPress();
             console.log("[Online] Closing online menu, returning to GameModes");
             // Hide online menu, hide start-screen, show GameModes
+            if (onlineMenuContainer) onlineMenuContainer.style.display = "none";
             onlineMenu.style.display = "none";
             const startScreen = document.getElementById("start-screen");
             if (startScreen) startScreen.style.display = "none";
@@ -906,6 +914,9 @@ document.addEventListener("DOMContentLoaded", function () {
             (window as any).updateHTMLTranslations();
         });
     }
+
+    // Initialize Room List Screen
+    new RoomListScreen();
 
     // Initial translation update
     setTimeout(() => {

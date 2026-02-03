@@ -18,7 +18,10 @@ export enum LogCategory {
     AI = "AI",
     UI = "UI",
     NETWORK = "NET",
-    AUDIO = "SND"
+    AUDIO = "SND",
+    AUTH = "AUTH",
+    TUTORIAL = "TUT",
+    I18N = "I18N"
 }
 
 export interface LogEntry {
@@ -186,6 +189,9 @@ class LoggerService {
             case LogCategory.GAME: color = '#e67e22'; break; // Orange
             case LogCategory.UI: color = '#e91e63'; break; // Pink
             case LogCategory.SYSTEM: color = '#1abc9c'; break; // Teal
+            case LogCategory.AUTH: color = '#16a085'; break; // Green
+            case LogCategory.TUTORIAL: color = '#f39c12'; break; // Yellow
+            case LogCategory.I18N: color = '#8e44ad'; break; // Dark Purple
         }
 
         // Level Overrides

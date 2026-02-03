@@ -60,29 +60,24 @@ export class LocaleManager {
      */
     loadTranslations(locale) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log(`[LocaleManager.loadTranslations] Carregando ${locale}...`);
             try {
                 const response = yield fetch(`src/i18n/${locale}.json?v=${Date.now()}`);
                 if (!response.ok) {
                     throw new Error(`Failed to load ${locale}.json`);
                 }
                 this.translations = yield response.json();
-                console.log(`[LocaleManager.loadTranslations] ${locale} carregado com sucesso:`, Object.keys(this.translations));
                 // Sempre carrega pt-BR como fallback
                 if (locale !== 'pt-BR') {
                     const fallbackResponse = yield fetch(`src/i18n/pt-BR.json?v=${Date.now()}`);
                     this.fallbackTranslations = yield fallbackResponse.json();
-                    console.log(`[LocaleManager.loadTranslations] Fallback pt-BR carregado`);
                 }
                 else {
                     this.fallbackTranslations = this.translations;
-                    console.log(`[LocaleManager.loadTranslations] Usando pt-BR como fallback`);
                 }
-                Logger.info(LogCategory.UI, `[LocaleManager] Idioma carregado: ${locale}`);
+                Logger.info(LogCategory.I18N, `[LocaleManager] Idioma carregado: ${locale}`);
             }
             catch (error) {
-                console.error(`[LocaleManager.loadTranslations] ERRO ao carregar ${locale}:`, error);
-                Logger.error(LogCategory.UI, `[LocaleManager] Erro ao carregar ${locale}:`, error);
+                Logger.error(LogCategory.I18N, `[LocaleManager] Erro ao carregar ${locale}:`, error);
             }
         });
     }
@@ -90,7 +85,6 @@ export class LocaleManager {
      * Traduz uma chave usando notação de ponto (ex: 'menu.play')
      */
     t(key) {
-        console.log(`[LocaleManager.t] Buscando: "${key}", Idioma atual: ${this.currentLocale}, isReady: ${this.isReady}`);
         const keys = key.split('.');
         let value = this.translations;
         // Navega pela estrutura aninhada
@@ -107,17 +101,14 @@ export class LocaleManager {
                     }
                     else {
                         // Se nem no fallback tem, retorna a chave
-                        Logger.warn(LogCategory.UI, `[LocaleManager] Tradução não encontrada: ${key}`);
-                        console.log(`[LocaleManager.t] Tradução NÃO encontrada: "${key}"`);
+                        Logger.debug(LogCategory.I18N, `[LocaleManager] Tradução não encontrada: ${key}`);
                         return key;
                     }
                 }
                 break;
             }
         }
-        const result = typeof value === 'string' ? value : key;
-        console.log(`[LocaleManager.t] Resultado para "${key}": "${result}"`);
-        return result;
+        return typeof value === 'string' ? value : key;
     }
     /**
      * Muda o idioma atual
@@ -129,9 +120,9 @@ export class LocaleManager {
             this.currentLocale = locale;
             localStorage.setItem('tellstones_locale', locale);
             yield this.loadTranslations(locale);
-            // Emitir evento para UI atualizar (usando string diretamente)
+            // Emitir evento para UI atualizar
             EventBus.emit('LOCALE:CHANGE', { locale });
-            Logger.info(LogCategory.UI, `[LocaleManager] Idioma alterado para: ${locale}`);
+            Logger.info(LogCategory.I18N, `[LocaleManager] Idioma alterado: ${locale}`);
         });
     }
     /**

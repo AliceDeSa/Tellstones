@@ -24,7 +24,7 @@ class EventBusClass {
 
         this.listeners.get(eventType)!.add(listener);
 
-        Logger.info(LogCategory.SYSTEM, `[EventBus] Listener registrado para: ${eventType}`);
+        Logger.debug(LogCategory.SYSTEM, `[EventBus] Listener registrado para: ${eventType}`);
 
         // Retorna função para cancelar
         return () => this.off(eventType, listener);
@@ -40,7 +40,7 @@ class EventBusClass {
         const listenersSet = this.listeners.get(eventType);
         if (listenersSet) {
             listenersSet.delete(listener);
-            Logger.info(LogCategory.SYSTEM, `[EventBus] Listener removido de: ${eventType}`);
+            Logger.debug(LogCategory.SYSTEM, `[EventBus] Listener removido de: ${eventType}`);
         }
     }
 
@@ -63,12 +63,17 @@ class EventBusClass {
             this.eventHistory.shift();
         }
 
-        // Log do evento
-        Logger.info(
-            LogCategory.SYSTEM,
-            `[EventBus] Emitindo: ${eventType}`,
-            data
-        );
+        // Log do evento (apenas eventos críticos em INFO)
+        const criticalEvents = [
+            'GAME:START', 'GAME:END', 'MULTIPLAYER:VICTORY',
+            'AUTH:STATE:CHANGED', 'AUTH:LOGIN:SUCCESS', 'AUTH:LOGIN:ERROR'
+        ];
+
+        if (criticalEvents.includes(eventType)) {
+            Logger.info(LogCategory.SYSTEM, `[EventBus] Emitindo: ${eventType}`, data);
+        } else {
+            Logger.debug(LogCategory.SYSTEM, `[EventBus] ${eventType}`);
+        }
 
         // Notificar listeners
         const listenersSet = this.listeners.get(eventType);
@@ -92,7 +97,7 @@ class EventBusClass {
      */
     clearListeners(eventType: EventType): void {
         this.listeners.delete(eventType);
-        Logger.info(LogCategory.SYSTEM, `[EventBus] Todos os listeners removidos de: ${eventType}`);
+        Logger.debug(LogCategory.SYSTEM, `[EventBus] Listeners removidos de: ${eventType}`);
     }
 
     /**

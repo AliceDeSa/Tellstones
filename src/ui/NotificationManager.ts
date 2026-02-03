@@ -34,7 +34,7 @@ class NotificationManager {
      * Registra listeners do EventBus para controle remoto de notificações
      */
     private registerEventListeners(): void {
-        EventBus.on(EventType.NOTIFICATION_SHOW, (data) => {
+        EventBus.on(EventType.UI_NOTIFICATION, (data) => {
             const { message, type } = data;
 
             // Usar showGlobal para notificações importantes (error, warning)

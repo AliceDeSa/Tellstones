@@ -1,0 +1,31 @@
+{
+    "rules": {
+        "salas": {
+            "$salaId": {
+                ".read": "true",
+                ".write": "true",
+                "modo": {
+                    ".validate": "newData.isString()"
+                },
+                "jogadores": {
+                    "$playerId": {
+                        ".validate": "newData.child('nome').exists() && newData.child('nome').isString()"
+                    }
+                },
+                "espectadores": {
+                    "$spectatorId": {
+                        ".validate": "newData.child('nome').exists() && newData.child('nome').isString()"
+                    }
+                }
+            }
+        },
+        "publicRooms": {
+            ".read": "true",
+            ".write": "true",
+            ".indexOn": [
+                "status",
+                "createdAt"
+            ]
+        }
+    }
+}

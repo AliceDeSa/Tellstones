@@ -3,6 +3,8 @@
 // =========================
 import { Logger, LogCategory } from "../utils/Logger.js";
 import LocaleManager from "../data/LocaleManager.js";
+import { EventBus } from "./EventBus.js";
+import { EventType } from "./types/Events.js";
 const GameController = {
     // --- MOVED METHODS (Fix TS Parsing Issue) ---
     // Finalizar Troca (Chamado após animação)
@@ -582,4 +584,55 @@ const GameController = {
         }
     }
 };
+// =========================
+// ✅ REFATORADO v6.0: EventBus Listeners
+// =========================
+// Retrocompatibilidade: Responder a eventos do PvE Mode
+EventBus.on(EventType.PVE_GAME_INIT, (data) => {
+    Logger.sys('[GameController] Event PVE_GAME_INIT received');
+    GameController.inicializarJogo(data.players);
+});
+EventBus.on(EventType.PVE_STATE_PERSIST, () => {
+    Logger.debug(LogCategory.GAME, '[GameController] Event PVE_STATE_PERSIST received');
+    GameController.persistirEstado();
+});
+EventBus.on(EventType.TURN_ADVANCE, () => {
+    Logger.debug(LogCategory.GAME, '[GameController] Event TURN_ADVANCE received');
+    GameController.avancarTurno();
+});
+// Multiplayer Listeners
+EventBus.on(EventType.MULTIPLAYER_STATE_UPDATE, (data) => {
+    // Logger.debug(LogCategory.NET, '[GameController] State Update received');
+    GameController.atualizarEstado(data.state);
+});
+EventBus.on(EventType.MULTIPLAYER_GAME_START, (data) => {
+    Logger.net('[GameController] Game Start received from Lobby');
+    // Se a função mostrarJogo for global, mantemos aqui por compatibilidade ou a movemos?
+    // Por enquanto, assumimos que quem escuta isso é o ScreenManager ou similar.
+    // Mas o MultiplayerMode emitia isso para (window as any).mostrarJogo
+    if (window.mostrarJogo) {
+        window.mostrarJogo(data.roomCode, data.players, data.spectators);
+    }
+});
+EventBus.on(EventType.MULTIPLAYER_VICTORY, (data) => {
+    Logger.game(`[GameController] Victory Event: ${data.isLocalPlayer ? 'Win' : 'Loss'}`);
+    const msg = data.isLocalPlayer
+        ? LocaleManager.t('multiplayer.victory')
+        : LocaleManager.t('multiplayer.defeat');
+    // Notificação visual
+    EventBus.emit(EventType.UI_NOTIFICATION, { message: msg, type: data.isLocalPlayer ? 'success' : 'error' });
+    // Play sound based on result
+    if (window.audioManager) {
+        if (data.isLocalPlayer)
+            window.audioManager.playSuccess();
+        else
+            window.audioManager.playFailure();
+    }
+    // Tela de Vitória Global (se existir)
+    setTimeout(() => {
+        if (window.checarTelaVitoriaGlobal)
+            window.checarTelaVitoriaGlobal();
+    }, 500);
+});
+// Exportar globalmente
 window.GameController = GameController;

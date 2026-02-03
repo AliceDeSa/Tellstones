@@ -328,11 +328,11 @@ export class LoginScreen {
                 }
                 const provider = new firebase.auth.GoogleAuthProvider();
                 yield firebase.auth().signInWithPopup(provider);
-                Logger.info(LogCategory.SYSTEM, '[LoginScreen] Login com Google bem-sucedido');
+                Logger.info(LogCategory.AUTH, '[LoginScreen] Login com Google bem-sucedido');
                 // onAuthStateChanged do AuthManager irá lidar com o resto
             }
             catch (error) {
-                Logger.error(LogCategory.SYSTEM, '[LoginScreen] Erro no login com Google:', error);
+                Logger.error(LogCategory.AUTH, '[LoginScreen] Erro no login com Google:', error);
                 this.showError(error.message || 'Erro ao fazer login com Google');
             }
         });
@@ -378,7 +378,7 @@ export class LoginScreen {
                 Logger.info(LogCategory.SYSTEM, `[LoginScreen] E-mail de recuperação enviado para: ${email}`);
             }
             catch (error) {
-                Logger.error(LogCategory.SYSTEM, '[LoginScreen] Erro ao enviar e-mail de recuperação:', error);
+                Logger.error(LogCategory.AUTH, '[LoginScreen] Erro ao enviar e-mail de recuperação:', error);
                 this.showError('Erro ao enviar e-mail de recuperação. Verifique o endereço.');
             }
         });
@@ -462,7 +462,7 @@ export class LoginScreen {
         if (divider) {
             divider.textContent = LocaleManager.t('common.or');
         }
-        Logger.info(LogCategory.UI, '[LoginScreen] Traduções atualizadas');
+        Logger.debug(LogCategory.UI, '[LoginScreen] Traduções atualizadas');
     }
     /**
      * Verifica se a tela está ativa

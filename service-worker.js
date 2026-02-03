@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tellstones-v6.0.1'; // Bumped for v6.0 ScreenManager
+const CACHE_NAME = 'tellstones-v6.0.3'; // Bumped for RoomListScreen
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
@@ -14,6 +14,7 @@ const ASSETS_TO_CACHE = [
     './dist/src/core/constants.js',
     './dist/src/core/Network.js',
     './dist/src/core/EventBus.js', // NEW v6.0
+    './dist/src/core/StatsManager.js',
     './dist/src/config/GameConfig.js',
     './dist/src/main.js',
 
@@ -30,6 +31,7 @@ const ASSETS_TO_CACHE = [
     // UI
     './dist/src/ui/Renderer.js',
     './dist/src/ui/NotificationManager.js',
+    './dist/src/ui/RoomListScreen.js',
     './dist/src/ui/ChangelogManager.js',
     './dist/src/ui/AnimationManager.js',
     './dist/src/ui/effects/Confetti.js',
@@ -43,6 +45,7 @@ const ASSETS_TO_CACHE = [
     // Modes
     './dist/src/modes/GameMode.js',
     './dist/src/modes/MultiplayerMode.js',
+    './dist/src/modes/multiplayer/RoomListManager.js',
     './dist/src/modes/PvEMode.js',
     './dist/src/modes/TutorialMode.js',
     './dist/src/modes/TellstonesTutorial.js',
@@ -58,7 +61,7 @@ const ASSETS_TO_CACHE = [
     './assets/img/tables/classic/Tabuleiro.jpg',
     './assets/img/coins/classic/Cara.png',
     './assets/img/coins/classic/Coroa.png',
-    './assets/img/backgrounds/bg_taverna.png'
+
 ];
 
 self.addEventListener('install', (event) => {

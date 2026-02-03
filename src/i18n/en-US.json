@@ -106,9 +106,43 @@
         }
     },
     "bot": {
-        "guess": "I say it is... {stone}!",
+        "guess": "I say it's... {stone}!",
         "believe": "Hmm... I believe you.",
-        "doubt": "Prove it then!"
+        "doubt": "Prove it then!",
+        "thinking": "Hmm... let me think.",
+        "thinking2": "One moment...",
+        "correct": "Bot was correct!",
+        "wrong": "Bot was wrong!",
+        "boasted": "Bot boasted!",
+        "challengeSuccess": "Challenge successful!",
+        "challengeFailed": "Challenge failed!"
+    },
+    "multiplayer": {
+        "victory": "You won!",
+        "defeat": "You lost!",
+        "playerJoined": "{{name}} joined as player!",
+        "spectatorJoined": "{{name}} is watching!",
+        "challengeResolved": "Challenge result processed!",
+        "joinError": "Error joining room",
+        "roomListTitle": "Available Rooms",
+        "noRooms": "No rooms available",
+        "createRoom": "Create New Room",
+        "joinRoom": "Join",
+        "filters": {
+            "mode": "Mode",
+            "players": "Players",
+            "all": "All"
+        },
+        "modes": {
+            "1v1": "1 vs 1",
+            "2v2": "2 vs 2",
+            "ffa": "Free for All"
+        },
+        "status": {
+            "waiting": "Waiting",
+            "playing": "Playing",
+            "finished": "Finished"
+        }
     },
     "tutorial": {
         "welcome": "Welcome to Tellstones!",
@@ -184,7 +218,10 @@
         "player": "Player",
         "spectator": "Spectator",
         "enter": "Enter",
+        "leave": "Leave",
         "createLobby": "Create Lobby",
+        "listRooms": "Public Rooms",
+        "refresh": "Refresh",
         "waiting": "Waiting for players...",
         "backToLobby": "Back to Lobby"
     },
@@ -236,6 +273,7 @@
         "duel": "1x1 (Duel)",
         "doubles": "2x2 (Doubles)",
         "createLobby": "Create Lobby",
+        "public": "Public Room",
         "back": "Back"
     },
     "notifications": {
@@ -272,12 +310,6 @@
         "winner": "WINNER: {name}!",
         "masterTitle": "Congratulations! You proved to be a Tellstones master.",
         "playerWon": "{name} scored 1 point!"
-    },
-    "multiplayer": {
-        "playerJoined": "{name} joined as player!",
-        "youWon": "You won!",
-        "youLost": "You lost!",
-        "challengeProcessed": "Challenge result processed!"
     },
     "room": {
         "incorrectPlayers": "Incorrect number of players for selected mode!",

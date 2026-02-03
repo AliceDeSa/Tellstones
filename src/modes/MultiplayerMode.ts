@@ -1,5 +1,9 @@
 
 import { GameMode, GameConfig } from "./GameMode.js";
+import { EventBus } from '../core/EventBus.js';
+import { EventType } from '../core/types/Events.js';
+import { Logger, LogCategory } from '../utils/Logger.js';
+import LocaleManager from '../data/LocaleManager.js';
 
 // Define Interfaces for Room Data
 interface PlayerData {
@@ -58,8 +62,8 @@ export class MultiplayerMode extends GameMode {
                 if (!estado.mesa)
                     estado.mesa = Array(7).fill(null);
 
-                if ((window as any).GameController)
-                    (window as any).GameController.atualizarEstado(estado);
+                // ✅ REFATORADO: Emitir evento de atualização de estado
+                EventBus.emit(EventType.MULTIPLAYER_STATE_UPDATE, { state: estado });
             }
         });
     }
@@ -74,14 +78,16 @@ export class MultiplayerMode extends GameMode {
             if (!estado.mesa)
                 estado.mesa = Array(7).fill(null);
 
-            // Check for Animations (Swap)
-            if ((window as any).Renderer && (window as any).Renderer.monitorarTrocas) {
-                (window as any).Renderer.monitorarTrocas(estado);
+            // ✅ REFATORADO: Emitir evento de animação ao invés de chamar Renderer
+            if (estado.trocaAnimacao) {
+                EventBus.emit(EventType.UI_ANIMATION, {
+                    animation: 'swap',
+                    target: 'board'
+                });
             }
 
-            // Atualiza Controlador
-            if ((window as any).GameController)
-                (window as any).GameController.atualizarEstado(estado);
+            // ✅ REFATORADO: Emitir evento ao invés de chamar GameController diretamente
+            EventBus.emit(EventType.MULTIPLAYER_STATE_UPDATE, { state: estado });
 
             // Verifica Vitória
             if (estado.vencedor) {
@@ -146,34 +152,43 @@ export class MultiplayerMode extends GameMode {
 
             jogadores.forEach((j) => {
                 if (!(window as any).ultimosJogadores.some((u: any) => u.nome === j.nome) && j.nome !== this.playerName) {
-                    if ((window as any).showToast)
-                        (window as any).showToast(`${j.nome} entrou como jogador!`);
+                    // ✅ REFATORADO: Emitir evento de notificação com i18n
+                    const message = LocaleManager.t('multiplayer.playerJoined').replace('{{name}}', j.nome);
+                    EventBus.emit(EventType.UI_NOTIFICATION, {
+                        message: message,
+                        type: 'info'
+                    });
                 }
             });
 
             (window as any).ultimosJogadores = jogadores;
 
-            if ((window as any).Renderer) {
-                (window as any).Renderer.atualizarInfoSala(this.roomCode, espectadores);
-            }
+            // ✅ REFATORADO: Emitir evento de atualização de lobby
+            EventBus.emit(EventType.MULTIPLAYER_LOBBY_UPDATE, {
+                roomCode: this.roomCode!,
+                players: jogadores,
+                spectators: espectadores
+            });
 
-            // Detect Game Start
+            // ✅ REFATORADO: Emitir evento de início de jogo
             if (sala.status === "jogo") {
-                if ((window as any).mostrarJogo)
-                    (window as any).mostrarJogo(this.roomCode, jogadores, espectadores);
+                EventBus.emit(EventType.MULTIPLAYER_GAME_START, {
+                    roomCode: this.roomCode!,
+                    players: jogadores,
+                    spectators: espectadores
+                });
             }
         });
     }
 
     private handleVictory(vencedor: any): void {
-        const msg = (vencedor.nomes && vencedor.nomes.includes(this.playerName)) ? "Você venceu!" : "Você perdeu!";
-        if ((window as any).showToast)
-            (window as any).showToast(msg);
+        const isLocalPlayer = vencedor.nomes && vencedor.nomes.includes(this.playerName);
 
-        setTimeout(() => {
-            if ((window as any).checarTelaVitoriaGlobal)
-                (window as any).checarTelaVitoriaGlobal();
-        }, 500);
+        // ✅ REFATORADO: Emitir evento de vitória
+        EventBus.emit(EventType.MULTIPLAYER_VICTORY, {
+            winner: vencedor,
+            isLocalPlayer: isLocalPlayer
+        });
     }
 
     // Override cleanup if needed
@@ -196,6 +211,8 @@ export class MultiplayerMode extends GameMode {
             }
 
             if (currentState.desafio.status !== "resolvido") return;
+
+            Logger.game("[Multiplayer] Resolvendo desafio via transaction");
 
             const desafio = currentState.desafio;
             const idxPedra: number = desafio.idxPedra;
@@ -235,11 +252,14 @@ export class MultiplayerMode extends GameMode {
             return currentState;
         }, (error: any, committed: boolean, snapshot: any) => {
             if (committed) {
-                if ((window as any).showToastInterno)
-                    (window as any).showToastInterno("Resultado do desafio processado!");
+                // ✅ REFATORADO: Emitir notificação via EventBus com i18n
+                EventBus.emit(EventType.UI_NOTIFICATION, {
+                    message: LocaleManager.t('multiplayer.challengeResolved'),
+                    type: 'success'
+                });
                 this.onStateChange(snapshot);
             } else if (error) {
-                console.warn("[Transaction] Failed", error);
+                Logger.warn(LogCategory.NETWORK, "[Multiplayer] Transaction failed", error);
             }
         });
     }

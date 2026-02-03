@@ -48,10 +48,10 @@ class AuthManagerClass {
             });
 
             this.isInitialized = true;
-            Logger.info(LogCategory.SYSTEM, '[AuthManager] Inicializado com Firebase Auth');
+            Logger.info(LogCategory.AUTH, '[AuthManager] Inicializado com Firebase Auth');
 
         } catch (error) {
-            Logger.error(LogCategory.SYSTEM, '[AuthManager] Erro na inicialização:', error);
+            Logger.error(LogCategory.AUTH, '[AuthManager] Erro na inicialização:', error);
 
             // Fallback: carregar do LocalStorage se Firebase falhar
             this.loadUserFromStorage();
@@ -97,12 +97,12 @@ class AuthManagerClass {
             // Salvar no LocalStorage para cache
             this.saveUserToStorage();
 
-            Logger.info(LogCategory.SYSTEM, `[AuthManager] Usuário autenticado: ${this.currentUser.displayName}`);
+            Logger.info(LogCategory.AUTH, `[AuthManager] Usuário autenticado: ${this.currentUser.displayName}`);
         } else {
             // Usuário deslogado
             this.currentUser = null;
             localStorage.removeItem('tellstones_user');
-            Logger.info(LogCategory.SYSTEM, '[AuthManager] Usuário deslogado');
+            Logger.info(LogCategory.AUTH, '[AuthManager] Usuário deslogado');
         }
 
         // Emitir evento de mudança de estado
@@ -117,10 +117,10 @@ class AuthManagerClass {
             const savedUser = localStorage.getItem('tellstones_user');
             if (savedUser) {
                 this.currentUser = JSON.parse(savedUser);
-                Logger.info(LogCategory.SYSTEM, `[AuthManager] Usuário carregado do cache: ${this.currentUser?.displayName}`);
+                Logger.info(LogCategory.AUTH, `[AuthManager] Usuário carregado do cache: ${this.currentUser?.displayName}`);
             }
         } catch (error) {
-            Logger.error(LogCategory.SYSTEM, '[AuthManager] Erro ao carregar usuário:', error);
+            Logger.error(LogCategory.AUTH, '[AuthManager] Erro ao carregar usuário:', error);
         }
     }
 
@@ -133,7 +133,7 @@ class AuthManagerClass {
                 localStorage.setItem('tellstones_user', JSON.stringify(this.currentUser));
             }
         } catch (error) {
-            Logger.error(LogCategory.SYSTEM, '[AuthManager] Erro ao salvar usuário:', error);
+            Logger.error(LogCategory.AUTH, '[AuthManager] Erro ao salvar usuário:', error);
         }
     }
 
@@ -154,12 +154,12 @@ class AuthManagerClass {
             // Login via Firebase
             const userCredential = await this.firebaseAuth.signInWithEmailAndPassword(email, password);
 
-            Logger.info(LogCategory.SYSTEM, `[AuthManager] Login bem-sucedido: ${email}`);
+            Logger.info(LogCategory.AUTH, `[AuthManager] Login bem-sucedido: ${email}`);
 
             // Evento de sucesso será emitido automaticamente pelo onAuthStateChanged
 
         } catch (error: any) {
-            Logger.error(LogCategory.SYSTEM, '[AuthManager] Erro no login:', error);
+            Logger.error(LogCategory.AUTH, '[AuthManager] Erro no login:', error);
 
             // Traduzir erros do Firebase
             const errorMessage = this.translateFirebaseError(error.code);
@@ -200,12 +200,12 @@ class AuthManagerClass {
                 });
             }
 
-            Logger.info(LogCategory.SYSTEM, `[AuthManager] Registro bem-sucedido: ${email}`);
+            Logger.info(LogCategory.AUTH, `[AuthManager] Registro bem-sucedido: ${email}`);
 
             // Evento de sucesso será emitido automaticamente pelo onAuthStateChanged
 
         } catch (error: any) {
-            Logger.error(LogCategory.SYSTEM, '[AuthManager] Erro no registro:', error);
+            Logger.error(LogCategory.AUTH, '[AuthManager] Erro no registro:', error);
 
             // Traduzir erros do Firebase
             const errorMessage = this.translateFirebaseError(error.code);
@@ -226,13 +226,13 @@ class AuthManagerClass {
             // Login anônimo via Firebase
             const userCredential = await this.firebaseAuth.signInAnonymously();
 
-            Logger.info(LogCategory.SYSTEM, `[AuthManager] Login como convidado: ${this.currentUser?.displayName}`);
+            Logger.info(LogCategory.AUTH, `[AuthManager] Login como convidado: ${this.currentUser?.displayName}`);
 
             // Emitir evento de convidado
             EventBus.emit(EventType.AUTH_GUEST_ENTER, {});
 
         } catch (error: any) {
-            Logger.error(LogCategory.SYSTEM, '[AuthManager] Erro no login como convidado:', error);
+            Logger.error(LogCategory.AUTH, '[AuthManager] Erro no login como convidado:', error);
 
             const errorMessage = this.translateFirebaseError(error.code);
             EventBus.emit(EventType.AUTH_LOGIN_ERROR, { error: errorMessage });
@@ -251,13 +251,13 @@ class AuthManagerClass {
 
             await this.firebaseAuth.signOut();
 
-            Logger.info(LogCategory.SYSTEM, '[AuthManager] Logout realizado');
+            Logger.info(LogCategory.AUTH, '[AuthManager] Logout realizado');
 
             // Emitir evento de logout
             EventBus.emit(EventType.AUTH_LOGOUT, {});
 
         } catch (error: any) {
-            Logger.error(LogCategory.SYSTEM, '[AuthManager] Erro ao fazer logout:', error);
+            Logger.error(LogCategory.AUTH, '[AuthManager] Erro ao fazer logout:', error);
             throw error;
         }
     }

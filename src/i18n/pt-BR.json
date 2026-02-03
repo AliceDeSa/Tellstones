@@ -108,7 +108,41 @@
     "bot": {
         "guess": "Eu digo que é... {stone}!",
         "believe": "Hmm... Eu acredito.",
-        "doubt": "Prove então!"
+        "doubt": "Prove então!",
+        "thinking": "Hm... deixe-me pensar.",
+        "thinking2": "Um momento...",
+        "correct": "Bot acertou!",
+        "wrong": "Bot errou!",
+        "boasted": "Bot se gabou!",
+        "challengeSuccess": "Desafio bem-sucedido!",
+        "challengeFailed": "Desafio falhou!"
+    },
+    "multiplayer": {
+        "victory": "Você venceu!",
+        "defeat": "Você perdeu!",
+        "playerJoined": "{{name}} entrou como jogador!",
+        "spectatorJoined": "{{name}} está assistindo!",
+        "challengeResolved": "Resultado do desafio processado!",
+        "joinError": "Erro ao entrar na sala",
+        "roomListTitle": "Salas Disponíveis",
+        "noRooms": "Nenhuma sala disponível",
+        "createRoom": "Criar Nova Sala",
+        "joinRoom": "Entrar",
+        "filters": {
+            "mode": "Modo",
+            "players": "Jogadores",
+            "all": "Todos"
+        },
+        "modes": {
+            "1v1": "1 vs 1",
+            "2v2": "2 vs 2",
+            "ffa": "Todos contra Todos"
+        },
+        "status": {
+            "waiting": "Aguardando",
+            "playing": "Em Jogo",
+            "finished": "Finalizada"
+        }
     },
     "tutorial": {
         "welcome": "Bem-vindo ao Tellstones!",
@@ -181,10 +215,12 @@
     "online": {
         "nickname": "Seu apelido",
         "roomCode": "Código da sala",
-        "player": "Jogador",
         "spectator": "Espectador",
-        "enter": "Entrar",
         "createLobby": "Criar Lobby",
+        "listRooms": "Salas Públicas",
+        "refresh": "Atualizar",
+        "enter": "Entrar",
+        "leave": "Sair",
         "waiting": "Aguardando jogadores...",
         "backToLobby": "Voltar ao Lobby"
     },
@@ -237,6 +273,7 @@
         "duel": "1x1 (Duelo)",
         "doubles": "2x2 (Duplas)",
         "createLobby": "Criar Lobby",
+        "public": "Sala Pública",
         "back": "Voltar"
     },
     "notifications": {
@@ -273,12 +310,6 @@
         "winner": "VENCEDOR: {name}!",
         "masterTitle": "Parabéns! Você provou ser um mestre do Tellstones.",
         "playerWon": "{name} ganhou 1 ponto!"
-    },
-    "multiplayer": {
-        "playerJoined": "{name} entrou como jogador!",
-        "youWon": "Você venceu!",
-        "youLost": "Você perdeu!",
-        "challengeProcessed": "Resultado do desafio processado!"
     },
     "room": {
         "incorrectPlayers": "Número de jogadores incorreto para o modo selecionado!",

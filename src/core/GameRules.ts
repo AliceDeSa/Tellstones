@@ -85,6 +85,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Export for Node/Jest environment
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = GameRules;
-}
+// Export for Node/Jest environment
+// if (typeof module !== 'undefined' && module.exports) {
+//     module.exports = GameRules;
+// }

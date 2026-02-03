@@ -33,7 +33,7 @@ const RoomManager: RoomManagerInterface = {
     notificacaoListener: null,
 
     // Cria uma nova sala
-    criarSala: function (modo: string) {
+    criarSala: function (modo: string, publicRoom: boolean = false) {
         if (typeof (window as any).gerarCodigoSala !== 'function' || typeof (window as any).getDBRef !== 'function') {
             console.error("[RoomManager] Dependências (gerarCodigoSala, getDBRef) não encontradas.");
             return null;
@@ -46,8 +46,22 @@ const RoomManager: RoomManagerInterface = {
             jogadores: {},
             espectadores: {},
             status: "lobby",
-            criadaEm: Date.now()
+            criadaEm: Date.now(),
+            publica: publicRoom
         });
+
+        // Registrar na lista pública se solicitado
+        if (publicRoom && (window as any).RoomListManager) {
+            // Precisamos do nome do criador, mas ele só entra na sala depois. 
+            // Vamos assumir "Criador" por enquanto ou pegar de safeStorage se existir
+            const savedName = safeStorage.getItem("tellstones_playerName") || "Criador";
+            (window as any).RoomListManager.createPublicRoomEntry(codigo, {
+                mode: modo,
+                creator: savedName,
+                maxPlayers: (modo === '2x2' ? 4 : 2)
+            });
+        }
+
         return codigo;
     },
 
@@ -263,6 +277,18 @@ const RoomManager: RoomManagerInterface = {
             // Chama função global legada ou nova do Controller
             if (typeof mostrarJogo === "function") mostrarJogo(codigo, jogadores, espectadores);
         }
+
+        // Atualizar lista pública se a sala for pública
+        // IMPORTANTE: Manter status 'waiting' durante lobby, só mudar quando jogo começar
+        if (sala.publica && (window as any).RoomListManager) {
+            // Se status mudou para "jogo", atualizar para "playing"
+            if (sala.status === "jogo") {
+                (window as any).RoomListManager.updateRoomStatus(codigo, "playing", jogadores.length);
+            } else if (sala.status === "lobby") {
+                // Durante lobby, manter "waiting" e apenas atualizar contagem de jogadores
+                (window as any).RoomListManager.updateRoomStatus(codigo, "waiting", jogadores.length);
+            }
+        }
     },
 
     // Solicita ao backend (via Firebase) para iniciar o jogo
@@ -322,6 +348,11 @@ const RoomManager: RoomManagerInterface = {
                         (window as any).getDBRef("salas/" + codigo + "/status").set("jogo");
                         if ((window as any).notificationManager) (window as any).notificationManager.showGlobal("Jogo iniciado!");
                         if ((window as any).AnalyticsManager) (window as any).AnalyticsManager.logGameStart("multiplayer", codigo, jogadores.length);
+
+                        // Atualizar status pública
+                        if ((window as any).RoomListManager) {
+                            (window as any).RoomListManager.updateRoomStatus(codigo, "playing", jogadores.length);
+                        }
 
                     } catch (err: any) {
                         console.error("[RoomManager] Erro ao iniciar jogo:", err);

@@ -4,6 +4,23 @@ Este documento detalha a evolução técnica do projeto, com foco nas decisões 
 
 ---
 
+## V6.1.0 - UI Polish & System Clean-up
+**Data:** 03/02/2026
+**Status:** Feature & Maintenance Release
+
+Foco em polimento visual da interface de login, reorganização estrutural do projeto e uma auditoria completa do sistema de logs para melhor experiência de desenvolvimento.
+
+### 🎨 UI & Interatividade
+-   **[UI]** **Login Button Renovation:** Substituição do botão de login padrão por um asset de imagem (`Login.png`), com animações de hover (scale + glow) e z-index ajustado (`9999`) para garantir interatividade acima de camadas de overlay.
+-   **[UX]** **Feedback Visual:** Implementação de efeitos de transição suave e drop-shadow dinâmico na interação com o mouse.
+
+### 🛠️ Engenharia de Sistema
+-   **[LOGS]** **Auditoria de Logs:** Redução drástica (>90%) no ruído do console. Logs verbosos do `LocaleManager` e `EventBus` foram movidos para nível `DEBUG`.
+-   **[DEV]** **Novas Categorias de Log:** Introdução de `AUTH`, `TUT` e `I18N` com color-coding específico no Logger para facilitar debugging.
+-   **[ARCH]** **Reorganização de Arquivos:** Limpeza da raiz do projeto. Configurações movidas para `config/`, documentação para `docs/` e scripts para `scripts/`. Raiz reduzida para apenas arquivos essenciais.
+
+---
+
 ## V6.0.0 - Authentication & Security Architecture
 **Data:** 02/02/2026
 **Status:** Major Feature Release

@@ -374,6 +374,33 @@
     transform: scale(0.95);
 }
 
+#list-rooms-btn {
+    background-image: url('../../img/ui/colors/Roxo.webp') !important;
+    background-size: 100% 100% !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-color: transparent !important;
+    color: #fff !important;
+    font-family: "Cinzel Decorative", serif;
+    font-size: 1.15em;
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    border: none !important;
+    width: 250px !important;
+    height: 65px !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+#list-rooms-btn:hover {
+    transform: scale(1.05);
+}
+
+#list-rooms-btn:active {
+    transform: scale(0.95);
+}
+
 /* --- Game Action Buttons (Desafiar/Se Gabar) --- */
 /* Fix container alignment */
 #botoes-acoes-laterais {
