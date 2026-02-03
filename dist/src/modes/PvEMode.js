@@ -12,6 +12,7 @@ import { Logger, LogCategory } from "../utils/Logger.js";
 import { PvETurnManager } from "./PvETurnManager.js";
 import { MatchManager, ActionType } from "../core/MatchManager.js";
 import { ChallengeResolver } from "../core/ChallengeResolver.js";
+import LocaleManager from "../data/LocaleManager.js";
 export class PvEMode extends GameMode {
     constructor() {
         super();
@@ -666,7 +667,7 @@ export class PvEMode extends GameMode {
                         const player = playersList.find((j) => j.id === 'p1' || j.nome !== 'Bot');
                         if (palpite === correta) {
                             if (window.notificationManager)
-                                window.notificationManager.showInternal("Bot acertou! Ponto para o Bot.");
+                                window.notificationManager.showInternal(LocaleManager.t('pve.botCorrect'));
                             if (window.audioManager)
                                 window.audioManager.playFailure();
                             bot.pontos = (bot.pontos || 0) + 1;
@@ -682,7 +683,7 @@ export class PvEMode extends GameMode {
                         }
                         else {
                             if (window.notificationManager)
-                                window.notificationManager.showInternal("Bot errou! Ponto para você.");
+                                window.notificationManager.showInternal(LocaleManager.t('pve.botWrong'));
                             player.pontos = (player.pontos || 0) + 1;
                             vencedor = player;
                             const chat = brain.getChatter('losing');
@@ -866,7 +867,7 @@ export class PvEMode extends GameMode {
         estado.mesa[targetIdx].virada = false;
         window.GameController.persistirEstado();
         if (window.notificationManager)
-            window.notificationManager.showInternal(`Pedra Revelada: ${realStone.nome}`);
+            window.notificationManager.showInternal(LocaleManager.t('pve.stoneRevealed').replace('{stone}', realStone.nome));
         setTimeout(() => {
             try {
                 let winner = null;
@@ -877,7 +878,7 @@ export class PvEMode extends GameMode {
                 const player = playersList.find((j) => j.id === 'p1' || j.nome !== 'Bot');
                 if (correct) {
                     if (window.notificationManager)
-                        window.notificationManager.showInternal("Você acertou! Ponto para você.");
+                        window.notificationManager.showInternal(LocaleManager.t('pve.playerCorrect'));
                     if (window.audioManager)
                         window.audioManager.playSuccess();
                     player.pontos = (player.pontos || 0) + 1;
@@ -889,7 +890,7 @@ export class PvEMode extends GameMode {
                 }
                 else {
                     if (window.notificationManager)
-                        window.notificationManager.showInternal(`Você errou! Era ${realStone.nome}. Ponto para o Bot.`);
+                        window.notificationManager.showInternal(LocaleManager.t('pve.playerWrong').replace('{stone}', realStone.nome));
                     if (window.audioManager)
                         window.audioManager.playFailure();
                     bot.pontos = (bot.pontos || 0) + 1;

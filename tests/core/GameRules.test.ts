@@ -1,10 +1,10 @@
-const GameRules = require('../../src/core/GameRules');
+import { GameRules } from '../../src/core/GameRules';
 
 describe('GameRules', () => {
 
     test('createInitialState should initialize valid game state', () => {
         const players = [{ nome: 'Alice' }, { nome: 'Bob' }];
-        const stones = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+        const stones = [{ nome: 'A', url: 'a.png' }, { nome: 'B', url: 'b.png' }, { nome: 'C', url: 'c.png' }];
 
         const state = GameRules.createInitialState(players, stones);
 
@@ -12,7 +12,9 @@ describe('GameRules', () => {
         expect(state.vez).toBe(1); // Starts with P2 (Index 1) as per rules logic (usually P2 starts or random)
         expect(state.mesa).toHaveLength(7);
         expect(state.pedraCentral).toBeDefined();
-        expect(state.pedraCentral.virada).toBe(false);
+        if (state.pedraCentral) {
+            expect(state.pedraCentral.virada).toBe(false);
+        }
     });
 
     test('calcularSlotsValidos should return only center slot (3) when table is empty', () => {
@@ -28,6 +30,7 @@ describe('GameRules', () => {
     test('calcularSlotsValidos should return adjacent slots', () => {
         const table = Array(7).fill(null);
         // Place stone at center (3)
+        // @ts-ignore
         table[3] = { nome: 'Stone', url: 'img.png' };
 
         const slots = GameRules.calcularSlotsValidos(table);

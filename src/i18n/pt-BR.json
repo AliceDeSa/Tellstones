@@ -195,7 +195,32 @@
         "cancel": "Cancelar",
         "close": "Fechar",
         "back": "Voltar",
-        "confirm": "Confirmar"
+        "confirm": "Confirmar",
+        "or": "OU"
+    },
+    "auth": {
+        "loginTitle": "Entrar",
+        "registerTitle": "Criar Conta",
+        "email": "E-mail",
+        "password": "Senha",
+        "confirmPassword": "Confirmar Senha",
+        "displayName": "Nome de Exibição",
+        "loginButton": "Entrar",
+        "registerButton": "Criar Conta",
+        "continueAsGuest": "Continuar como Convidado",
+        "loginWithGoogle": "Entrar com Google",
+        "forgotPassword": "Esqueceu a senha?",
+        "switchToRegister": "Não tem conta? Registre-se",
+        "switchToLogin": "Já tem conta? Faça login",
+        "loginSuccess": "Login realizado com sucesso!",
+        "guestEnter": "Você entrou como convidado",
+        "passwordMismatch": "As senhas não coincidem",
+        "errors": {
+            "invalidEmail": "E-mail inválido",
+            "wrongPassword": "Senha incorreta",
+            "userNotFound": "Usuário não encontrado"
+        },
+        "logoutSuccess": "Logout realizado"
     },
     "custom": {
         "title": "Customização",
@@ -203,10 +228,127 @@
         "stones": "Conjunto de Pedras"
     },
     "lobby": {
+        "title": "Lobby da Partida",
+        "roomCode": "Código da sala",
+        "players": "Jogadores",
+        "spectators": "Espectadores",
+        "startGame": "Iniciar Jogo",
         "createRoomTitle": "Criar Nova Sala",
         "duel": "1x1 (Duelo)",
         "doubles": "2x2 (Duplas)",
         "createLobby": "Criar Lobby",
         "back": "Voltar"
+    },
+    "notifications": {
+        "peeked": "Você espiou: {stone}",
+        "dragging": "Arrastando {stone}...",
+        "invalid": "Inválido!",
+        "swapped": "Pedras trocadas!",
+        "selectHiddenChallenge": "Escolha uma pedra virada para desafiar!",
+        "waitOpponent": "Aguarde o oponente escolher a pedra!",
+        "waitTurn": "Aguarde sua vez",
+        "notYourTurn": "Não é sua vez!",
+        "stonePlaced": "Pedra colocada!",
+        "waitCoinFlip": "Aguarde escolha de Cara ou Coroa!",
+        "themeApplied": "Tema \"{theme}\" aplicado!",
+        "stoneRevealed": "Pedra revelada e pontos computados!"
+    },
+    "pve": {
+        "botCorrect": "Bot acertou! Ponto para o Bot.",
+        "botWrong": "Bot errou! Ponto para você.",
+        "playerCorrect": "Você acertou! Ponto para você.",
+        "playerWrong": "Você errou! Era {stone}. Ponto para o Bot.",
+        "stoneRevealed": "Pedra Revelada: {stone}",
+        "botPersonality": "Bot Personality: {name}",
+        "botChallenged": "{actor} desafiou a pedra {target}!",
+        "botPeeked": "Bot espiou a pedra na posição {position}",
+        "cannotChallengeVisible": "Não pode desafiar pedra visível"
+    },
+    "victory": {
+        "congratulations": "Parabéns, você venceu!",
+        "believedMaster": "Você acreditou. O Mestre marcou ponto!",
+        "doubtedMaster": "Você duvidou! O Mestre vai provar...",
+        "masterProved": "Mestre revelou as pedras e acertou! 3 Pontos para ele.",
+        "playerProved": "Você provou seu conhecimento e VENCEU 3 PONTOS!",
+        "winner": "VENCEDOR: {name}!",
+        "masterTitle": "Parabéns! Você provou ser um mestre do Tellstones.",
+        "playerWon": "{name} ganhou 1 ponto!"
+    },
+    "multiplayer": {
+        "playerJoined": "{name} entrou como jogador!",
+        "youWon": "Você venceu!",
+        "youLost": "Você perdeu!",
+        "challengeProcessed": "Resultado do desafio processado!"
+    },
+    "room": {
+        "incorrectPlayers": "Número de jogadores incorreto para o modo selecionado!",
+        "gameStarted": "Jogo iniciado!",
+        "startError": "Erro ao iniciar: {error}",
+        "reconnecting": "Reconectando à sessão anterior..."
+    },
+    "tutorialUI": {
+        "header": "⋮⋮ TUTORIAL ⋮⋮",
+        "waiting": "Aguardando ação...",
+        "actionUnavailable": "Ação indisponível neste passo do tutorial.",
+        "testMemory": "Vamos testar sua memória uma última vez!"
+    },
+    "tutorialSteps": {
+        "step0": {
+            "title": "Bem-vindo ao Tellstones",
+            "msg": "Tellstones é um jogo de memória e blefe. Vamos aprender o básico em poucos passos.",
+            "action": "Clique em 'Próximo' para começar."
+        },
+        "step1": {
+            "title": "Colocando Pedras",
+            "msg": "Você e o oponente (Mestre) se revezam colocando pedras na mesa. A pedra central (neutra) já está lá.",
+            "action": "Arraste uma pedra da sua reserva (esquerda) para qualquer espaço vazio no tabuleiro."
+        },
+        "step2": {
+            "title": "Escondendo a Informação",
+            "msg": "Depois que todas as pedras são colocadas (ou quando você quiser), você pode virar uma pedra para baixo para escondê-la.",
+            "action": "Dê um DUPLO CLIQUE na pedra que você acabou de colocar para escondê-la."
+        },
+        "step3": {
+            "title": "Espiando Pedras (Virar)",
+            "msg": "A qualquer momento, você pode conferir uma pedra escondida (virada para baixo) para lembrar o símbolo. Só você verá.",
+            "action": "Dê um DUPLO CLIQUE em uma pedra virada para baixo para olhá-la (ela virará momentaneamente)."
+        },
+        "step4": {
+            "title": "Trocando Pedras",
+            "msg": "Você pode trocar duas pedras de lugar para confundir o oponente.",
+            "action": "Clique e arraste uma pedra da mesa sobre outra pedra para trocá-las de posição."
+        },
+        "step5": {
+            "title": "Desafiando o Oponente",
+            "msg": "Se você acha que o oponente não sabe qual pedra é qual, você pode desafiá-lo. Ele terá que acertar ou perderá o ponto.",
+            "action": "Clique no botão 'Desafiar' e se prepare para testar o Mestre."
+        },
+        "step6": {
+            "title": "Respondendo ao Desafio",
+            "msg": "Agora inverta os papéis. O Mestre vai te desafiar! Você precisa provar que sabe qual é a pedra.",
+            "action": "O Mestre vai te desafiar agora. Selecione a pedra correta quando solicitado."
+        },
+        "step7": {
+            "title": "Se Gabar",
+            "msg": "Se você sabe TODAS as pedras viradas, você pode 'Se Gabar'. Isso é um movimento arriscado para ganhar o jogo instantaneamente.",
+            "action": "Clique no botão 'Se Gabar'."
+        },
+        "step8": {
+            "title": "Provando o Conhecimento",
+            "msg": "Quando você 'Se Gaba', você deve revelar TODAS as pedras viradas para provar que você sabe.",
+            "action": "Clique em cada pedra virada e selecione o nome correto."
+        },
+        "step9": {
+            "title": "Parabéns!",
+            "msg": "Você completou o tutorial! Agora você sabe o básico do Tellstones.",
+            "action": "Clique em 'Sair' para voltar ao menu ou jogue contra o Bot!"
+        }
+    },
+    "master": {
+        "name": "Mestre",
+        "challenged": "O Mestre desafiou você!",
+        "boasting": "O Mestre está se gabando!",
+        "doubt": "Mestre: 'Eu duvido! Prove que você sabe todas as pedras.'",
+        "doubtBoastToo": "Mestre: 'Você também sabe? Duvido! Prove.'"
     }
 }

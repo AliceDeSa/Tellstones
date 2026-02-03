@@ -58,6 +58,23 @@ export var EventType;
     EventType["TUTORIAL_RESTRICTION"] = "TUTORIAL:RESTRICTION";
     // Audio
     EventType["AUDIO_MUTE_CHANGED"] = "AUDIO:MUTE:CHANGED";
+    EventType["AUDIO_MUSIC_VOLUME"] = "AUDIO:MUSIC:VOLUME";
+    EventType["AUDIO_SFX_VOLUME"] = "AUDIO:SFX:VOLUME";
+    EventType["AUDIO_PLAY_CLICK"] = "AUDIO:PLAY:CLICK";
+    EventType["AUDIO_PLAY_PRESS"] = "AUDIO:PLAY:PRESS";
+    // Notifications
+    EventType["NOTIFICATION_SHOW"] = "NOTIFICATION:SHOW";
+    // Autenticação
+    EventType["AUTH_LOGIN_SUCCESS"] = "AUTH:LOGIN:SUCCESS";
+    EventType["AUTH_LOGIN_ERROR"] = "AUTH:LOGIN:ERROR";
+    EventType["AUTH_LOGOUT"] = "AUTH:LOGOUT";
+    EventType["AUTH_GUEST_ENTER"] = "AUTH:GUEST:ENTER";
+    EventType["AUTH_STATE_CHANGED"] = "AUTH:STATE:CHANGED";
+    // Room/Lobby
+    EventType["ROOM_PLAYERS_UPDATE"] = "ROOM:PLAYERS:UPDATE";
+    EventType["ROOM_SPECTATORS_UPDATE"] = "ROOM:SPECTATORS:UPDATE";
+    EventType["ROOM_START"] = "ROOM:START";
+    EventType["ROOM_LEAVE"] = "ROOM:LEAVE";
     // Idioma
     EventType["LANGUAGE_CHANGE"] = "LANGUAGE:CHANGE";
 })(EventType || (EventType = {}));

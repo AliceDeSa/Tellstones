@@ -7,9 +7,7 @@ import { EventBus } from '../core/EventBus.js';
 import { EventType } from '../core/types/Events.js';
 import { Logger, LogCategory } from '../utils/Logger.js';
 import { GameStateManager } from '../state/GameStateManager.js';
-import { Button } from '../ui/components/Button.js';
 import { Slider } from '../ui/components/Slider.js';
-import { Toggle } from '../ui/components/Toggle.js';
 import LocaleManager from '../data/LocaleManager.js';
 
 export class Settings implements Screen {
@@ -20,9 +18,7 @@ export class Settings implements Screen {
     private musicSlider: Slider | null = null;
     private sfxSlider: Slider | null = null;
 
-    // Botões para atualizar traduções
-    private resetBtn: Button | null = null;
-    private saveBtn: Button | null = null;
+
 
     // Armazenar última posição válida para restaurar
     private lastMusicVol = 80;
@@ -42,28 +38,26 @@ export class Settings implements Screen {
         setTimeout(() => this.updateTranslations(), 100);
 
         // Listener para Mute Externo (ex: Botão Global)
-        if ((window as any).EventBus) {
-            (window as any).EventBus.on('AUDIO:MUTE:CHANGED', (data: any) => {
-                // Apenas Música deve ser afetada pelo Mute Global
-                if (data.isMuted) {
-                    // Salvar antes de zerar
-                    if (this.musicSlider) this.lastMusicVol = this.musicSlider.getValue() || 50;
+        EventBus.on(EventType.AUDIO_MUTE_CHANGED, (data) => {
+            // Apenas Música deve ser afetada pelo Mute Global
+            if (data.isMuted) {
+                // Salvar antes de zerar
+                if (this.musicSlider) this.lastMusicVol = this.musicSlider.getValue() || 50;
 
-                    // Zerar visualmente apenas a música
-                    if (this.musicSlider) this.musicSlider.setValue(0);
-                } else {
-                    // Restaurar apenas música
-                    if (this.musicSlider && this.musicSlider.getValue() === 0) {
-                        this.musicSlider.setValue(this.lastMusicVol);
-                    }
+                // Zerar visualmente apenas a música
+                if (this.musicSlider) this.musicSlider.setValue(0);
+            } else {
+                // Restaurar apenas música
+                if (this.musicSlider && this.musicSlider.getValue() === 0) {
+                    this.musicSlider.setValue(this.lastMusicVol);
                 }
-            });
+            }
+        });
 
-            // Listener para mudança de idioma
-            (window as any).EventBus.on('LOCALE:CHANGE', () => {
-                this.updateTranslations();
-            });
-        }
+        // Listener para mudança de idioma
+        EventBus.on(EventType.LANGUAGE_CHANGE, () => {
+            this.updateTranslations();
+        });
 
         Logger.info(LogCategory.UI, '[Settings] Tela de configurações inicializada');
     }
@@ -108,25 +102,7 @@ export class Settings implements Screen {
         body.appendChild(audioContent);
         panelWrapper.appendChild(body);
 
-        // Footer com botões
-        const footer = document.createElement('div');
-        footer.className = 'ui-screen__footer';
 
-        this.resetBtn = new Button({
-            text: LocaleManager.t('settings.reset'),
-            variant: 'secondary',
-            onClick: () => this.resetSettings()
-        });
-        footer.appendChild(this.resetBtn.getElement());
-
-        this.saveBtn = new Button({
-            text: LocaleManager.t('settings.save'),
-            variant: 'primary',
-            onClick: () => this.saveSettings()
-        });
-        footer.appendChild(this.saveBtn.getElement());
-
-        panelWrapper.appendChild(footer);
 
         // Adicionar ao DOM
         document.body.appendChild(this.container);
@@ -412,58 +388,34 @@ export class Settings implements Screen {
 
     private setMusicVolume(value: number): void {
         this.checkUnmuteIfSliderMoved(value);
-        if ((window as any).audioManager) {
-            (window as any).audioManager.setMusicVolume(value / 100);
-        }
+        // Emitir evento para AudioManager
+        EventBus.emit(EventType.AUDIO_MUSIC_VOLUME, { volume: value / 100 });
         Logger.info(LogCategory.UI, `[Settings] Volume música: ${value}%`);
+        this.autoSaveSettings();
     }
 
     private setSfxVolume(value: number): void {
         this.checkUnmuteIfSliderMoved(value);
-        if ((window as any).audioManager) {
-            (window as any).audioManager.setSfxVolume(value / 100);
-        }
+        // Emitir evento para AudioManager
+        EventBus.emit(EventType.AUDIO_SFX_VOLUME, { volume: value / 100 });
         Logger.info(LogCategory.UI, `[Settings] Volume efeitos: ${value}%`);
+        this.autoSaveSettings();
     }
 
     // Helper para desmutar se usuário mexer no slider
     private checkUnmuteIfSliderMoved(value: number): void {
         if (value > 0 && (window as any).isMuted) {
-            if ((window as any).EventBus) {
-                (window as any).EventBus.emit('AUDIO:MUTE:CHANGED', { isMuted: false });
-            }
+            EventBus.emit(EventType.AUDIO_MUTE_CHANGED, { isMuted: false });
         }
     }
 
-    private saveSettings(): void {
+    private autoSaveSettings(): void {
         const settings = {
             musicVolume: this.musicSlider?.getValue() ?? 80,
             sfxVolume: this.sfxSlider?.getValue() ?? 100
         };
-
         GameStateManager.saveSettings(settings);
-        Logger.info(LogCategory.UI, '[Settings] Configurações salvas', settings);
-
-        // Feedback visual
-        const feedback = document.createElement('div');
-        feedback.className = 'toast show';
-        feedback.innerText = LocaleManager.t('settings.saved');
-        document.body.appendChild(feedback);
-        setTimeout(() => feedback.remove(), 2000);
-    }
-
-
-
-    private resetSettings(): void {
-        // Valores padrão
-        this.musicSlider?.setValue(80);
-        this.sfxSlider?.setValue(100);
-
-        // Aplicar
-        this.setMusicVolume(80);
-        this.setSfxVolume(100);
-
-        Logger.info(LogCategory.UI, '[Settings] Configurações resetadas para padrão');
+        Logger.info(LogCategory.UI, '[Settings] Auto-saved', settings);
     }
 
     private goBack(): void {
@@ -472,14 +424,6 @@ export class Settings implements Screen {
 
     private updateTranslations(): void {
         console.log('[Settings] Atualizando traduções...');
-
-        // Atualizar botões
-        if (this.resetBtn) {
-            this.resetBtn.setText(LocaleManager.t('settings.reset'));
-        }
-        if (this.saveBtn) {
-            this.saveBtn.setText(LocaleManager.t('settings.save'));
-        }
 
         // Atualizar sliders usando o método setLabel
         if (this.musicSlider) {

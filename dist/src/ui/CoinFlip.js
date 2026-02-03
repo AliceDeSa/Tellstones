@@ -1,5 +1,6 @@
 // Logic for Coin Flip (Cara ou Coroa)
 // Migrated from main.js
+import LocaleManager from '../data/LocaleManager.js';
 export const CoinFlip = {
     listenerRef: null,
     ultimoLadoNotificado: null,
@@ -122,11 +123,14 @@ export const CoinFlip = {
             if (btnCoroa)
                 btnCoroa.disabled = true;
             if (feedbackDiv) {
-                feedbackDiv.innerHTML = `Você ficou com: <b>${minhaEscolha.toUpperCase()}</b><br><span style='font-size:0.95em;color:#ffd700;'>Aguarde o sorteio da moeda...</span>`;
+                const text = LocaleManager.t('game.coinFlip.youGot').replace('{side}', minhaEscolha.toUpperCase());
+                const wait = LocaleManager.t('game.coinFlip.waiting');
+                feedbackDiv.innerHTML = `${text}<br><span style='font-size:0.95em;color:#ffd700;'>${wait}</span>`;
             }
             if (minhaEscolha !== this.ultimoLadoNotificado) {
+                const text = LocaleManager.t('game.coinFlip.youGot').replace('{side}', minhaEscolha.toUpperCase());
                 if (window.notificationManager)
-                    window.notificationManager.showInternal(`Você ficou com: ${minhaEscolha.toUpperCase()}`);
+                    window.notificationManager.showInternal(text);
                 this.ultimoLadoNotificado = minhaEscolha;
             }
             const agora = Date.now();
@@ -238,9 +242,8 @@ export const CoinFlip = {
             }
             moedaAnimada.classList.remove("moeda-girando");
             const vitoria = (resultado === 0 && minhaEscolha === "cara") || (resultado === 1 && minhaEscolha === "coroa");
-            this.mostrarNotificacaoMoeda(vitoria
-                ? "<span style='font-size:1.2em;'>Você ganhou o sorteio! Você começa.</span>"
-                : "<span style='font-size:1.2em;'>O adversário ganhou o sorteio e começa.</span>");
+            const msg = vitoria ? LocaleManager.t('game.coinFlip.youWon') : LocaleManager.t('game.coinFlip.botWon');
+            this.mostrarNotificacaoMoeda(msg);
             setTimeout(() => {
                 if (moedaBtn) {
                     moedaBtn.style.opacity = "0";

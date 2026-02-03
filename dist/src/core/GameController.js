@@ -2,6 +2,7 @@
 // GameController - Orquestração do Jogo
 // =========================
 import { Logger, LogCategory } from "../utils/Logger.js";
+import LocaleManager from "../data/LocaleManager.js";
 const GameController = {
     // --- MOVED METHODS (Fix TS Parsing Issue) ---
     // Finalizar Troca (Chamado após animação)
@@ -161,7 +162,7 @@ const GameController = {
                 telaVitoria.style.display = "flex";
                 if (estado.vencedor === window.nomeAtual) {
                     titulo.innerText = "Vitória!";
-                    msg.innerText = "Parabéns, você venceu!";
+                    msg.innerText = LocaleManager.t('victory.congratulations');
                     if (window.audioManager)
                         window.audioManager.playSuccess();
                 }
@@ -298,7 +299,7 @@ const GameController = {
                 estado.jogadores[idx].pontos++;
             if (salaAtual === "MODO_TUTORIAL") {
                 if (window.notificationManager)
-                    window.notificationManager.showInternal(`Você acreditou. O Mestre marcou ponto!`);
+                    window.notificationManager.showInternal(LocaleManager.t('victory.believedMaster'));
                 estado.vez = 1;
                 // Force update
                 window.getDBRef("salas/" + salaAtual + "/estadoJogo").update({
@@ -321,7 +322,7 @@ const GameController = {
             if (window.estadoJogo)
                 window.estadoJogo.desafio = null;
             if (window.notificationManager)
-                window.notificationManager.showGlobal(`${jogadorDesafio} ganhou 1 ponto!`);
+                window.notificationManager.showGlobal(LocaleManager.t('victory.playerWon').replace('{name}', jogadorDesafio));
             // FORCE TURN FIX: Do NOT advance turn here. 
             // Initiate Boast (Player) -> Turn passes to Bot (1).
             // Bot Responds (Believes) -> Turn is still (1)? 
@@ -332,11 +333,11 @@ const GameController = {
         else if (acao === "duvidar") {
             if (salaAtual === "MODO_TUTORIAL") {
                 if (window.notificationManager)
-                    window.notificationManager.showInternal("Você duvidou! O Mestre vai provar...");
+                    window.notificationManager.showInternal(LocaleManager.t('victory.doubtedMaster'));
                 // Simula Mestre provando
                 setTimeout(() => {
                     if (window.notificationManager)
-                        window.notificationManager.showInternal("Mestre revelou as pedras e acertou! 3 Pantos para ele.");
+                        window.notificationManager.showInternal(LocaleManager.t('victory.masterProved'));
                     const idxBot = estado.jogadores.findIndex((j) => j.nome === "Mestre");
                     if (idxBot !== -1)
                         estado.jogadores[idxBot].pontos += 3;
@@ -415,7 +416,7 @@ const GameController = {
             if (window.audioManager)
                 window.audioManager.playSuccess();
             if (window.notificationManager)
-                window.notificationManager.showGlobal("Você provou seu conhecimento e VENCEU 3 PONTOS!");
+                window.notificationManager.showGlobal(LocaleManager.t('victory.playerProved'));
             // Robust Scoring: Update directly via Firebase Transaction/Update to avoid race
             const boasterName = estado.desafio.jogador;
             let idxJogador = estado.jogadores.findIndex((j) => j.nome === boasterName);
@@ -516,7 +517,7 @@ const GameController = {
         if (window.audioManager)
             window.audioManager.playSuccess();
         if (window.notificationManager) {
-            window.notificationManager.showGlobal(`VENCEDOR: ${nome}!`, 5000);
+            window.notificationManager.showGlobal(LocaleManager.t('victory.winner').replace('{name}', nome), 5000);
         }
         Logger.game(`[GameController] Vencedor declarado: ${nome}`);
     },
@@ -568,7 +569,7 @@ const GameController = {
                 const isMe = (vencedor.id === 'p1' || vencedor.nome === window.nomeAtual);
                 if (msg)
                     msg.innerText = isMe
-                        ? "Parabéns! Você provou ser um mestre do Tellstones."
+                        ? LocaleManager.t('victory.masterTitle')
                         : "Derrota! Mais sorte na próxima vez.";
                 // Play Sound
                 if (window.audioManager) {

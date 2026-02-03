@@ -182,7 +182,7 @@ const Renderer = {
                         // 1. Rich Notification
                         if (window.notificationManager) {
                             window.notificationManager.showInternal(
-                                `Você espiou: ${p.nome} <span style='display:inline-block;width:44px;height:44px;background:#fff;border-radius:50%;vertical-align:middle;margin-left:8px;box-shadow:0 1px 4px #0002;'><img src='${p.url}' alt='${p.nome}' style='width:40px;height:40px;vertical-align:middle;margin:2px;'></span>`
+                                `${LocaleManager.t('notifications.peeked').replace('{stone}', p.nome)} <span style='display:inline-block;width:44px;height:44px;background:#fff;border-radius:50%;vertical-align:middle;margin-left:8px;box-shadow:0 1px 4px #0002;'><img src='${p.url}' alt='${p.nome}' style='width:40px;height:40px;vertical-align:middle;margin:2px;'></span>`
                             );
                         }
 
@@ -235,7 +235,7 @@ const Renderer = {
                         e.dataTransfer.setData("idx", i.toString());
                         e.dataTransfer.effectAllowed = "move";
                         div.style.opacity = "0.5";
-                        if (window.notificationManager) window.notificationManager.showInternal(`Arrastando ${p.nome}...`);
+                        if (window.notificationManager) window.notificationManager.showInternal(LocaleManager.t('notifications.dragging').replace('{stone}', p.nome));
                     }
                 };
 
@@ -266,7 +266,7 @@ const Renderer = {
 
                         // Check if valid start stone exists
                         if (!window.estadoJogo.mesa[fromIdx]) {
-                            if (window.notificationManager) window.notificationManager.showInternal("Inválido!");
+                            if (window.notificationManager) window.notificationManager.showInternal(LocaleManager.t('notifications.invalid'));
                             return;
                         }
 
@@ -299,7 +299,7 @@ const Renderer = {
                             }
                         }
 
-                        if (window.notificationManager) window.notificationManager.showInternal("Pedras trocadas!");
+                        if (window.notificationManager) window.notificationManager.showInternal(LocaleManager.t('notifications.swapped'));
 
                         // Tutorial Trigger (Swap Action)
                         if (window.tellstonesTutorial) window.tellstonesTutorial.registrarAcaoConcluida();
@@ -307,7 +307,7 @@ const Renderer = {
                 };
             } else {
                 div.style.cursor = "not-allowed";
-                div.title = "Aguarde sua vez";
+                div.title = LocaleManager.t('notifications.waitTurn');
             }
 
             // Click Handler for Challenge (Special Case)
@@ -316,12 +316,12 @@ const Renderer = {
                     e.stopPropagation();
                     if (!p.virada) {
                         if (window.notificationManager)
-                            window.notificationManager.showInternal("Escolha uma pedra virada para desafiar!");
+                            window.notificationManager.showInternal(LocaleManager.t('notifications.selectHiddenChallenge'));
                         return;
                     }
 
                     // Notify User
-                    if (window.notificationManager) window.notificationManager.showInternal("Aguarde o oponente escolher a pedra!");
+                    if (window.notificationManager) window.notificationManager.showInternal(LocaleManager.t('notifications.waitOpponent'));
 
                     // Visual Feedback
                     // if (window.adicionarSilhuetaEspiada) window.adicionarSilhuetaEspiada(i);

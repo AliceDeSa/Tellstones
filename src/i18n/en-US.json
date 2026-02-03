@@ -195,7 +195,31 @@
         "cancel": "Cancel",
         "close": "Close",
         "back": "Back",
-        "confirm": "Confirm"
+        "confirm": "Confirm",
+        "or": "OR"
+    },
+    "auth": {
+        "loginTitle": "Sign In",
+        "registerTitle": "Create Account",
+        "email": "Email",
+        "password": "Password",
+        "confirmPassword": "Confirm Password",
+        "displayName": "Display Name",
+        "loginButton": "Sign In",
+        "registerButton": "Create Account",
+        "continueAsGuest": "Continue as Guest",
+        "loginWithGoogle": "Sign in with Google",
+        "forgotPassword": "Forgot password?",
+        "switchToRegister": "Don't have an account? Sign up",
+        "switchToLogin": "Already have an account? Sign in",
+        "loginSuccess": "Successfully logged in!",
+        "guestEnter": "You entered as a guest",
+        "passwordMismatch": "Passwords do not match",
+        "errors": {
+            "invalidEmail": "Invalid email",
+            "wrongPassword": "Incorrect password",
+            "userNotFound": "User not found"
+        }
     },
     "custom": {
         "title": "Customization",
@@ -203,10 +227,127 @@
         "stones": "Stone Set"
     },
     "lobby": {
+        "title": "Match Lobby",
+        "roomCode": "Room code",
+        "players": "Players",
+        "spectators": "Spectators",
+        "startGame": "Start Game",
         "createRoomTitle": "Create New Room",
         "duel": "1x1 (Duel)",
         "doubles": "2x2 (Doubles)",
         "createLobby": "Create Lobby",
         "back": "Back"
+    },
+    "notifications": {
+        "peeked": "You peeked: {stone}",
+        "dragging": "Dragging {stone}...",
+        "invalid": "Invalid!",
+        "swapped": "Stones swapped!",
+        "selectHiddenChallenge": "Choose a hidden stone to challenge!",
+        "waitOpponent": "Wait for opponent to choose the stone!",
+        "waitTurn": "Wait for your turn",
+        "notYourTurn": "Not your turn!",
+        "stonePlaced": "Stone placed!",
+        "waitCoinFlip": "Wait for Heads or Tails choice!",
+        "themeApplied": "Theme \"{theme}\" applied!",
+        "stoneRevealed": "Stone revealed and points computed!"
+    },
+    "pve": {
+        "botCorrect": "Bot got it right! Point for the Bot.",
+        "botWrong": "Bot got it wrong! Point for you.",
+        "playerCorrect": "You got it right! Point for you.",
+        "playerWrong": "You got it wrong! It was {stone}. Point for the Bot.",
+        "stoneRevealed": "Stone Revealed: {stone}",
+        "botPersonality": "Bot Personality: {name}",
+        "botChallenged": "{actor} challenged stone {target}!",
+        "botPeeked": "Bot peeked at stone at position {position}",
+        "cannotChallengeVisible": "Cannot challenge visible stone"
+    },
+    "victory": {
+        "congratulations": "Congratulations, you won!",
+        "believedMaster": "You believed. The Master scored a point!",
+        "doubtedMaster": "You doubted! The Master will prove...",
+        "masterProved": "Master revealed the stones and got it right! 3 Points for them.",
+        "playerProved": "You proved your knowledge and WON 3 POINTS!",
+        "winner": "WINNER: {name}!",
+        "masterTitle": "Congratulations! You proved to be a Tellstones master.",
+        "playerWon": "{name} scored 1 point!"
+    },
+    "multiplayer": {
+        "playerJoined": "{name} joined as player!",
+        "youWon": "You won!",
+        "youLost": "You lost!",
+        "challengeProcessed": "Challenge result processed!"
+    },
+    "room": {
+        "incorrectPlayers": "Incorrect number of players for selected mode!",
+        "gameStarted": "Game started!",
+        "startError": "Error starting: {error}",
+        "reconnecting": "Reconnecting to previous session..."
+    },
+    "tutorialUI": {
+        "header": "⋮⋮ TUTORIAL ⋮⋮",
+        "waiting": "Waiting for action...",
+        "actionUnavailable": "Action unavailable at this tutorial step.",
+        "testMemory": "Let's test your memory one last time!"
+    },
+    "tutorialSteps": {
+        "step0": {
+            "title": "Welcome to Tellstones",
+            "msg": "Tellstones is a memory and bluffing game. Let's learn the basics in a few steps.",
+            "action": "Click 'Next' to begin."
+        },
+        "step1": {
+            "title": "Placing Stones",
+            "msg": "You and your opponent (Master) take turns placing stones on the table. The center stone (neutral) is already there.",
+            "action": "Drag a stone from your reserve (left) to any empty space on the board."
+        },
+        "step2": {
+            "title": "Hiding Information",
+            "msg": "After all stones are placed (or whenever you want), you can flip a stone face-down to hide it.",
+            "action": "DOUBLE-CLICK the stone you just placed to hide it."
+        },
+        "step3": {
+            "title": "Peeking at Stones (Flip)",
+            "msg": "At any time, you can check a hidden stone (face-down) to remember the symbol. Only you will see it.",
+            "action": "DOUBLE-CLICK a face-down stone to peek at it (it will flip momentarily)."
+        },
+        "step4": {
+            "title": "Swapping Stones",
+            "msg": "You can swap two stones to confuse your opponent.",
+            "action": "Click and drag a stone on the table over another stone to swap their positions."
+        },
+        "step5": {
+            "title": "Challenging the Opponent",
+            "msg": "If you think your opponent doesn't know which stone is which, you can challenge them. They'll have to guess correctly or lose the point.",
+            "action": "Click the 'Challenge' button and prepare to test the Master."
+        },
+        "step6": {
+            "title": "Responding to Challenge",
+            "msg": "Now reverse the roles. The Master will challenge you! You must prove you know which stone it is.",
+            "action": "The Master will challenge you now. Select the correct stone when prompted."
+        },
+        "step7": {
+            "title": "Boasting",
+            "msg": "If you know ALL the hidden stones, you can 'Boast'. This is a risky move to win the game instantly.",
+            "action": "Click the 'Boast' button."
+        },
+        "step8": {
+            "title": "Proving Your Knowledge",
+            "msg": "When you 'Boast', you must reveal ALL hidden stones to prove you know them.",
+            "action": "Click each hidden stone and select the correct name."
+        },
+        "step9": {
+            "title": "Congratulations!",
+            "msg": "You've completed the tutorial! Now you know the basics of Tellstones.",
+            "action": "Click 'Exit' to return to the menu or play against the Bot!"
+        }
+    },
+    "master": {
+        "name": "Master",
+        "challenged": "The Master challenged you!",
+        "boasting": "The Master is boasting!",
+        "doubt": "Master: 'I doubt it! Prove you know all the stones.'",
+        "doubtBoastToo": "Master: 'You know too? I doubt it! Prove it.'"
     }
 }

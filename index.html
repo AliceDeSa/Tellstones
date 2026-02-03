@@ -85,8 +85,28 @@
 
 
 
+
+
+  <!-- Botão de Login/Perfil (Fix Position, toggled via JS) -->
+  <div id="user-profile-container"
+    style="position: fixed; top: 20px; left: 20px; display: flex; align-items: center; gap: 12px; z-index: 1000;">
+    <button id="login-btn"
+      style="padding: 10px 20px; background: rgba(59, 130, 246, 0.8); color: white; border: 2px solid rgba(59, 130, 246, 1); border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+      🔐 Login
+    </button>
+    <div id="user-info"
+      style="display: none; background: rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 8px; color: white; font-size: 14px;">
+      <span id="user-display-name">Convidado</span>
+      <button id="logout-btn"
+        style="margin-left: 12px; padding: 6px 12px; background: rgba(239, 68, 68, 0.8); color: white; border: 1px solid rgba(239, 68, 68, 1); border-radius: 6px; cursor: pointer; font-size: 12px;">
+        Sair
+      </button>
+    </div>
+  </div>
+
   <!-- ================= TELA INICIAL (MAIN MENU) ================= -->
   <div id="start-screen" class="active">
+
     <!-- Título e slogan -->
     <h1>TellStones</h1>
     <h2 id="slogan-main">Memorize. Blefe. Desafie.</h2>
@@ -97,6 +117,8 @@
       <button id="options-btn" data-i18n="menu.options">OPÇÕES</button>
       <button id="customization-btn" data-i18n="menu.customization">PERSONALIZAÇÃO</button>
     </div>
+
+
 
     <!-- Menu Online (Inside start-screen) -->
     <div id="online-menu" style="display:none; flex-direction:column; gap:0px; align-items:center;">
@@ -284,8 +306,12 @@
     </div>
     <!-- ======= BOTÕES DE AÇÕES LATERAIS RESTORED TO GAME ======= -->
     <div id="botoes-acoes-laterais">
-      <button id="btn-desafiar" data-i18n="game.challenge">Desafiar</button>
-      <button id="btn-segabar" data-i18n="game.boast">Se Gabar</button>
+      <button id="btn-desafiar" class="btn-image-action">
+        <img id="btn-desafiar-img" src="./assets/img/ui/btn-desafiar.png" alt="Desafiar">
+      </button>
+      <button id="btn-segabar" class="btn-image-action">
+        <img id="btn-segabar-img" src="./assets/img/ui/btn-Se_Gabar.png" alt="Se Gabar">
+      </button>
     </div>
     <!-- ======= ÍCONE DE AÇÕES ======= -->
     <!-- Ícone de ações removido daqui e movido para o body para corrigir z-index -->
@@ -418,6 +444,7 @@
   <!-- Script principal do jogo -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
   <script type="module" src="dist/src/core/constants.js"></script>
   <!-- Core System (NEW - v6.0) -->
@@ -444,6 +471,13 @@
   <link rel="stylesheet" href="assets/css/customization.css">
   <script type="module" src="dist/src/ui/ThemeManager.js"></script>
   <script type="module" src="dist/src/screens/Customization.js"></script>
+
+  <!-- Authentication & Login (NEW - v6.0 Fase 2.0) -->
+  <link rel="stylesheet" href="css/login.css">
+  <script type="module" src="dist/src/core/AuthManager.js"></script>
+  <script type="module" src="dist/src/screens/LoginScreen.js"></script>
+  <script type="module" src="dist/src/screens/LobbyScreen.js"></script>
+  <script type="module" src="dist/src/integration/LoginIntegration.js"></script>
 
   <!-- Utilities -->
   <script type="module" src="dist/src/utils/Logger.js"></script>

@@ -31,7 +31,7 @@ interface GameState {
     botProfile?: any;
 }
 
-const GameRules = {
+export const GameRules = {
     // Cria o estado inicial do jogo
     createInitialState: function (jogadores: Player[], pedrasOficiais: Stone[]): GameState {
         // Embaralhar as pedras da reserva a cada partida

@@ -375,46 +375,68 @@
 }
 
 /* --- Game Action Buttons (Desafiar/Se Gabar) --- */
-#btn-desafiar,
-#btn-segabar {
-    width: 230px;
-    height: 76px;
-    border: none;
-    outline: none;
-    box-shadow: none;
-    background-color: transparent;
-    background-size: contain;
-    background-position: center;
-    background-repeat: no-repeat;
-    color: transparent !important;
-    text-shadow: none !important;
+/* Fix container alignment */
+#botoes-acoes-laterais {
+    align-items: center !important;
+    justify-content: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 5px !important;
+    /* Override legacy gap */
+    padding: 0 !important;
+    margin: 0 !important;
+    height: auto !important;
+    width: auto !important;
+    background: none !important;
+    /* Ensure no background box */
+}
+
+/* Use high specificity to override legacy #botoes-acoes-laterais button styles */
+#botoes-acoes-laterais #btn-desafiar,
+#botoes-acoes-laterais #btn-segabar {
+    width: auto;
+    height: auto;
+    min-width: 0 !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: none !important;
     cursor: pointer;
     transition: transform 0.2s;
+
+    /* Strict layout to remove ANY extra space around image */
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    line-height: 0 !important;
+    font-size: 0 !important;
+
+    margin: 5px 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+}
+
+#btn-desafiar img,
+#btn-segabar img {
     display: block;
-    margin: 0;
-}
-
-#btn-desafiar {
-    background-image: url('../../img/Desafiar.webp');
-}
-
-#btn-segabar {
-    background-image: url('../../img/Se_Gabar.webp');
+    width: 230px;
+    height: auto;
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
 }
 
 #btn-desafiar:hover,
 #btn-segabar:hover {
-    transform: scale(1.1);
-    filter: none;
-    outline: none;
-    box-shadow: none;
+    transform: scale(1.05);
+}
+
+#btn-desafiar:hover img,
+#btn-segabar:hover img {
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6)) brightness(1.1);
 }
 
 #btn-desafiar:active,
 #btn-segabar:active {
     transform: scale(0.95);
-    filter: none;
-    outline: none;
 }
 
 #back-to-main-btn {

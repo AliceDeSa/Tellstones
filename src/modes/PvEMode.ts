@@ -3,6 +3,7 @@ import { Logger, LogCategory } from "../utils/Logger.js";
 import { PvETurnManager, TurnAction } from "./PvETurnManager.js";
 import { MatchManager, MatchState, ActionType, GameAction } from "../core/MatchManager.js";
 import { ChallengeResolver, ResponseType, ResolverState } from "../core/ChallengeResolver.js";
+import LocaleManager from "../data/LocaleManager.js";
 
 // Garantir que tipos globais sejam reconhecidos ou redeclarados localmente se necessário
 // Assumindo que BotBrain e outros estão globais, referenciados via window
@@ -779,7 +780,7 @@ export class PvEMode extends GameMode {
                         const player = playersList.find((j: any) => j.id === 'p1' || j.nome !== 'Bot');
 
                         if (palpite === correta) {
-                            if ((window as any).notificationManager) (window as any).notificationManager.showInternal("Bot acertou! Ponto para o Bot.");
+                            if ((window as any).notificationManager) (window as any).notificationManager.showInternal(LocaleManager.t('pve.botCorrect'));
                             if ((window as any).audioManager) (window as any).audioManager.playFailure();
                             bot.pontos = (bot.pontos || 0) + 1;
                             vencedor = bot;
@@ -790,7 +791,7 @@ export class PvEMode extends GameMode {
                                 else if ((window as any).notificationManager) (window as any).notificationManager.showInternal(`Bot: "${chat}"`);
                             }, 2000);
                         } else {
-                            if ((window as any).notificationManager) (window as any).notificationManager.showInternal("Bot errou! Ponto para você.");
+                            if ((window as any).notificationManager) (window as any).notificationManager.showInternal(LocaleManager.t('pve.botWrong'));
                             player.pontos = (player.pontos || 0) + 1;
                             vencedor = player;
 
@@ -974,7 +975,7 @@ export class PvEMode extends GameMode {
         estado.mesa[targetIdx].virada = false;
         (window as any).GameController.persistirEstado();
 
-        if ((window as any).notificationManager) (window as any).notificationManager.showInternal(`Pedra Revelada: ${realStone.nome}`);
+        if ((window as any).notificationManager) (window as any).notificationManager.showInternal(LocaleManager.t('pve.stoneRevealed').replace('{stone}', realStone.nome));
 
         setTimeout(() => {
             try {
@@ -988,7 +989,7 @@ export class PvEMode extends GameMode {
 
 
                 if (correct) {
-                    if ((window as any).notificationManager) (window as any).notificationManager.showInternal("Você acertou! Ponto para você.");
+                    if ((window as any).notificationManager) (window as any).notificationManager.showInternal(LocaleManager.t('pve.playerCorrect'));
                     if ((window as any).audioManager) (window as any).audioManager.playSuccess();
                     player.pontos = (player.pontos || 0) + 1;
                     winner = player;
@@ -997,7 +998,7 @@ export class PvEMode extends GameMode {
                     if (chat) setTimeout(() => { if ((window as any).Renderer && (window as any).Renderer.mostrarFalaBot) (window as any).Renderer.mostrarFalaBot(chat); }, 1500);
 
                 } else {
-                    if ((window as any).notificationManager) (window as any).notificationManager.showInternal(`Você errou! Era ${realStone.nome}. Ponto para o Bot.`);
+                    if ((window as any).notificationManager) (window as any).notificationManager.showInternal(LocaleManager.t('pve.playerWrong').replace('{stone}', realStone.nome));
                     if ((window as any).audioManager) (window as any).audioManager.playFailure();
                     bot.pontos = (bot.pontos || 0) + 1;
                     winner = bot;

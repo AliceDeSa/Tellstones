@@ -1,4 +1,6 @@
 
+import LocaleManager from "../data/LocaleManager.js";
+
 export interface TutorialPermissions {
     actions: string[];
 }
@@ -38,9 +40,9 @@ export class TellstonesTutorial {
         this.roteiro = [
             {
                 // 0
-                titulo: "Bem-vindo ao Tellstones",
-                msg: "Tellstones é um jogo de memória e blefe. Vamos aprender o básico em poucos passos.",
-                acao: "Clique em 'Próximo' para começar.",
+                titulo: LocaleManager.t('tutorialSteps.step0.title'),
+                msg: LocaleManager.t('tutorialSteps.step0.msg'),
+                acao: LocaleManager.t('tutorialSteps.step0.action'),
                 setup: () => {
                     this.resetarEstadoParaTutorial();
                 },
@@ -49,9 +51,9 @@ export class TellstonesTutorial {
             },
             {
                 // 1
-                titulo: "Colocando Pedras",
-                msg: "Você e o oponente (Mestre) se revezam colocando pedras na mesa. A pedra central (neutra) já está lá.",
-                acao: "Arraste uma pedra da sua reserva (esquerda) para qualquer espaço vazio no tabuleiro.",
+                titulo: LocaleManager.t('tutorialSteps.step1.title'),
+                msg: LocaleManager.t('tutorialSteps.step1.msg'),
+                acao: LocaleManager.t('tutorialSteps.step1.action'),
                 setup: () => {
                     (window as any).estadoJogo.vez = 1;
                     if ((window as any).GameController)
@@ -69,9 +71,9 @@ export class TellstonesTutorial {
             },
             {
                 // 2
-                titulo: "Escondendo a Informação",
-                msg: "Depois que todas as pedras são colocadas (ou quando você quiser), você pode virar uma pedra para baixo para escondê-la.",
-                acao: "Dê um DUPLO CLIQUE na pedra que você acabou de colocar para escondê-la.",
+                titulo: LocaleManager.t('tutorialSteps.step2.title'),
+                msg: LocaleManager.t('tutorialSteps.step2.msg'),
+                acao: LocaleManager.t('tutorialSteps.step2.action'),
                 setup: () => { },
                 validacao: () => {
                     const mesa = (window as any).estadoJogo.mesa;
@@ -81,9 +83,9 @@ export class TellstonesTutorial {
             },
             {
                 // 3
-                titulo: "Espiando Pedras (Virar)",
-                msg: "A qualquer momento, você pode conferir uma pedra escondida (virada para baixo) para lembrar o símbolo. Só você verá.",
-                acao: "Dê um DUPLO CLIQUE em uma pedra virada para baixo para olhá-la (ela virará momentaneamente).",
+                titulo: LocaleManager.t('tutorialSteps.step3.title'),
+                msg: LocaleManager.t('tutorialSteps.step3.msg'),
+                acao: LocaleManager.t('tutorialSteps.step3.action'),
                 setup: () => {
                     (window as any).estadoJogo.vez = 1;
                     if ((window as any).GameController)
@@ -96,9 +98,9 @@ export class TellstonesTutorial {
             },
             {
                 // 4
-                titulo: "Trocando Pedras",
-                msg: "Você pode trocar duas pedras de lugar para confundir o oponente.",
-                acao: "Clique e arraste uma pedra da mesa sobre outra pedra para trocá-las de posição.",
+                titulo: LocaleManager.t('tutorialSteps.step4.title'),
+                msg: LocaleManager.t('tutorialSteps.step4.msg'),
+                acao: LocaleManager.t('tutorialSteps.step4.action'),
                 setup: () => {
                     (window as any).estadoJogo.vez = 1;
                     // Salva estado inicial da mesa
@@ -117,9 +119,9 @@ export class TellstonesTutorial {
             },
             {
                 // 5
-                titulo: "Desafiando o Oponente",
-                msg: "Se você acha que o oponente não sabe qual pedra é qual, você pode desafiá-lo. Ele terá que acertar ou perderá o ponto.",
-                acao: "Clique no botão 'Desafiar' e se prepare para testar o Mestre.",
+                titulo: LocaleManager.t('tutorialSteps.step5.title'),
+                msg: LocaleManager.t('tutorialSteps.step5.msg'),
+                acao: LocaleManager.t('tutorialSteps.step5.action'),
                 setup: () => {
                     (window as any).estadoJogo.vez = 1;
                     if ((window as any).GameController)
@@ -134,9 +136,9 @@ export class TellstonesTutorial {
             },
             {
                 // 6
-                titulo: "Respondendo ao Desafio",
-                msg: "Agora inverta os papéis. O Mestre vai te desafiar! Você precisa provar que sabe qual é a pedra.",
-                acao: "O Mestre vai te desafiar agora. Selecione a pedra correta quando solicitado.",
+                titulo: LocaleManager.t('tutorialSteps.step6.title'),
+                msg: LocaleManager.t('tutorialSteps.step6.msg'),
+                acao: LocaleManager.t('tutorialSteps.step6.action'),
                 setup: () => {
                     (window as any).tutorialDesafioIniciado = false;
                     const mesa = (window as any).estadoJogo.mesa;
@@ -166,7 +168,7 @@ export class TellstonesTutorial {
                             mesa: mesa
                         });
                         if ((window as any).notificationManager)
-                            (window as any).notificationManager.showGlobal("O Mestre desafiou você!");
+                            (window as any).notificationManager.showGlobal(LocaleManager.t('master.challenged'));
 
                         (window as any).tutorialDesafioIniciado = true;
 
@@ -185,9 +187,9 @@ export class TellstonesTutorial {
             },
             {
                 // 7
-                titulo: "Se Gabar ",
-                msg: "Se você sabe TODAS as pedras viradas, você pode 'Se Gabar'. Isso é um movimento arriscado para ganhar o jogo instantaneamente.",
-                acao: "Clique no botão 'Se Gabar'.",
+                titulo: LocaleManager.t('tutorialSteps.step7.title'),
+                msg: LocaleManager.t('tutorialSteps.step7.msg'),
+                acao: LocaleManager.t('tutorialSteps.step7.action'),
                 setup: () => {
                     (window as any).estadoJogo.mesa.forEach((p: any) => {
                         if (p)
@@ -209,7 +211,7 @@ export class TellstonesTutorial {
                         (window as any).estadoJogo.desafio.jogador !== "Mestre") {
 
                         if ((window as any).notificationManager)
-                            (window as any).notificationManager.showInternal("Mestre: 'Eu duvido! Prove que você sabe todas as pedras.'");
+                            (window as any).notificationManager.showInternal(LocaleManager.t('master.doubt'));
 
                         if (!(window as any).step7BotDoubtsTriggered && (window as any).estadoJogo.desafio.status !== "responder_pecas") {
                             (window as any).step7BotDoubtsTriggered = true;
@@ -233,9 +235,9 @@ export class TellstonesTutorial {
             },
             {
                 // 8
-                titulo: "Defendendo contra 'Se Gabar'",
-                msg: "O Mestre diz que sabe tudo! Ele vai se gabar. Você pode Duvidar (ele tem que provar), Acreditar (ele ganha 1 ponto) ou Se Gabar também.",
-                acao: "Responda ao 'Se Gabar' do Mestre.",
+                titulo: LocaleManager.t('tutorialSteps.step8.title'),
+                msg: LocaleManager.t('tutorialSteps.step8.msg'),
+                acao: LocaleManager.t('tutorialSteps.step8.action'),
                 setup: () => {
                     (window as any).tutorialBoastIniciado = false;
                     let count = (window as any).estadoJogo.mesa.filter((p: any) => p && p.virada).length;
@@ -258,7 +260,7 @@ export class TellstonesTutorial {
                     (window as any).estadoJogo.desafio = novoDesafio;
                     (window as any).estadoJogo.vez = 0;
                     if ((window as any).notificationManager)
-                        (window as any).notificationManager.showGlobal("O Mestre está se gabando!");
+                        (window as any).notificationManager.showGlobal(LocaleManager.t('master.boasting'));
                     (window as any).tutorialBoastIniciado = true;
                     if ((window as any).Renderer)
                         (window as any).Renderer.renderizarOpcoesSegabar();
@@ -301,9 +303,9 @@ export class TellstonesTutorial {
             },
             {
                 // 9
-                titulo: "Provando seu Conhecimento",
-                msg: "Agora é sua vez! O Mestre duvidou de você (ou você escolheu atacar). Prove que você sabe onde estão as pedras.",
-                acao: "Clique nas opções para identificar cada pedra sequencialmente.",
+                titulo: LocaleManager.t('tutorialSteps.step9.title'),
+                msg: LocaleManager.t('tutorialSteps.step9.msg'),
+                acao: LocaleManager.t('tutorialSteps.step9.action'),
                 setup: () => {
                     if (!(window as any).estadoJogo.desafio) {
                         (window as any).estadoJogo.mesa.forEach((p: any) => {
@@ -325,7 +327,7 @@ export class TellstonesTutorial {
                         (window as any).estadoJogo.desafio = desafioFinal;
                         (window as any).estadoJogo.vez = 1;
                         if ((window as any).notificationManager)
-                            (window as any).notificationManager.showInternal("Vamos testar sua memória uma última vez!");
+                            (window as any).notificationManager.showInternal(LocaleManager.t('tutorialUI.testMemory'));
                         if ((window as any).Renderer)
                             (window as any).Renderer.renderizarMesa();
                         if ((window as any).Renderer && (window as any).Renderer.renderizarRespostaSegabar) {
@@ -335,7 +337,7 @@ export class TellstonesTutorial {
                     else {
                         if ((window as any).estadoJogo.desafio.status === "aguardando_resposta") {
                             if ((window as any).notificationManager)
-                                (window as any).notificationManager.showInternal("Mestre: 'Você também sabe? Duvido! Prove.'");
+                                (window as any).notificationManager.showInternal(LocaleManager.t('master.doubtBoastToo'));
                             (window as any).estadoJogo.desafio.status = "responder_pecas";
                             (window as any).estadoJogo.desafio.idxAtual = 0;
                             (window as any).estadoJogo.desafio.respostas = [];
@@ -354,9 +356,9 @@ export class TellstonesTutorial {
             },
             {
                 // 10
-                titulo: "Tutorial Finalizado",
-                msg: "Parabéns! Você completou o tutorial básico.",
-                acao: "Agora você pode jogar partidas completas.",
+                titulo: LocaleManager.t('tutorial.completed'),
+                msg: LocaleManager.t('tutorial.completedMsg'),
+                acao: LocaleManager.t('tutorial.completedAction'),
                 setup: () => { },
                 validacao: () => true,
                 permissoes: { actions: [] }
@@ -374,7 +376,7 @@ export class TellstonesTutorial {
         }
 
         if ((window as any).notificationManager)
-            (window as any).notificationManager.showInternal(`Ação indisponível neste passo do tutorial.`);
+            (window as any).notificationManager.showInternal(LocaleManager.t('tutorialUI.actionUnavailable'));
 
         return false;
     }

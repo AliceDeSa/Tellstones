@@ -14,6 +14,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { Logger, LogCategory } from "../utils/Logger.js";
+import LocaleManager from '../data/LocaleManager.js';
 // ========================================
 // ENUMS E TIPOS
 // ========================================
@@ -442,7 +443,9 @@ export class ChallengeResolver {
             }
             // Mostrar fala do bot
             if ((_c = window.Renderer) === null || _c === void 0 ? void 0 : _c.mostrarFalaBot) {
-                window.Renderer.mostrarFalaBot(`Eu digo que é... ${guess}!`);
+                const stoneName = LocaleManager.t('game.stones.' + guess);
+                const speech = LocaleManager.t('bot.guess').replace('{stone}', stoneName);
+                window.Renderer.mostrarFalaBot(speech);
             }
             yield this.delay(1000);
             // Submeter resposta
@@ -462,10 +465,10 @@ export class ChallengeResolver {
             Logger.ai(`[ChallengeResolver] Bot decidiu: ${decision}`);
             if ((_a = window.Renderer) === null || _a === void 0 ? void 0 : _a.mostrarFalaBot) {
                 if (decision === ResponseType.BELIEVE) {
-                    window.Renderer.mostrarFalaBot("Hmm... eu acredito em você.");
+                    window.Renderer.mostrarFalaBot(LocaleManager.t('bot.believe'));
                 }
                 else {
-                    window.Renderer.mostrarFalaBot("Prove então!");
+                    window.Renderer.mostrarFalaBot(LocaleManager.t('bot.doubt'));
                 }
             }
             yield this.delay(1000);

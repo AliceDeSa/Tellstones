@@ -3,6 +3,7 @@
 // =========================
 
 import { Logger, LogCategory } from "../utils/Logger.js";
+import LocaleManager from "../data/LocaleManager.js";
 
 interface GameControllerInterface {
     inicializarJogo(jogadores: any[]): any;
@@ -205,7 +206,7 @@ const GameController: GameControllerInterface = {
                 telaVitoria.style.display = "flex";
                 if (estado.vencedor === (window as any).nomeAtual) {
                     titulo.innerText = "Vitória!";
-                    msg.innerText = "Parabéns, você venceu!";
+                    msg.innerText = LocaleManager.t('victory.congratulations');
                     if ((window as any).audioManager) (window as any).audioManager.playSuccess();
                 } else {
                     titulo.innerText = "Derrota";
@@ -353,7 +354,7 @@ const GameController: GameControllerInterface = {
             if (idx !== -1) estado.jogadores[idx].pontos++;
 
             if (salaAtual === "MODO_TUTORIAL") {
-                if ((window as any).notificationManager) (window as any).notificationManager.showInternal(`Você acreditou. O Mestre marcou ponto!`);
+                if ((window as any).notificationManager) (window as any).notificationManager.showInternal(LocaleManager.t('victory.believedMaster'));
                 estado.vez = 1;
                 // Force update
                 (window as any).getDBRef("salas/" + salaAtual + "/estadoJogo").update({
@@ -377,7 +378,7 @@ const GameController: GameControllerInterface = {
             estado.desafio = null;
             if ((window as any).estadoJogo) (window as any).estadoJogo.desafio = null;
 
-            if ((window as any).notificationManager) (window as any).notificationManager.showGlobal(`${jogadorDesafio} ganhou 1 ponto!`);
+            if ((window as any).notificationManager) (window as any).notificationManager.showGlobal(LocaleManager.t('victory.playerWon').replace('{name}', jogadorDesafio));
             // FORCE TURN FIX: Do NOT advance turn here. 
             // Initiate Boast (Player) -> Turn passes to Bot (1).
             // Bot Responds (Believes) -> Turn is still (1)? 
@@ -388,10 +389,10 @@ const GameController: GameControllerInterface = {
         // --- DUVIDAR ---
         else if (acao === "duvidar") {
             if (salaAtual === "MODO_TUTORIAL") {
-                if ((window as any).notificationManager) (window as any).notificationManager.showInternal("Você duvidou! O Mestre vai provar...");
+                if ((window as any).notificationManager) (window as any).notificationManager.showInternal(LocaleManager.t('victory.doubtedMaster'));
                 // Simula Mestre provando
                 setTimeout(() => {
-                    if ((window as any).notificationManager) (window as any).notificationManager.showInternal("Mestre revelou as pedras e acertou! 3 Pantos para ele.");
+                    if ((window as any).notificationManager) (window as any).notificationManager.showInternal(LocaleManager.t('victory.masterProved'));
                     const idxBot = estado.jogadores.findIndex((j: any) => j.nome === "Mestre");
                     if (idxBot !== -1) estado.jogadores[idxBot].pontos += 3;
                     estado.vez = 1;
@@ -471,7 +472,7 @@ const GameController: GameControllerInterface = {
         if (!errou) {
             // VENCEU O DESAFIO
             if ((window as any).audioManager) (window as any).audioManager.playSuccess();
-            if ((window as any).notificationManager) (window as any).notificationManager.showGlobal("Você provou seu conhecimento e VENCEU 3 PONTOS!");
+            if ((window as any).notificationManager) (window as any).notificationManager.showGlobal(LocaleManager.t('victory.playerProved'));
 
             // Robust Scoring: Update directly via Firebase Transaction/Update to avoid race
             const boasterName = estado.desafio.jogador;
@@ -586,7 +587,7 @@ const GameController: GameControllerInterface = {
         if ((window as any).audioManager) (window as any).audioManager.playSuccess();
 
         if ((window as any).notificationManager) {
-            (window as any).notificationManager.showGlobal(`VENCEDOR: ${nome}!`, 5000);
+            (window as any).notificationManager.showGlobal(LocaleManager.t('victory.winner').replace('{name}', nome), 5000);
         }
         Logger.game(`[GameController] Vencedor declarado: ${nome}`);
     },
@@ -644,7 +645,7 @@ const GameController: GameControllerInterface = {
 
                 const isMe = (vencedor.id === 'p1' || vencedor.nome === (window as any).nomeAtual);
                 if (msg) msg.innerText = isMe
-                    ? "Parabéns! Você provou ser um mestre do Tellstones."
+                    ? LocaleManager.t('victory.masterTitle')
                     : "Derrota! Mais sorte na próxima vez.";
 
                 // Play Sound
