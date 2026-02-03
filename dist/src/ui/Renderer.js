@@ -1,4 +1,5 @@
 "use strict";
+import LocaleManager from '../data/LocaleManager.js';
 // =========================
 // Renderização e Manipulação de DOM (Renderer)
 // =========================
@@ -181,7 +182,7 @@ const Renderer = {
                         // PEEK (Espiar / Full Logic)
                         // 1. Rich Notification
                         if (window.notificationManager) {
-                            window.notificationManager.showInternal(`Você espiou: ${p.nome} <span style='display:inline-block;width:44px;height:44px;background:#fff;border-radius:50%;vertical-align:middle;margin-left:8px;box-shadow:0 1px 4px #0002;'><img src='${p.url}' alt='${p.nome}' style='width:40px;height:40px;vertical-align:middle;margin:2px;'></span>`);
+                            window.notificationManager.showInternal(`${LocaleManager.t('notifications.peeked').replace('{stone}', p.nome)} <span style='display:inline-block;width:44px;height:44px;background:#fff;border-radius:50%;vertical-align:middle;margin-left:8px;box-shadow:0 1px 4px #0002;'><img src='${p.url}' alt='${p.nome}' style='width:40px;height:40px;vertical-align:middle;margin:2px;'></span>`);
                         }
                         // 2. Notify others (Public Log)
                         if (window.getDBRef && window.salaAtual && window.nomeAtual) {
@@ -231,7 +232,7 @@ const Renderer = {
                         e.dataTransfer.effectAllowed = "move";
                         div.style.opacity = "0.5";
                         if (window.notificationManager)
-                            window.notificationManager.showInternal(`Arrastando ${p.nome}...`);
+                            window.notificationManager.showInternal(LocaleManager.t('notifications.dragging').replace('{stone}', p.nome));
                     }
                 };
                 div.ondragend = () => {
@@ -257,7 +258,7 @@ const Renderer = {
                         // Check if valid start stone exists
                         if (!window.estadoJogo.mesa[fromIdx]) {
                             if (window.notificationManager)
-                                window.notificationManager.showInternal("Inválido!");
+                                window.notificationManager.showInternal(LocaleManager.t('notifications.invalid'));
                             return;
                         }
                         // Use GameController to trigger swap via 'trocaAnimacao' (Legacy Pattern)
@@ -293,7 +294,7 @@ const Renderer = {
                             }
                         }
                         if (window.notificationManager)
-                            window.notificationManager.showInternal("Pedras trocadas!");
+                            window.notificationManager.showInternal(LocaleManager.t('notifications.swapped'));
                         // Tutorial Trigger (Swap Action)
                         if (window.tellstonesTutorial)
                             window.tellstonesTutorial.registrarAcaoConcluida();
@@ -302,7 +303,7 @@ const Renderer = {
             }
             else {
                 div.style.cursor = "not-allowed";
-                div.title = "Aguarde sua vez";
+                div.title = LocaleManager.t('notifications.waitTurn');
             }
             // Click Handler for Challenge (Special Case)
             div.onclick = function (e) {
@@ -310,12 +311,12 @@ const Renderer = {
                     e.stopPropagation();
                     if (!p.virada) {
                         if (window.notificationManager)
-                            window.notificationManager.showInternal("Escolha uma pedra virada para desafiar!");
+                            window.notificationManager.showInternal(LocaleManager.t('notifications.selectHiddenChallenge'));
                         return;
                     }
                     // Notify User
                     if (window.notificationManager)
-                        window.notificationManager.showInternal("Aguarde o oponente escolher a pedra!");
+                        window.notificationManager.showInternal(LocaleManager.t('notifications.waitOpponent'));
                     // Visual Feedback
                     // if (window.adicionarSilhuetaEspiada) window.adicionarSilhuetaEspiada(i);
                     // Update State
@@ -349,10 +350,10 @@ const Renderer = {
             };
             // Tooltip
             if (p.virada) {
-                div.onmouseenter = (e) => window.showTooltip("Pedra Escondida", e.clientX, e.clientY);
+                div.onmouseenter = (e) => window.showTooltip(LocaleManager.t('game.tooltips.hiddenStone'), e.clientX, e.clientY);
             }
             else {
-                div.onmouseenter = (e) => window.showTooltip(p.nome, e.clientX, e.clientY);
+                div.onmouseenter = (e) => window.showTooltip(LocaleManager.t('game.stones.' + p.nome), e.clientX, e.clientY);
             }
             div.onmouseleave = window.hideTooltip;
             wrapper.appendChild(div);
@@ -525,8 +526,8 @@ const Renderer = {
             // Shared Logic
             div.innerHTML = `<img src="${this._fixAssetPath(p.url)}" alt="${p.nome}" draggable="false">`;
             div.setAttribute("data-idx", i.toString());
-            div.onmouseenter = function (e) { window.showTooltip("Arraste para o Tabuleiro", e.clientX, e.clientY); };
-            div.onmousemove = function (e) { window.showTooltip("Arraste para o Tabuleiro", e.clientX, e.clientY); };
+            div.onmouseenter = function (e) { window.showTooltip(LocaleManager.t('game.tooltips.dragToTable'), e.clientX, e.clientY); };
+            div.onmousemove = function (e) { window.showTooltip(LocaleManager.t('game.tooltips.dragToTable'), e.clientX, e.clientY); };
             div.onmouseleave = window.hideTooltip;
             div.onmouseout = window.hideTooltip;
             circle.appendChild(div);
@@ -561,7 +562,7 @@ const Renderer = {
             central.innerHTML = `<img src="${pedraCentral.url}" alt="${pedraCentral.nome}" draggable="false">`;
             central.onmousedown = null;
             central.style.cursor = "not-allowed";
-            central.title = "Aguarde o alinhamento";
+            central.title = LocaleManager.t('game.tooltips.waitAlignment');
             circle.appendChild(central);
         }
     },
@@ -617,8 +618,8 @@ const Renderer = {
             if (!(window.estadoJogo.alinhamentoFeito && window.ehMinhaVez())) {
                 div.style.cursor = "not-allowed";
                 div.title = window.estadoJogo.alinhamentoFeito
-                    ? "Aguarde sua vez"
-                    : "Aguarde o alinhamento";
+                    ? LocaleManager.t('game.tooltips.waitTurn')
+                    : LocaleManager.t('game.tooltips.waitAlignment');
                 div.onmousedown = null;
                 div.ontouchstart = null;
             }
@@ -628,8 +629,8 @@ const Renderer = {
             }
             // Tooltip handler
             if (!div.title) {
-                div.onmouseenter = function (e) { window.showTooltip(p.nome, e.clientX, e.clientY); };
-                div.onmousemove = function (e) { window.showTooltip(p.nome, e.clientX, e.clientY); };
+                div.onmouseenter = function (e) { window.showTooltip(LocaleManager.t('game.stones.' + p.nome), e.clientX, e.clientY); };
+                div.onmousemove = function (e) { window.showTooltip(LocaleManager.t('game.stones.' + p.nome), e.clientX, e.clientY); };
                 div.onmouseleave = window.hideTooltip;
                 div.onmouseout = window.hideTooltip;
             }
@@ -1097,7 +1098,7 @@ const Renderer = {
         box.className = "box-desafio";
         const titulo = document.createElement("div");
         titulo.className = "titulo-desafio";
-        titulo.innerText = "Adivinhe a peça do desafio!";
+        titulo.innerText = LocaleManager.t('game.guessChallengeTitle');
         box.appendChild(titulo);
         const linha = document.createElement("div");
         linha.className = "linha-pedras";
@@ -1163,15 +1164,15 @@ const Renderer = {
         box.style.justifyContent = "center";
         box.style.alignItems = "center";
         box.style.gap = "18px";
-        const btnAcreditar = this.criarBotaoAcao("Acreditar", () => {
+        const btnAcreditar = this.criarBotaoAcao(LocaleManager.t('game.actions.believe'), () => {
             if (window.GameController)
                 window.GameController.responderSegabar("acreditar");
         });
-        const btnDuvidar = this.criarBotaoAcao("Duvidar", () => {
+        const btnDuvidar = this.criarBotaoAcao(LocaleManager.t('game.actions.doubt'), () => {
             if (window.GameController)
                 window.GameController.responderSegabar("duvidar");
         });
-        const btnSegabarTambem = this.criarBotaoAcao("Se Gabar Também", () => {
+        const btnSegabarTambem = this.criarBotaoAcao(LocaleManager.t('game.actions.boastToo'), () => {
             if (window.GameController)
                 window.GameController.responderSegabar("segabar_tambem");
         });
@@ -1246,7 +1247,7 @@ const Renderer = {
         const currentIdx = estadoJogo.desafio.idxAtual || 0;
         const titulo = document.createElement("div");
         titulo.className = "titulo-desafio";
-        titulo.innerText = `Prove! Qual é a ${currentIdx + 1}ª pedra virada (da esquerda para a direita)?`;
+        titulo.innerText = LocaleManager.t('game.proveTitle').replace('{ordinal}', (currentIdx + 1).toString());
         box.appendChild(titulo);
         const linha = document.createElement("div");
         linha.className = "linha-pedras";

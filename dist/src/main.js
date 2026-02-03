@@ -5,6 +5,7 @@
 // Imports
 import { safeStorage } from "./utils/utils.js";
 import { CoinFlip } from "./ui/CoinFlip.js";
+import LocaleManager from './data/LocaleManager.js';
 // Global Error Handler
 window.onerror = function (message, source, lineno, colno, error) {
     if (window.AnalyticsManager) {
@@ -407,21 +408,41 @@ document.addEventListener("DOMContentLoaded", function () {
         btnTutorial.onclick = function () {
             window.tocarSomPress();
             console.log("[Menu] Iniciando Tutorial...");
-            // Use ScreenManager to switch UI to Game Screen (Clean up Menu)
-            if (window.ScreenManager) {
-                window.ScreenManager.navigateTo('game');
+            try {
+                // 1. Force UI Cleanup (Manual Fallback)
+                const gameModes = document.getElementById("game-modes-screen");
+                if (gameModes)
+                    gameModes.style.display = "none";
+                const startScreen = document.getElementById("start-screen");
+                if (startScreen)
+                    startScreen.classList.remove("active");
+                // 2. Use ScreenManager to switch UI
+                if (window.ScreenManager) {
+                    window.ScreenManager.navigateTo('game');
+                }
+                else {
+                    if (window.mostrarTela)
+                        window.mostrarTela("game");
+                }
+                // 3. Start Tutorial Mode
+                if (window.TutorialMode) {
+                    // Check if cleaning up previous mode is needed
+                    if (window.currentGameMode && window.currentGameMode.cleanup) {
+                        window.currentGameMode.cleanup();
+                    }
+                    window.currentGameMode = new window.TutorialMode();
+                    window.currentGameMode.start({ roomCode: "MODO_TUTORIAL" });
+                    console.log("[Menu] TutorialMode iniciado com sucesso.");
+                }
+                else {
+                    console.error("[Menu] TutorialMode não encontrado! Verifique se TutorialMode.js foi carregado.");
+                    alert("Erro ao iniciar tutorial: Componente não carregado.");
+                }
             }
-            // Setup Tutorial Mode
-            if (window.TutorialMode) {
-                window.currentGameMode = new window.TutorialMode();
-                window.currentGameMode.start({ roomCode: "MODO_TUTORIAL" });
+            catch (err) {
+                console.error("[Menu] Erro fatal ao iniciar tutorial:", err);
+                alert("Ocorreu um erro ao iniciar o tutorial. Verifique o console.");
             }
-            else {
-                console.error("TutorialMode not loaded!");
-            }
-            // Initial Screen Setup (Force if ScreenManager failed or needed extra setup)
-            if (window.mostrarTela && !window.ScreenManager)
-                window.mostrarTela("game");
         };
     }
     // PvE Button
@@ -587,7 +608,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnDesafiar) {
         btnDesafiar.onclick = function () {
             if (window.ehMinhaVez && !window.ehMinhaVez()) {
-                window.showToastInterno("Não é sua vez!");
+                window.showToastInterno(LocaleManager.t('notifications.notYourTurn'));
                 return;
             }
             // Check GameMode permissions if applicable
@@ -597,7 +618,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (window.tocarSomClick)
                 window.tocarSomClick();
             window.selecionandoDesafio = true;
-            window.showToastInterno("Selecione uma pedra virada para desafiar.");
+            window.showToastInterno(LocaleManager.t('game.selectStoneChallenge'));
             // Tutorial Trigger (Button Click Only)
             if (window.tellstonesTutorial)
                 window.tellstonesTutorial.registrarAcaoConcluida();
@@ -607,7 +628,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnSeGabar) {
         btnSeGabar.onclick = function () {
             if (window.ehMinhaVez && !window.ehMinhaVez()) {
-                window.showToastInterno("Não é sua vez!");
+                window.showToastInterno(LocaleManager.t('notifications.notYourTurn'));
                 return;
             }
             if (window.currentGameMode && !window.currentGameMode.canPerformAction("BOTAO_SE_GABAR")) {
@@ -768,6 +789,20 @@ document.addEventListener("DOMContentLoaded", function () {
                     el.placeholder = LocaleManager.t(key);
                 }
             });
+            // Update localized images for Challenge/Boast buttons
+            const currentLocale = LocaleManager.getCurrentLocale();
+            const btnDesafiarImg = document.getElementById('btn-desafiar-img');
+            const btnSegabarImg = document.getElementById('btn-segabar-img');
+            if (btnDesafiarImg) {
+                btnDesafiarImg.src = currentLocale === 'pt-BR'
+                    ? './assets/img/ui/btn-desafiar.png'
+                    : './assets/img/ui/btn-challenge.png';
+            }
+            if (btnSegabarImg) {
+                btnSegabarImg.src = currentLocale === 'pt-BR'
+                    ? './assets/img/ui/btn-Se_Gabar.png'
+                    : './assets/img/ui/btn-Boast.png';
+            }
             console.log('[Main] HTML translations updated');
         }).catch(err => {
             console.error('[Main] Failed to update HTML translations:', err);

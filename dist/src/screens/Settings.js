@@ -14,7 +14,6 @@ import { EventBus } from '../core/EventBus.js';
 import { EventType } from '../core/types/Events.js';
 import { Logger, LogCategory } from '../utils/Logger.js';
 import { GameStateManager } from '../state/GameStateManager.js';
-import { Button } from '../ui/components/Button.js';
 import { Slider } from '../ui/components/Slider.js';
 import LocaleManager from '../data/LocaleManager.js';
 export class Settings {
@@ -24,9 +23,6 @@ export class Settings {
         // Componentes de configuração
         this.musicSlider = null;
         this.sfxSlider = null;
-        // Botões para atualizar traduções
-        this.resetBtn = null;
-        this.saveBtn = null;
         // Armazenar última posição válida para restaurar
         this.lastMusicVol = 80;
         this.lastSfxVol = 100;
@@ -40,29 +36,27 @@ export class Settings {
             // Atualizar traduções assim que o container for criado
             setTimeout(() => this.updateTranslations(), 100);
             // Listener para Mute Externo (ex: Botão Global)
-            if (window.EventBus) {
-                window.EventBus.on('AUDIO:MUTE:CHANGED', (data) => {
-                    // Apenas Música deve ser afetada pelo Mute Global
-                    if (data.isMuted) {
-                        // Salvar antes de zerar
-                        if (this.musicSlider)
-                            this.lastMusicVol = this.musicSlider.getValue() || 50;
-                        // Zerar visualmente apenas a música
-                        if (this.musicSlider)
-                            this.musicSlider.setValue(0);
+            EventBus.on(EventType.AUDIO_MUTE_CHANGED, (data) => {
+                // Apenas Música deve ser afetada pelo Mute Global
+                if (data.isMuted) {
+                    // Salvar antes de zerar
+                    if (this.musicSlider)
+                        this.lastMusicVol = this.musicSlider.getValue() || 50;
+                    // Zerar visualmente apenas a música
+                    if (this.musicSlider)
+                        this.musicSlider.setValue(0);
+                }
+                else {
+                    // Restaurar apenas música
+                    if (this.musicSlider && this.musicSlider.getValue() === 0) {
+                        this.musicSlider.setValue(this.lastMusicVol);
                     }
-                    else {
-                        // Restaurar apenas música
-                        if (this.musicSlider && this.musicSlider.getValue() === 0) {
-                            this.musicSlider.setValue(this.lastMusicVol);
-                        }
-                    }
-                });
-                // Listener para mudança de idioma
-                window.EventBus.on('LOCALE:CHANGE', () => {
-                    this.updateTranslations();
-                });
-            }
+                }
+            });
+            // Listener para mudança de idioma
+            EventBus.on(EventType.LANGUAGE_CHANGE, () => {
+                this.updateTranslations();
+            });
             Logger.info(LogCategory.UI, '[Settings] Tela de configurações inicializada');
         });
     }
@@ -98,22 +92,6 @@ export class Settings {
         const audioContent = this.createAudioControls();
         body.appendChild(audioContent);
         panelWrapper.appendChild(body);
-        // Footer com botões
-        const footer = document.createElement('div');
-        footer.className = 'ui-screen__footer';
-        this.resetBtn = new Button({
-            text: LocaleManager.t('settings.reset'),
-            variant: 'secondary',
-            onClick: () => this.resetSettings()
-        });
-        footer.appendChild(this.resetBtn.getElement());
-        this.saveBtn = new Button({
-            text: LocaleManager.t('settings.save'),
-            variant: 'primary',
-            onClick: () => this.saveSettings()
-        });
-        footer.appendChild(this.saveBtn.getElement());
-        panelWrapper.appendChild(footer);
         // Adicionar ao DOM
         document.body.appendChild(this.container);
     }
@@ -369,63 +347,38 @@ export class Settings {
     }
     setMusicVolume(value) {
         this.checkUnmuteIfSliderMoved(value);
-        if (window.audioManager) {
-            window.audioManager.setMusicVolume(value / 100);
-        }
+        // Emitir evento para AudioManager
+        EventBus.emit(EventType.AUDIO_MUSIC_VOLUME, { volume: value / 100 });
         Logger.info(LogCategory.UI, `[Settings] Volume música: ${value}%`);
+        this.autoSaveSettings();
     }
     setSfxVolume(value) {
         this.checkUnmuteIfSliderMoved(value);
-        if (window.audioManager) {
-            window.audioManager.setSfxVolume(value / 100);
-        }
+        // Emitir evento para AudioManager
+        EventBus.emit(EventType.AUDIO_SFX_VOLUME, { volume: value / 100 });
         Logger.info(LogCategory.UI, `[Settings] Volume efeitos: ${value}%`);
+        this.autoSaveSettings();
     }
     // Helper para desmutar se usuário mexer no slider
     checkUnmuteIfSliderMoved(value) {
         if (value > 0 && window.isMuted) {
-            if (window.EventBus) {
-                window.EventBus.emit('AUDIO:MUTE:CHANGED', { isMuted: false });
-            }
+            EventBus.emit(EventType.AUDIO_MUTE_CHANGED, { isMuted: false });
         }
     }
-    saveSettings() {
+    autoSaveSettings() {
         var _a, _b, _c, _d;
         const settings = {
             musicVolume: (_b = (_a = this.musicSlider) === null || _a === void 0 ? void 0 : _a.getValue()) !== null && _b !== void 0 ? _b : 80,
             sfxVolume: (_d = (_c = this.sfxSlider) === null || _c === void 0 ? void 0 : _c.getValue()) !== null && _d !== void 0 ? _d : 100
         };
         GameStateManager.saveSettings(settings);
-        Logger.info(LogCategory.UI, '[Settings] Configurações salvas', settings);
-        // Feedback visual
-        const feedback = document.createElement('div');
-        feedback.className = 'toast show';
-        feedback.innerText = LocaleManager.t('settings.saved');
-        document.body.appendChild(feedback);
-        setTimeout(() => feedback.remove(), 2000);
-    }
-    resetSettings() {
-        var _a, _b;
-        // Valores padrão
-        (_a = this.musicSlider) === null || _a === void 0 ? void 0 : _a.setValue(80);
-        (_b = this.sfxSlider) === null || _b === void 0 ? void 0 : _b.setValue(100);
-        // Aplicar
-        this.setMusicVolume(80);
-        this.setSfxVolume(100);
-        Logger.info(LogCategory.UI, '[Settings] Configurações resetadas para padrão');
+        Logger.info(LogCategory.UI, '[Settings] Auto-saved', settings);
     }
     goBack() {
         EventBus.emit(EventType.SCREEN_CHANGE, { from: 'settings', to: 'main-menu' });
     }
     updateTranslations() {
         console.log('[Settings] Atualizando traduções...');
-        // Atualizar botões
-        if (this.resetBtn) {
-            this.resetBtn.setText(LocaleManager.t('settings.reset'));
-        }
-        if (this.saveBtn) {
-            this.saveBtn.setText(LocaleManager.t('settings.save'));
-        }
         // Atualizar sliders usando o método setLabel
         if (this.musicSlider) {
             this.musicSlider.setLabel(LocaleManager.t('settings.music'));

@@ -2,6 +2,15 @@
 const ChangelogManager = {
     data: [
         {
+            version: "v6.0.0 - Auth & Security Architecture",
+            changes: [
+                "<strong>Firebase Auth:</strong> Login via Google, Email/Senha e Convidado.",
+                "<strong>UI Revamp:</strong> Novo modal de login compacto e responsivo.",
+                "<strong>Security:</strong> Correção de restrições de API e arquitetura segura.",
+                "<strong>UX Polish:</strong> Auto-dismiss no login e fluxos de recuperação de senha."
+            ]
+        },
+        {
             version: "v5.4.1 - UI Polish & Theme Architecture",
             changes: [
                 "<strong>Theme Engine:</strong> Injeção dinâmica de assets de UI (Hot-Swap sem reload).",
@@ -25,6 +34,30 @@ const ChangelogManager = {
                 "<strong>Strict Safety:</strong> Compilação estrita eliminando erros de runtime (Null Checks).",
                 "<strong>Type Contracts:</strong> Formalização de interfaces Cliente-Servidor.",
                 "<strong>Automator:</strong> Ferramenta de stress-test para validação de lógica."
+            ]
+        },
+        {
+            version: "v5.3.5 - Tavern Expansion",
+            changes: [
+                "<strong>Tavern Upgrade:</strong> Pôsteres interativos (Drag & Drop) e expansão de mundo.",
+                "<strong>Procedural Decor:</strong> Povoamento aleatório de 30+ itens no cenário.",
+                "<strong>Interactive:</strong> Zoom e Pan interativo no menu de opções."
+            ]
+        },
+        {
+            version: "v5.3.0 - Navigation & Lobby Update",
+            changes: [
+                "<strong>GameModesScreen:</strong> Nova tela seletora de modos de jogo.",
+                "<strong>Lobby System:</strong> Interface dedicada para salas online e nickname sync.",
+                "<strong>Nav Refactor:</strong> Simplificação do MainMenu e centralização no ScreenManager."
+            ]
+        },
+        {
+            version: "v5.2.0 - Global Localization (I18n)",
+            changes: [
+                "<strong>Locale Engine:</strong> Suporte multi-idioma (PT-BR / EN-US) via JSON.",
+                "<strong>Hot-Swap:</strong> Troca instantânea de idioma sem reload.",
+                "<strong>Smart Fallback:</strong> Prevenção de chaves ausentes com default locale."
             ]
         },
         {

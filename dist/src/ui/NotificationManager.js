@@ -1,4 +1,5 @@
-"use strict";
+import { EventBus } from '../core/EventBus.js';
+import { EventType } from '../core/types/Events.js';
 class NotificationManager {
     constructor() {
         this.globalToast = document.getElementById("toast");
@@ -9,6 +10,25 @@ class NotificationManager {
         };
         this.queue = [];
         this.isShowingInternal = false;
+        // Register EventBus listeners
+        this.registerEventListeners();
+    }
+    /**
+     * Registra listeners do EventBus para controle remoto de notificações
+     */
+    registerEventListeners() {
+        EventBus.on(EventType.NOTIFICATION_SHOW, (data) => {
+            const { message, type } = data;
+            // Usar showGlobal para notificações importantes (error, warning)
+            // Usar showInternal para info/success
+            if (type === 'error' || type === 'warning') {
+                this.showGlobal(message, 4000);
+            }
+            else {
+                this.showInternal(message, 2500);
+            }
+        });
+        console.log("[NotificationManager] EventBus listeners registrados");
     }
     /**
      * Exibe um toast global (centralizado/topo) para mensagens importantes de sistema.

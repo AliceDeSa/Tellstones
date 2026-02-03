@@ -19,11 +19,9 @@ export class Customization {
         this.themeManager = ThemeManager.getInstance();
 
         // Listener para mudança de idioma
-        if ((window as any).EventBus) {
-            (window as any).EventBus.on('LOCALE:CHANGE', () => {
-                this.updateTranslations();
-            });
-        }
+        EventBus.on(EventType.LANGUAGE_CHANGE, () => {
+            this.updateTranslations();
+        });
     }
 
     /**
@@ -200,10 +198,8 @@ export class Customization {
     private async selectTheme(themeId: string): Promise<void> {
         console.log('[Customization] Selecionando tema:', themeId);
 
-        // Som de click
-        if ((window as any).audioManager) {
-            (window as any).audioManager.playClick();
-        }
+        // Som de click via EventBus
+        EventBus.emit(EventType.AUDIO_PLAY_CLICK, {});
 
         // Aplicar tema via ThemeManager
         await this.themeManager.loadTheme(themeId);
@@ -211,12 +207,13 @@ export class Customization {
         // Atualizar UI (remover active de todos, adicionar ao selecionado)
         this.refreshThemeGrid();
 
-        // Feedback visual
+        // Feedback visual via EventBus
         const theme = this.themeManager.getThemeById(themeId);
         if (theme) {
-            if ((window as any).notificationManager) {
-                (window as any).notificationManager.showGlobal(`Tema "${theme.name}" aplicado!`);
-            }
+            EventBus.emit(EventType.NOTIFICATION_SHOW, {
+                message: `Tema "${theme.name}" aplicado!`,
+                type: 'success'
+            });
         }
     }
 
@@ -231,9 +228,8 @@ export class Customization {
         this.backBtn.setAttribute('data-i18n', 'common.back');
 
         this.backBtn.onclick = () => {
-            if ((window as any).audioManager) {
-                (window as any).audioManager.playClick();
-            }
+            // Som de click via EventBus
+            EventBus.emit(EventType.AUDIO_PLAY_CLICK, {});
 
             // Voltar ao menu principal via EventBus
             EventBus.emit(EventType.SCREEN_CHANGE, { from: 'customization', to: 'main-menu' });
@@ -278,12 +274,26 @@ export class Customization {
     }
 
     /**
-     * Limpa a tela
+     * Método update da interface Screen (não usado nesta tela)
      */
-    cleanup(): void {
+    update(): void {
+        // Customization é uma tela estática, sem necessidade de update
+    }
+
+    /**
+     * Método destroy da interface Screen
+     */
+    destroy(): void {
         this.container?.remove();
         this.container = null;
-        console.log('[Customization] Tela limpa');
+        console.log('[Customization] Tela destruída');
+    }
+
+    /**
+     * Limpa a tela (alias para destroy, mantido para compatibilidade)
+     */
+    cleanup(): void {
+        this.destroy();
     }
 }
 

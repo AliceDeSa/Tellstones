@@ -3,6 +3,8 @@
  * Parte da v6.0: UI modularizada e separada da lógica
  */
 
+import LocaleManager from "../data/LocaleManager.js";
+
 export interface TutorialUIConfig {
     position?: { top: string; right: string };
     theme?: 'default' | 'dark' | 'premium';
@@ -49,7 +51,7 @@ export class TutorialUI {
         // Handle (barra de arrastar)
         const handle = document.createElement('div');
         handle.className = 'tutorial-handle';
-        handle.innerHTML = '⋮⋮ TUTORIAL ⋮⋮';
+        handle.innerHTML = LocaleManager.t('tutorialUI.header');
         this.overlay.appendChild(handle);
 
         // Container de texto
@@ -133,12 +135,12 @@ export class TutorialUI {
         if (enabled) {
             this.btnNext.classList.remove('disabled');
             this.btnNext.disabled = false;
-            this.btnNext.innerHTML = 'Próximo >>';
+            this.btnNext.innerText = LocaleManager.t('tutorial.nextButton');
             this.pulse();
         } else {
             this.btnNext.classList.add('disabled');
             this.btnNext.disabled = true;
-            this.btnNext.innerHTML = 'Aguardando ação...';
+            this.btnNext.innerHTML = LocaleManager.t('tutorialUI.waiting');
         }
     }
 

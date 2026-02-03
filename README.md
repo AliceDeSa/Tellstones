@@ -1,6 +1,6 @@
-# Tellstones: King's Gambit - Online Edition (v5.4.1 - UI Polish)
+# Tellstones: King's Gambit - Online Edition (v6.0.0 - Auth Update)
 [![Status](https://img.shields.io/badge/Status-Active-success.svg)]()
-[![Version](https://img.shields.io/badge/Version-5.4.1-blue.svg)]()
+[![Version](https://img.shields.io/badge/Version-6.0.0-blue.svg)]()
 [![License](https://img.shields.io/badge/License-Fan_Project-purple.svg)]()
 [![PWA](https://img.shields.io/badge/PWA-Supported-orange.svg)]()
 
@@ -59,10 +59,21 @@ Personalize a experiência visual do jogo.
 -   **Hot-Swap**: Troca de tema em tempo real sem recarregar a página.
 -   **Extensível**: Arquitetura preparada para futuros temas (CyberPunk, Coliseum, Arcane).
 
+### 🌎 Internacionalização (I18n)
+-   **Multi-Idioma**: Suporte nativo para Português (PT-BR) e Inglês (EN-US).
+-   **Detecção Automática**: Carrega preferências salvas do usuário.
+-   **Extensível**: Baseado em arquivos JSON, facilitando adição de novos idiomas.
+
 ### 📱 Progressive Web App (PWA)
 -   **Instalável**: Pode ser instalado como App no Android/iOS/Desktop.
 -   **Offline First**: Assets cacheados via Service Worker para carregamento instantâneo.
 -   **Mobile First**: Design responsivo com suporte a rotação e toque otimizado.
+
+### 🔐 Sistema de Login Seguro
+-   **Multi-Provider**: Suporte para conta Google, Email/Senha e Acesso Anônimo.
+-   **Security**: Implementação robusta com Firebase Auth e validação de sessão em tempo real.
+-   **UI Moderna**: Interface de login redesenhada com Glassmorphism e fluxo não intrusivo.
+-   **Persistência**: Mantém o usuário logado entre sessões e recarregamentos.
 
 ### 🎓 Modo Tutorial
 -   Um guia interativo passo-a-passo que ensina as regras jogando.
@@ -88,6 +99,7 @@ O projeto foi construído com foco em **TypeScript** e **Vanilla JS** para máxi
     -   Async/Await para operações de rede.
 
 ### Backend & Serviços
+-   **Firebase Auth**: Gerenciamento de identidade, sessões seguras e oAuth (Google).
 -   **Firebase Realtime Database**: Gerenciamento de estado de jogo (Salas, Jogadores, Movimentos).
 -   **Google Analytics 4**: Telemetria para balanceamento de jogo (Vitórias do Bot vs Jogador).
 -   **Service Workers**: Cache strategy (Stale-While-Revalidate) para PWA.
@@ -162,7 +174,15 @@ assets/                 # Recursos Estáticos
 
 ## 📅 Histórico de Atualizações (Changelog)
 
-### v5.4.1 - UI Polish & Theme System (Atual)
+## 📅 Histórico de Atualizações (Changelog)
+
+### v6.0.0 - Authentication & Security Architecture (Atual)
+-   **Firebase Auth**: Integração completa com Google, Email e Guest Login.
+-   **UI Revamp**: Novo modal de login compacto (Glassmorphism) e responsivo.
+-   **Security**: Correção de políticas CORS e restrições de API Key.
+-   **UX Polish**: Autofechamento de modal, fluxos de recuperação de senha e melhorias de z-index.
+
+### v5.4.1 - UI Polish & Theme System
 -   **Refinamento UI**: Correção de alinhamento do GameModes, slogan unificado, emojis removidos.
 -   **Menu Online**: Navegação corrigida, seleção Jogador/Espectador restaurada, nickname sync.
 -   **Sistema de Temas**: Suporte para `optionsPanel` personalizado, cada tema com painel de opções único.

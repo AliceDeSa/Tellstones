@@ -46,6 +46,12 @@ export class MainMenu implements Screen {
                 mainMenuBtns.style.display = 'flex';
             }
 
+            // Mostrar botão de login (Corrigido v6.0.0)
+            const loginContainer = document.getElementById('user-profile-container');
+            if (loginContainer) {
+                loginContainer.style.display = 'flex';
+            }
+
             Logger.info(LogCategory.UI, '[MainMenu] Tela exibida');
         }
     }
@@ -53,6 +59,11 @@ export class MainMenu implements Screen {
     hide(): void {
         if (this.container) {
             this.container.style.display = 'none';
+            // Esconder botão de login
+            const loginContainer = document.getElementById('user-profile-container');
+            if (loginContainer) {
+                loginContainer.style.display = 'none';
+            }
             Logger.info(LogCategory.UI, '[MainMenu] Tela escondida');
         }
     }

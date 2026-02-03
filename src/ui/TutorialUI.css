@@ -10,12 +10,12 @@
   --tutorial-bg-end: rgba(30, 35, 45, 0.98);
   --tutorial-border: #4caf50;
   --tutorial-glow: 0 0 20px rgba(76, 175, 80, 0.3);
-  
+
   /* Cores de texto */
   --tutorial-title-color: #4caf50;
   --tutorial-text-color: #ffffff;
   --tutorial-action-color: #8ecfff;
-  
+
   /* Botão */
   --tutorial-btn-bg: #4caf50;
   --tutorial-btn-hover: #66bb6a;
@@ -32,17 +32,17 @@
   padding: 15px;
   color: var(--tutorial-text-color);
   z-index: 100000;
-  
+
   /* Sombras e efeitos */
-  box-shadow: 
+  box-shadow:
     0 4px 25px rgba(0, 0, 0, 0.7),
     var(--tutorial-glow);
   backdrop-filter: blur(10px);
-  
+
   display: flex;
   flex-direction: column;
   gap: 8px;
-  
+
   /* Animação de entrada */
   animation: tutorial-fade-in 0.5s ease-out;
 }
@@ -55,11 +55,9 @@
   left: 0;
   right: 0;
   height: 40%;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.05),
-    transparent
-  );
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.05),
+      transparent);
   border-radius: 12px 12px 0 0;
   pointer-events: none;
 }
@@ -124,7 +122,7 @@
   font-size: 14px;
   font-weight: 600;
   transition: all 0.3s ease;
-  
+
   /* Sombra sutil */
   box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
 }
@@ -166,6 +164,7 @@
     opacity: 0;
     transform: translateY(-20px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -178,6 +177,7 @@
     opacity: 1;
     transform: scale(1);
   }
+
   to {
     opacity: 0;
     transform: scale(0.95);
@@ -186,9 +186,12 @@
 
 /* Pulso */
 @keyframes tutorial-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
@@ -196,23 +199,38 @@
 
 /* Shake (erro) */
 @keyframes tutorial-shake {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateX(0);
   }
-  10%, 30%, 50%, 70%, 90% {
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
     transform: translateX(-5px);
   }
-  20%, 40%, 60%, 80% {
+
+  20%,
+  40%,
+  60%,
+  80% {
     transform: translateX(5px);
   }
 }
 
 /* Cursor piscando */
 @keyframes tutorial-cursor-blink {
-  0%, 49% {
+
+  0%,
+  49% {
     opacity: 1;
   }
-  50%, 100% {
+
+  50%,
+  100% {
     opacity: 0;
   }
 }
@@ -233,9 +251,9 @@
   --tutorial-bg-start: rgba(18, 18, 25, 0.98);
   --tutorial-bg-end: rgba(25, 25, 35, 0.98);
   --tutorial-border: linear-gradient(135deg, #4caf50, #2196f3);
-  
+
   border-image: linear-gradient(135deg, #4caf50, #2196f3) 1;
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.8),
     0 0 30px rgba(76, 175, 80, 0.4),
     0 0 20px rgba(33, 150, 243, 0.3);
@@ -252,19 +270,19 @@
     top: 10px !important;
     right: 10px !important;
   }
-  
+
   .tutorial-title {
     font-size: 1em;
   }
-  
+
   .tutorial-message {
     font-size: 0.85em;
   }
-  
+
   .tutorial-action {
     font-size: 0.8em;
   }
-  
+
   .tutorial-btn {
     padding: 6px 12px;
     font-size: 12px;
@@ -287,7 +305,7 @@
 #tutorial-ui.dragging {
   cursor: move;
   user-select: none;
-  box-shadow: 
+  box-shadow:
     0 8px 40px rgba(0, 0, 0, 0.9),
     var(--tutorial-glow);
 }
@@ -311,7 +329,7 @@
   #tutorial-ui {
     border-width: 3px;
   }
-  
+
   .tutorial-title,
   .tutorial-message,
   .tutorial-action {
@@ -321,6 +339,7 @@
 
 /* Redução de movimento */
 @media (prefers-reduced-motion: reduce) {
+
   #tutorial-ui,
   .tutorial-btn,
   .typewriter-cursor {

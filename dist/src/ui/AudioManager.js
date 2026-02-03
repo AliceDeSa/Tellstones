@@ -1,4 +1,5 @@
-"use strict";
+import { EventBus } from '../core/EventBus.js';
+import { EventType } from '../core/types/Events.js';
 class AudioManager {
     constructor() {
         this.isMuted = false;
@@ -44,10 +45,41 @@ class AudioManager {
         if (this.pendingSfxVolume !== null) {
             this.setSfxVolume(this.pendingSfxVolume);
         }
+        // Register EventBus listeners
+        this.registerEventListeners();
         console.log("[AudioManager] Initialized with detected elements:", {
             bgMusic: !!this.bgMusic,
             click: !!this.sounds.click
         });
+    }
+    /**
+     * Registra listeners do EventBus para controle remoto de áudio
+     */
+    registerEventListeners() {
+        // Volume da música
+        EventBus.on(EventType.AUDIO_MUSIC_VOLUME, (data) => {
+            this.setMusicVolume(data.volume);
+        });
+        // Volume dos efeitos
+        EventBus.on(EventType.AUDIO_SFX_VOLUME, (data) => {
+            this.setSfxVolume(data.volume);
+        });
+        // Reproduzir sons
+        EventBus.on(EventType.AUDIO_PLAY_CLICK, () => {
+            this.playClick();
+        });
+        EventBus.on(EventType.AUDIO_PLAY_PRESS, () => {
+            this.playPress();
+        });
+        // Mute global
+        EventBus.on(EventType.AUDIO_MUTE_CHANGED, (data) => {
+            this.isMuted = data.isMuted;
+            window.isMuted = data.isMuted;
+            if (data.isMuted) {
+                this.stopAmbience();
+            }
+        });
+        console.log("[AudioManager] EventBus listeners registrados");
     }
     play(key) {
         const audio = this.sounds[key];

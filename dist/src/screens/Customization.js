@@ -23,11 +23,9 @@ export class Customization {
         this.backBtn = null;
         this.themeManager = ThemeManager.getInstance();
         // Listener para mudança de idioma
-        if (window.EventBus) {
-            window.EventBus.on('LOCALE:CHANGE', () => {
-                this.updateTranslations();
-            });
-        }
+        EventBus.on(EventType.LANGUAGE_CHANGE, () => {
+            this.updateTranslations();
+        });
     }
     /**
      * Renderiza a tela de personalização
@@ -179,20 +177,19 @@ export class Customization {
     selectTheme(themeId) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('[Customization] Selecionando tema:', themeId);
-            // Som de click
-            if (window.audioManager) {
-                window.audioManager.playClick();
-            }
+            // Som de click via EventBus
+            EventBus.emit(EventType.AUDIO_PLAY_CLICK, {});
             // Aplicar tema via ThemeManager
             yield this.themeManager.loadTheme(themeId);
             // Atualizar UI (remover active de todos, adicionar ao selecionado)
             this.refreshThemeGrid();
-            // Feedback visual
+            // Feedback visual via EventBus
             const theme = this.themeManager.getThemeById(themeId);
             if (theme) {
-                if (window.notificationManager) {
-                    window.notificationManager.showGlobal(`Tema "${theme.name}" aplicado!`);
-                }
+                EventBus.emit(EventType.NOTIFICATION_SHOW, {
+                    message: `Tema "${theme.name}" aplicado!`,
+                    type: 'success'
+                });
             }
         });
     }
@@ -206,9 +203,8 @@ export class Customization {
         this.backBtn.setAttribute('data-i18n-prefix', '&#8617; ');
         this.backBtn.setAttribute('data-i18n', 'common.back');
         this.backBtn.onclick = () => {
-            if (window.audioManager) {
-                window.audioManager.playClick();
-            }
+            // Som de click via EventBus
+            EventBus.emit(EventType.AUDIO_PLAY_CLICK, {});
             // Voltar ao menu principal via EventBus
             EventBus.emit(EventType.SCREEN_CHANGE, { from: 'customization', to: 'main-menu' });
         };
@@ -248,13 +244,25 @@ export class Customization {
         this.refreshThemeGrid();
     }
     /**
-     * Limpa a tela
+     * Método update da interface Screen (não usado nesta tela)
      */
-    cleanup() {
+    update() {
+        // Customization é uma tela estática, sem necessidade de update
+    }
+    /**
+     * Método destroy da interface Screen
+     */
+    destroy() {
         var _a;
         (_a = this.container) === null || _a === void 0 ? void 0 : _a.remove();
         this.container = null;
-        console.log('[Customization] Tela limpa');
+        console.log('[Customization] Tela destruída');
+    }
+    /**
+     * Limpa a tela (alias para destroy, mantido para compatibilidade)
+     */
+    cleanup() {
+        this.destroy();
     }
 }
 // Global Export

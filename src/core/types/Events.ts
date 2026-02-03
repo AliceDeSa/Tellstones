@@ -69,6 +69,26 @@ export enum EventType {
 
     // Audio
     AUDIO_MUTE_CHANGED = 'AUDIO:MUTE:CHANGED',
+    AUDIO_MUSIC_VOLUME = 'AUDIO:MUSIC:VOLUME',
+    AUDIO_SFX_VOLUME = 'AUDIO:SFX:VOLUME',
+    AUDIO_PLAY_CLICK = 'AUDIO:PLAY:CLICK',
+    AUDIO_PLAY_PRESS = 'AUDIO:PLAY:PRESS',
+
+    // Notifications
+    NOTIFICATION_SHOW = 'NOTIFICATION:SHOW',
+
+    // Autenticação
+    AUTH_LOGIN_SUCCESS = 'AUTH:LOGIN:SUCCESS',
+    AUTH_LOGIN_ERROR = 'AUTH:LOGIN:ERROR',
+    AUTH_LOGOUT = 'AUTH:LOGOUT',
+    AUTH_GUEST_ENTER = 'AUTH:GUEST:ENTER',
+    AUTH_STATE_CHANGED = 'AUTH:STATE:CHANGED',
+
+    // Room/Lobby
+    ROOM_PLAYERS_UPDATE = 'ROOM:PLAYERS:UPDATE',
+    ROOM_SPECTATORS_UPDATE = 'ROOM:SPECTATORS:UPDATE',
+    ROOM_START = 'ROOM:START',
+    ROOM_LEAVE = 'ROOM:LEAVE',
 
     // Idioma
     LANGUAGE_CHANGE = 'LANGUAGE:CHANGE',
@@ -78,21 +98,46 @@ export enum EventType {
  * Dados de cada tipo de evento
  */
 export interface EventData {
+    // Audio Events
     [EventType.AUDIO_MUTE_CHANGED]: { isMuted: boolean };
+    [EventType.AUDIO_MUSIC_VOLUME]: { volume: number };
+    [EventType.AUDIO_SFX_VOLUME]: { volume: number };
+    [EventType.AUDIO_PLAY_CLICK]: {};
+    [EventType.AUDIO_PLAY_PRESS]: {};
 
+    // Notification Events
+    [EventType.NOTIFICATION_SHOW]: { message: string; type?: 'info' | 'success' | 'error' | 'warning' };
+
+    // Auth Events
+    [EventType.AUTH_LOGIN_SUCCESS]: { user: { uid: string; email: string; displayName: string; isAnonymous: boolean } };
+    [EventType.AUTH_LOGIN_ERROR]: { error: string };
+    [EventType.AUTH_LOGOUT]: {};
+    [EventType.AUTH_GUEST_ENTER]: {};
+    [EventType.AUTH_STATE_CHANGED]: { isLoggedIn: boolean; user: any | null };
+
+    // Room Events
+    [EventType.ROOM_PLAYERS_UPDATE]: { players: any[] };
+    [EventType.ROOM_SPECTATORS_UPDATE]: { spectators: any[] };
+    [EventType.ROOM_START]: { roomCode: string };
+    [EventType.ROOM_LEAVE]: {};
+
+    // Screen Events
     [EventType.SCREEN_CHANGE]: { from: string; to: string };
     [EventType.SCREEN_SHOW]: { screen: string };
     [EventType.SCREEN_HIDE]: { screen: string };
 
+    // Game Events
     [EventType.GAME_START]: { mode: 'tutorial' | 'pve' | 'campaign' | 'online' };
     [EventType.GAME_END]: { winner: { id: string; nome: string } | null; reason: string };
     [EventType.GAME_PAUSE]: {};
     [EventType.GAME_RESUME]: {};
 
+    // Turn Events
     [EventType.TURN_START]: { playerIndex: number; playerName: string };
     [EventType.TURN_END]: { playerIndex: number };
     [EventType.TURN_ADVANCE]: {};
 
+    // Action Events
     [EventType.ACTION_PLACE]: { slot: number; stoneName: string };
     [EventType.ACTION_FLIP]: { slot: number };
     [EventType.ACTION_SWAP]: { from: number; to: number };
@@ -100,29 +145,36 @@ export interface EventData {
     [EventType.ACTION_CHALLENGE]: { slot: number; guess: string };
     [EventType.ACTION_BOAST]: {};
 
+    // State Events
     [EventType.STATE_UPDATE]: { state: any; reason: string };
     [EventType.STATE_SAVE]: {};
     [EventType.STATE_LOAD]: {};
 
+    // Settings Events
     [EventType.SETTINGS_UPDATE]: { key: string; value: any };
     [EventType.SETTINGS_SAVE]: {};
     [EventType.SETTINGS_LOAD]: {};
 
+    // Theme Events
     [EventType.THEME_CHANGE]: { theme: string };
     [EventType.THEME_LOAD]: { theme: string };
 
+    // UI Events
     [EventType.UI_UPDATE]: { component: string; data: any };
     [EventType.UI_NOTIFICATION]: { message: string; type: 'info' | 'success' | 'error' };
     [EventType.UI_ANIMATION]: { animation: string; target: string };
 
+    // Economy Events
     [EventType.CURRENCY_CHANGE]: { amount: number; reason: string };
     [EventType.SHOP_PURCHASE]: { item: string; cost: number };
     [EventType.REWARD_EARNED]: { type: string; amount: number };
 
+    // Bot Events
     [EventType.BOT_THINKING]: { thinking: boolean };
     [EventType.BOT_ACTION]: { action: any };
     [EventType.BOT_RESPONSE]: { response: any };
 
+    // Tutorial Events
     [EventType.TUTORIAL_START]: {};
     [EventType.TUTORIAL_END]: { completed: boolean; reason?: string };
     [EventType.TUTORIAL_STEP_START]: { step: number; title: string; description?: string };
@@ -130,6 +182,7 @@ export interface EventData {
     [EventType.TUTORIAL_HINT]: { hint: string; step: number };
     [EventType.TUTORIAL_RESTRICTION]: { allowed: string[]; blocked: string[] };
 
+    // Language Events
     [EventType.LANGUAGE_CHANGE]: { language: 'pt-BR' | 'en-US' };
 }
 
