@@ -111,6 +111,14 @@ O projeto foi construído com foco em **TypeScript** e **Vanilla JS** para máxi
 
 ---
 
+### 🔮 O Futuro: v7.0.0 (3D Tavern Update)
+O próximo grande marco do projeto, atualmente em desenvolvimento.
+-   **Full 3D Environment:** A taberna deixa de ser uma imagem 2D e se torna um ambiente 3D navegável (Three.js).
+-   **Imersão:** Caminhe até a mesa para jogar, suba as escadas para o quarto ou converse com o vendedor.
+-   **Cinematic Camera:** Transições de câmera suaves entre o Hub e o Tabuleiro.
+
+---
+
 ### 🧠 Nova Arquitetura de IA (BotBrain v5)
 A partir da versão v5.4.0, o sistema de Inteligência Artificial foi completamente reescrito para suportar **Turnos Individuais Detalhados** e **Lógica Autônoma**.
 

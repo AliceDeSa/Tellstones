@@ -136,7 +136,7 @@ export class Customization {
         preview.className = 'theme-preview';
         preview.onerror = () => {
             // Fallback se imagem não carregar
-            preview.src = 'assets/img/ui/placeholder-theme.jpg';
+            preview.src = 'assets/themes/Taberna/img/ui/placeholder-theme.jpg';
         };
         card.appendChild(preview);
 

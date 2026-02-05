@@ -139,26 +139,26 @@ const Renderer = {
             else {
                 // FIXED: Runtime migration for legacy paths coming from Firebase
                 let url = p.url;
-                if (url && url.indexOf("assets/img/stones/demacia") === -1 && url.indexOf("assets/img/stones/new_set") === -1 && url.indexOf("assets/img/coins") === -1) {
+                if (url && url.indexOf("assets/themes/Taberna/img/stones/demacia") === -1 && url.indexOf("assets/img/stones/new_set") === -1 && url.indexOf("assets/themes/Taberna/img/coins") === -1) {
                     // Legacy path detected? Fix it.
                     if (url.includes("Coroa"))
-                        url = "assets/img/stones/demacia/Coroa.svg";
+                        url = "assets/themes/Taberna/img/stones/demacia/Coroa.svg";
                     else if (url.includes("espada"))
-                        url = "assets/img/stones/demacia/espada.svg";
+                        url = "assets/themes/Taberna/img/stones/demacia/espada.svg";
                     else if (url.includes("escudo"))
-                        url = "assets/img/stones/demacia/escudo.svg";
+                        url = "assets/themes/Taberna/img/stones/demacia/escudo.svg";
                     else if (url.includes("cavalo"))
-                        url = "assets/img/stones/demacia/cavalo.svg";
+                        url = "assets/themes/Taberna/img/stones/demacia/cavalo.svg";
                     else if (url.includes("bandeira"))
-                        url = "assets/img/stones/demacia/bandeira.svg";
+                        url = "assets/themes/Taberna/img/stones/demacia/bandeira.svg";
                     else if (url.includes("martelo"))
-                        url = "assets/img/stones/demacia/martelo.svg";
+                        url = "assets/themes/Taberna/img/stones/demacia/martelo.svg";
                     else if (url.includes("Balanca"))
-                        url = "assets/img/stones/demacia/Balanca.svg";
+                        url = "assets/themes/Taberna/img/stones/demacia/Balanca.svg";
                     else if (url.includes("Cara.png"))
-                        url = "assets/img/coins/classic/Cara.png"; // Coin fix
+                        url = "assets/themes/Taberna/img/coins/classic/Cara.png"; // Coin fix
                     else if (url.includes("Coroa.png"))
-                        url = "assets/img/coins/classic/Coroa.png"; // Coin fix
+                        url = "assets/themes/Taberna/img/coins/classic/Coroa.png"; // Coin fix
                 }
                 div.innerHTML = `<img src="${url}" alt="${p.nome}" draggable="false" style="width:100%; height:100%; border-radius:50%; pointer-events:none;">`;
             }
@@ -1185,26 +1185,30 @@ const Renderer = {
     _fixAssetPath: function (url) {
         if (!url)
             return url;
-        if (url.indexOf("assets/img/stones/demacia") === -1 && url.indexOf("assets/img/stones/new_set") === -1 && url.indexOf("assets/img/coins") === -1) {
-            // Legacy path detected? Fix it.
-            if (url.includes("Coroa"))
-                return "assets/img/stones/demacia/Coroa.svg";
-            if (url.includes("espada"))
-                return "assets/img/stones/demacia/espada.svg";
-            if (url.includes("escudo"))
-                return "assets/img/stones/demacia/escudo.svg";
-            if (url.includes("cavalo"))
-                return "assets/img/stones/demacia/cavalo.svg";
-            if (url.includes("bandeira"))
-                return "assets/img/stones/demacia/bandeira.svg";
-            if (url.includes("martelo"))
-                return "assets/img/stones/demacia/martelo.svg";
-            if (url.includes("Balanca"))
-                return "assets/img/stones/demacia/Balanca.svg";
-            if (url.includes("Cara.png"))
-                return "assets/img/coins/classic/Cara.png";
-            if (url.includes("Coroa.png"))
-                return "assets/img/coins/classic/Coroa.png";
+        // 1. Generic Replace for known patterns
+        if (url.includes("assets/img/stones/demacia") && !url.includes("themes/Taberna")) {
+            return url.replace("assets/img/stones/demacia", "assets/themes/Taberna/img/stones/demacia");
+        }
+        if (url.includes("assets/img/coins") && !url.includes("themes/Taberna")) {
+            return url.replace("assets/img/coins", "assets/themes/Taberna/img/coins");
+        }
+        if (url.includes("assets/img/ui") && !url.includes("themes/Taberna")) {
+            return url.replace("assets/img/ui", "assets/themes/Taberna/img/ui");
+        }
+        // 2. Fallback for Filenames (Aggressive Search)
+        // If the URL is just a filename or legacy path without full structure
+        if (url.indexOf("assets/themes/Taberna") === -1) {
+            const filename = url.split('/').pop();
+            if (filename) {
+                // Stones
+                if (["Coroa.svg", "espada.svg", "escudo.svg", "cavalo.svg", "bandeira.svg", "martelo.svg", "Balanca.svg"].includes(filename)) {
+                    return `assets/themes/Taberna/img/stones/demacia/${filename}`;
+                }
+                // Coins
+                if (["Cara.png", "Coroa.png"].includes(filename)) {
+                    return `assets/themes/Taberna/img/coins/classic/${filename}`;
+                }
+            }
         }
         return url;
     },

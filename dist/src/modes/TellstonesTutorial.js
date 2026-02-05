@@ -431,16 +431,16 @@ export class TellstonesTutorial {
     resetarEstadoParaTutorial() {
         const estado = window.estadoJogo;
         estado.mesa = Array(7).fill(null);
-        estado.mesa[3] = { nome: "Coroa", url: "assets/img/stones/demacia/Coroa.svg", virada: false, fixo: true };
+        estado.mesa[3] = { nome: "Coroa", url: "assets/themes/Taberna/img/stones/demacia/Coroa.svg", virada: false, fixo: true };
         estado.centralAlinhada = true;
         estado.alinhamentoFeito = true;
         estado.reserva = [
-            { nome: "Espada", url: "assets/img/stones/demacia/espada.svg" },
-            { nome: "Escudo", url: "assets/img/stones/demacia/escudo.svg" },
-            { nome: "Cavalo", url: "assets/img/stones/demacia/cavalo.svg" },
-            { nome: "Bandeira", url: "assets/img/stones/demacia/bandeira.svg" },
-            { nome: "Martelo", url: "assets/img/stones/demacia/martelo.svg" },
-            { nome: "Balança", url: "assets/img/stones/demacia/Balanca.svg" }
+            { nome: "Espada", url: "assets/themes/Taberna/img/stones/demacia/espada.svg" },
+            { nome: "Escudo", url: "assets/themes/Taberna/img/stones/demacia/escudo.svg" },
+            { nome: "Cavalo", url: "assets/themes/Taberna/img/stones/demacia/cavalo.svg" },
+            { nome: "Bandeira", url: "assets/themes/Taberna/img/stones/demacia/bandeira.svg" },
+            { nome: "Martelo", url: "assets/themes/Taberna/img/stones/demacia/martelo.svg" },
+            { nome: "Balança", url: "assets/themes/Taberna/img/stones/demacia/Balanca.svg" }
         ];
         estado.vez = 1;
         estado.desafio = null;

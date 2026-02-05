@@ -19,37 +19,39 @@ document.addEventListener('DOMContentLoaded', () => {
     // Instanciar LoginScreen
     const loginScreen = new LoginScreen();
     // Elementos do DOM
-    const loginBtn = document.getElementById('login-btn');
+    const loginState = document.getElementById('login-state'); // Container completo
+    // Mantemos loginBtn para o click listener, mas usamos o container para visibilidade
+    const loginBtn = document.getElementById('login-btn-bg') || document.getElementById('login-btn');
     const userInfo = document.getElementById('user-info');
     const userDisplayName = document.getElementById('user-display-name');
     const logoutBtn = document.getElementById('logout-btn');
-    if (!loginBtn || !userInfo || !userDisplayName || !logoutBtn) {
-        console.error('[LoginIntegration] Elementos do DOM não encontrados');
+    if (!loginState || !userInfo || !userDisplayName || !logoutBtn) {
+        console.error('[LoginIntegration] Elementos do DOM não encontrados', { loginState, userInfo, userDisplayName, logoutBtn });
         return;
     }
     /**
      * Atualiza UI baseado no estado de autenticação
      */
     function updateAuthUI() {
-        if (!loginBtn || !userInfo || !userDisplayName)
+        if (!loginState || !userInfo || !userDisplayName)
             return;
         const user = AuthManager.getCurrentUser();
         if (user) {
             // Usuário logado
-            loginBtn.style.display = 'none';
+            loginState.style.display = 'none';
             userInfo.style.display = 'flex';
             userDisplayName.textContent = user.displayName;
             // Adicionar ícone se for convidado
             if (user.isAnonymous) {
-                userDisplayName.innerHTML = `👤 ${user.displayName}`;
+                userDisplayName.innerHTML = `${user.displayName}`;
             }
             else {
-                userDisplayName.innerHTML = `✅ ${user.displayName}`;
+                userDisplayName.innerHTML = `${user.displayName}`;
             }
         }
         else {
             // Usuário não logado
-            loginBtn.style.display = 'block';
+            loginState.style.display = 'flex';
             userInfo.style.display = 'none';
         }
     }
@@ -57,11 +59,13 @@ document.addEventListener('DOMContentLoaded', () => {
     EventBus.on(EventType.AUTH_STATE_CHANGED, () => {
         updateAuthUI();
     });
-    // Click no botão de login
-    loginBtn.addEventListener('click', () => {
-        EventBus.emit(EventType.AUDIO_PLAY_CLICK, {});
-        loginScreen.show();
-    });
+    // Click no botão de login (Container)
+    if (loginState) {
+        loginState.addEventListener('click', () => {
+            EventBus.emit(EventType.AUDIO_PLAY_CLICK, {});
+            loginScreen.show();
+        });
+    }
     // Click no botão de logout
     logoutBtn.addEventListener('click', () => __awaiter(void 0, void 0, void 0, function* () {
         EventBus.emit(EventType.AUDIO_PLAY_CLICK, {});

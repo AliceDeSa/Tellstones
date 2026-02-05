@@ -805,13 +805,13 @@ document.addEventListener("DOMContentLoaded", function () {
             const btnSegabarImg = document.getElementById('btn-segabar-img');
             if (btnDesafiarImg) {
                 btnDesafiarImg.src = currentLocale === 'pt-BR'
-                    ? './assets/img/ui/btn-desafiar.png'
-                    : './assets/img/ui/btn-challenge.png';
+                    ? './assets/themes/Taberna/img/ui/btn-desafiar.png'
+                    : './assets/themes/Taberna/img/ui/btn-challenge.png';
             }
             if (btnSegabarImg) {
                 btnSegabarImg.src = currentLocale === 'pt-BR'
-                    ? './assets/img/ui/btn-Se_Gabar.png'
-                    : './assets/img/ui/btn-Boast.png';
+                    ? './assets/themes/Taberna/img/ui/btn-Se_Gabar.png'
+                    : './assets/themes/Taberna/img/ui/btn-Boast.png';
             }
             console.log('[Main] HTML translations updated');
         }).catch(err => {

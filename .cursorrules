@@ -30,6 +30,10 @@ src/
 │   ├── pve/        # Lógica exclusiva do PvE
 │   ├── campaign/   # Lógica exclusiva da campanha
 │   └── online/     # Lógica exclusiva do online
+├── tavern/         # [NEW] Ambiente 3D (React + Three.js)
+│   ├── zones/      # Cenas (Hub, VIP, Second Floor)
+│   ├── components/ # Objetos Interativos (Table, Props)
+│   └── assets/     # Modelos GLTF/GLB
 ├── ai/             # IA (BotBrain, BotMemory, DummyBot)
 ├── ui/             # Interface (Renderer, ThemeManager, AnimationManager)
 ├── data/           # Persistência (SaveManager, SettingsManager)

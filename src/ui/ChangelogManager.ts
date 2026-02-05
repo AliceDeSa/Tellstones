@@ -6,6 +6,14 @@ interface ChangelogItem {
 const ChangelogManager = {
     data: [
         {
+            version: "v6.1.1 - Login & Layout Polish",
+            changes: [
+                "<strong>UI Refinement:</strong> Layout horizontal para info do usuário e ícone de Logoff SVG.",
+                "<strong>Interaction Fix:</strong> Área de clique do login expandida para todo o container.",
+                "<strong>Visual Clean-up:</strong> Remoção de artefatos visuais no display de nome."
+            ]
+        },
+        {
             version: "v6.0.0 - Auth & Security Architecture",
             changes: [
                 "<strong>Firebase Auth:</strong> Login via Google, Email/Senha e Convidado.",

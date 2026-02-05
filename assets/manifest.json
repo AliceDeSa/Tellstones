@@ -9,12 +9,12 @@
     "orientation": "landscape",
     "icons": [
         {
-            "src": "img/ui/logo.webp",
+            "src": "themes/Taberna/img/ui/logo.webp",
             "sizes": "192x192",
             "type": "image/webp"
         },
         {
-            "src": "img/ui/logo.webp",
+            "src": "themes/Taberna/img/ui/logo.webp",
             "sizes": "512x512",
             "type": "image/webp"
         }

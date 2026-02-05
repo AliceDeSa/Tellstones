@@ -174,7 +174,7 @@ export class Settings {
         const headerFiles = [...postersFiles, ...otherFiles];
         headerFiles.forEach((file) => {
             const img = document.createElement('img');
-            img.src = `assets/img/ui/tavern/${file}`;
+            img.src = `assets/themes/Taberna/img/ui/tavern/${file}`;
             img.className = 'tavern-poster';
             img.draggable = false;
             img.style.pointerEvents = 'auto';
@@ -301,7 +301,7 @@ export class Settings {
         const currentLocale = LocaleManager.getCurrentLocale();
         flags.forEach((flag) => {
             const img = document.createElement('img');
-            img.src = `assets/img/ui/${flag.file}`;
+            img.src = `assets/themes/Taberna/img/ui/${flag.file}`;
             img.className = 'language-flag';
             img.draggable = false;
             img.style.pointerEvents = 'auto';

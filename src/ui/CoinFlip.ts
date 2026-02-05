@@ -76,12 +76,12 @@ export const CoinFlip = {
 
             // Styling buttons
             if (btnCara) {
-                btnCara.innerHTML = `<img src='assets/img/coins/classic/Cara.png' alt='Cara' style='width:80px;height:80px;border-radius:50%;margin-bottom:10px;box-shadow:0 2px 8px #0007;' /><span style='font-size:1.1em;'>Cara</span>`;
+                btnCara.innerHTML = `<img src='assets/themes/Taberna/img/coins/classic/Cara.png' alt='Cara' style='width:80px;height:80px;border-radius:50%;margin-bottom:10px;box-shadow:0 2px 8px #0007;' /><span style='font-size:1.1em;'>Cara</span>`;
                 Object.assign(btnCara.style, { fontSize: "1.3em", padding: "16px 32px", minWidth: "120px", display: "inline-flex", flexDirection: "column", alignItems: "center" });
                 btnCara.onclick = () => this.definirEscolha("cara");
             }
             if (btnCoroa) {
-                btnCoroa.innerHTML = `<img src='assets/img/coins/classic/Coroa.png' alt='Coroa' style='width:80px;height:80px;border-radius:50%;margin-bottom:10px;box-shadow:0 2px 8px #0007;' /><span style='font-size:1.1em;'>Coroa</span>`;
+                btnCoroa.innerHTML = `<img src='assets/themes/Taberna/img/coins/classic/Coroa.png' alt='Coroa' style='width:80px;height:80px;border-radius:50%;margin-bottom:10px;box-shadow:0 2px 8px #0007;' /><span style='font-size:1.1em;'>Coroa</span>`;
                 Object.assign(btnCoroa.style, { fontSize: "1.3em", padding: "16px 32px", minWidth: "120px", display: "inline-flex", flexDirection: "column", alignItems: "center" });
                 btnCoroa.onclick = () => this.definirEscolha("coroa");
             }
@@ -164,8 +164,8 @@ export const CoinFlip = {
             document.body.appendChild(btn);
             btn.innerHTML = `
                 <span id="moeda-animada" style="display:inline-block;width:100px;height:100px;position:relative;perspective:600px;pointer-events:none;">
-                    <img id="moeda-frente" src="assets/img/coins/classic/Cara.png" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transition:transform 0.6s;box-shadow:0 4px 12px rgba(0,0,0,0.5);background:#222;pointer-events:none;" />
-                    <img id="moeda-verso" src="assets/img/coins/classic/Coroa.png" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transform:rotateY(180deg);transition:transform 0.6s;box-shadow:0 4px 12px rgba(0,0,0,0.5);background:#222;pointer-events:none;" />
+                    <img id="moeda-frente" src="assets/themes/Taberna/img/coins/classic/Cara.png" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transition:transform 0.6s;box-shadow:0 4px 12px rgba(0,0,0,0.5);background:#222;pointer-events:none;" />
+                    <img id="moeda-verso" src="assets/themes/Taberna/img/coins/classic/Coroa.png" style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transform:rotateY(180deg);transition:transform 0.6s;box-shadow:0 4px 12px rgba(0,0,0,0.5);background:#222;pointer-events:none;" />
                 </span>
             `;
         }
@@ -275,7 +275,7 @@ export const CoinFlip = {
             // ... minimal styles ...
             Object.assign(notif.style, {
                 position: "absolute", left: "50%", top: "40%", transform: "translate(-50%, -50%)",
-                background: "transparent url('assets/img/ui/notification_icon.png') no-repeat center center",
+                background: "transparent url('assets/themes/Taberna/img/ui/notification_icon.png') no-repeat center center",
                 backgroundSize: "100% 100%", // Restore to stretch full image
                 width: "700px", // Wider
                 height: "220px", // Taller

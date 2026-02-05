@@ -4,7 +4,18 @@ Este documento detalha a evolução técnica do projeto, com foco nas decisões 
 
 ---
 
-## V6.1.0 - UI Polish & System Clean-up
+## V6.1.1 - Login & Layout Polish
+**Data:** 05/02/2026
+**Status:** Hotfix / Polish
+**Foco:** Refinamento final da interface de usuário antes da migração para 3D.
+
+### 🎨 Visual Polish
+- **[UI]** **Login Interface:** Substituição do botão "Sair" por ícone SVG minimalista.
+- **[LAYOUT]** **User Info:** Realinhamento horizontal do nome do usuário e controles.
+- **[FIX]** **Interactive Area:** Correção da área de clique no botão de login (agora o container inteiro é clicável).
+- **[CLEAN]** **Visual Clutter:** Remoção de prefixos (emojis) redundantes no nome do usuário.
+
+---
 **Data:** 03/02/2026
 **Status:** Feature & Maintenance Release
 

@@ -13,17 +13,17 @@
   <!-- Social Media Preview (Open Graph) -->
   <meta property="og:title" content="Tellstones">
   <meta property="og:description" content="Memorize. Blefe. Desafie. Jogue Tellstones contra o Bot ou online!">
-  <meta property="og:image" content="assets/img/ui/og-social-card.png">
+  <meta property="og:image" content="assets/themes/Taberna/img/ui/og-social-card.png">
   <meta property="og:image:width" content="1280">
   <meta property="og:image:height" content="640">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="stylesheet" href="assets/css/main.css?v=5.4.5">
-  <link rel="stylesheet" href="assets/css/legacy.css?v=5.4.5">
-  <link rel="icon" type="image/webp" href="assets/img/ui/logo.webp">
-  <link rel="stylesheet" href="assets/fonts/fonts.css">
+  <link rel="stylesheet" href="assets/themes/Taberna/css/main.css?v=5.4.5">
+  <link rel="stylesheet" href="assets/themes/Taberna/css/legacy.css?v=5.4.5">
+  <link rel="icon" type="image/webp" href="assets/themes/Taberna/img/ui/logo.webp">
+  <link rel="stylesheet" href="assets/core/fonts/fonts.css">
   <!-- UI Design System -->
-  <link rel="stylesheet" href="assets/css/ui-system.css?v=6.0.0">
-  <link rel="stylesheet" href="assets/css/ui-components.css?v=6.0.0">
+  <link rel="stylesheet" href="assets/themes/Taberna/css/ui-system.css?v=6.0.0">
+  <link rel="stylesheet" href="assets/themes/Taberna/css/ui-components.css?v=6.0.0">
 
   <!-- FIX VISUAL KO-FI (Fallback) -->
   <style>
@@ -88,20 +88,48 @@
 
 
   <!-- Botão de Login/Perfil (Fix Position, toggled via JS) -->
-  <div id="user-profile-container"
-    style="position: fixed; top: 0px; left: 0px; display: flex; align-items: center; gap: 12px; z-index: 9999; pointer-events: auto;">
-    <img id="login-btn" src="assets/img/ui/Login.png" alt="Login"
-      style="width: auto; height: 130px; cursor: pointer; transition: all 0.3s ease; filter: drop-shadow(0 0 0px rgba(255, 255, 255, 0)); pointer-events: auto;"
-      onmouseover="this.style.transform='scale(1.08)'; this.style.filter='drop-shadow(0 0 15px rgba(255, 255, 255, 0.8)) brightness(1.15)';"
-      onmouseout="this.style.transform='scale(1)'; this.style.filter='drop-shadow(0 0 0px rgba(255, 255, 255, 0)) brightness(1)';">
+  <div id="user-profile-container" style="position: fixed; top: 0px; left: 0px; z-index: 9999; pointer-events: none;">
 
+    <!-- STATE 1: Login Button (Visible when NOT logged in) -->
+    <div id="login-state"
+      style="position: relative; display: flex; align-items: center; justify-content: center; pointer-events: auto; cursor: pointer; transition: transform 0.2s ease;"
+      onmouseover="this.querySelector('img').style.filter='drop-shadow(0 0 10px rgba(255, 255, 255, 0.6)) brightness(1.1)'; this.style.transform='scale(1.05)';"
+      onmouseout="this.querySelector('img').style.filter='drop-shadow(0 0 0px rgba(255, 255, 255, 0)) brightness(1)'; this.style.transform='scale(1)';">
+
+      <img id="login-btn-bg" src="assets/themes/Taberna/img/ui/login_user.png" alt="Plate"
+        style="height: 130px; width: auto; display: block; filter: drop-shadow(0 0 0px rgba(255, 255, 255, 0)); transition: all 0.3s ease;">
+
+      <span
+        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #eecfa1; font-family: 'Cinzel Decorative', serif; font-weight: bold; font-size: 1.5em; text-shadow: 0 2px 4px #000; pointer-events: none;">LOGIN</span>
+    </div>
+
+    <!-- STATE 2: User Info (Visible when logged in) -->
     <div id="user-info"
-      style="display: none; background: rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 8px; color: white; font-size: 14px;">
-      <span id="user-display-name">Convidado</span>
-      <button id="logout-btn"
-        style="margin-left: 12px; padding: 6px 12px; background: rgba(239, 68, 68, 0.8); color: white; border: 1px solid rgba(239, 68, 68, 1); border-radius: 6px; cursor: pointer; font-size: 12px;">
-        Sair
-      </button>
+      style="display: none; position: relative; align-items: center; justify-content: center; pointer-events: auto;">
+
+      <!-- Same Background Image for Consistency -->
+      <img src="assets/themes/Taberna/img/ui/login_user.png" alt="Plate"
+        style="height: 130px; width: auto; display: block;">
+
+      <!-- Content Overlay -->
+      <div
+        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center; width: 100%; gap: 0px;">
+        <span id="user-display-name"
+          style="font-weight: bold; color: #eecfa1; text-shadow: 0 1px 3px #000; font-size: 1.1em; pointer-events: none;">Convidado</span>
+
+        <button id="logout-btn" title="Sair"
+          style="background: transparent; border: none; cursor: pointer; color: #000000; font-size: 1.2em; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;"
+          onmouseover="this.style.transform='scale(1.2)'; this.style.color='#ff8888';"
+          onmouseout="this.style.transform='scale(1)'; this.style.color='#ff5555';">
+          <!-- Simple SVG Logout Icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -281,10 +309,10 @@
     <!-- ======= BOTÕES DE AÇÕES LATERAIS RESTORED TO GAME ======= -->
     <div id="botoes-acoes-laterais">
       <button id="btn-desafiar" class="btn-image-action">
-        <img id="btn-desafiar-img" src="./assets/img/ui/btn-desafiar.png" alt="Desafiar">
+        <img id="btn-desafiar-img" src="./assets/themes/Taberna/img/ui/btn-desafiar.png" alt="Desafiar">
       </button>
       <button id="btn-segabar" class="btn-image-action">
-        <img id="btn-segabar-img" src="./assets/img/ui/btn-Se_Gabar.png" alt="Se Gabar">
+        <img id="btn-segabar-img" src="./assets/themes/Taberna/img/ui/btn-Se_Gabar.png" alt="Se Gabar">
       </button>
     </div>
     <!-- ======= ÍCONE DE AÇÕES ======= -->
@@ -319,7 +347,7 @@
         <!-- pedras renderizadas via JS -->
       </div>
       <div id="tabuleiro-wrapper" style="width:740px;height:320px;position:relative;display:inline-block;">
-        <img id="tabuleiro" src="assets/img/tables/classic/Tabuleiro.jpg" alt="Tabuleiro Tellstones"
+        <img id="tabuleiro" src="assets/themes/Taberna/img/tables/classic/Tabuleiro.jpg" alt="Tabuleiro Tellstones"
           style="width:740px;height:320px;object-fit:contain;" />
         <div id="pedras-mesa"></div>
         <!-- Marcadores de ponto à esquerda (Jogador 1 ou Dupla 1) -->
@@ -340,13 +368,13 @@
           style="background:none;border:none;outline:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;width:auto;height:auto;display:none;">
           <span id="moeda-animada"
             style="display:inline-block;width:80px;height:80px;position:relative;perspective:300px;">
-            <img id="moeda-frente" src="assets/img/coins/classic/Cara.png"
+            <img id="moeda-frente" src="assets/themes/Taberna/img/coins/classic/Cara.png"
               style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
-            <img id="moeda-verso" src="assets/img/coins/classic/Coroa.png"
+            <img id="moeda-verso" src="assets/themes/Taberna/img/coins/classic/Coroa.png"
               style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transform:rotateY(180deg);transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
           </span>
         </button>
-        <audio id="som-moeda" src="assets/audio/moeda.mp3" preload="auto"></audio>
+        <audio id="som-moeda" src="assets/themes/Taberna/audio/moeda.mp3" preload="auto"></audio>
         <!-- Botões laterais removidos daqui -->
       </div>
       <div id="pedra-central-animada" style="display:none;"></div>
@@ -357,12 +385,13 @@
   <!-- Movido para fora de #game para garantir z-index superior ao card -->
   <div id="icone-acoes" title="Ações"
     style="padding:0;width:60px;height:60px;display:none;align-items:center;justify-content:center;background:none;border:none;">
-    <img src="assets/img/ui/Ações.png" alt="Ações" style="width:54px;height:54px;object-fit:contain;display:block;" />
+    <img src="assets/themes/Taberna/img/ui/Ações.png" alt="Ações"
+      style="width:54px;height:54px;object-fit:contain;display:block;" />
   </div>
 
   <!-- ================= CARTA DE AÇÕES ================= -->
   <div id="carta-acoes" style="display:none;">
-    <img src="assets/img/ui/card_actions.png" alt="Carta de Ações" id="img-carta-acoes" />
+    <img src="assets/themes/Taberna/img/ui/card_actions.png" alt="Carta de Ações" id="img-carta-acoes" />
     <div id="conteudo-acoes">
       <!-- As ações serão renderizadas aqui via JS -->
     </div>
@@ -380,13 +409,13 @@
       <h2 data-i18n="game.coinFlip.choose">Escolha: Cara ou Coroa ?</h2>
       <button id="btn-cara"
         style="margin:12px 24px; font-size:1.2em; display:inline-flex; flex-direction:column; align-items:center;">
-        <img src="assets/img/coins/classic/Cara.png" alt="Cara"
+        <img src="assets/themes/Taberna/img/coins/classic/Cara.png" alt="Cara"
           style="width:48px;height:48px;border-radius:50%;margin-bottom:6px;box-shadow:0 2px 8px #0007;" />
         <span data-i18n="game.coinFlip.heads">Cara</span>
       </button>
       <button id="btn-coroa"
         style="margin:12px 24px; font-size:1.2em; display:inline-flex; flex-direction:column; align-items:center;">
-        <img src="assets/img/coins/classic/Coroa.png" alt="Coroa"
+        <img src="assets/themes/Taberna/img/coins/classic/Coroa.png" alt="Coroa"
           style="width:48px;height:48px;border-radius:50%;margin-bottom:6px;box-shadow:0 2px 8px #0007;" />
         <span data-i18n="game.coinFlip.tails">Coroa</span>
       </button>
@@ -408,12 +437,12 @@
 
   <!-- ================= SCRIPTS E ÁUDIO ================= -->
   <div id="audio-container" style="display:none;">
-    <audio id="som-fundo" src="assets/audio/ambient.mp3" loop preload="auto"></audio>
-    <audio id="som-click" src="assets/audio/click.wav" preload="auto"></audio>
-    <audio id="som-press" src="assets/audio/press.mp3" preload="auto"></audio>
-    <audio id="som-desafio" src="assets/audio/som%20teste.wav" preload="auto"></audio>
-    <audio id="som-sucesso" src="assets/audio/success%20minimalistic.wav" preload="auto"></audio>
-    <audio id="som-falha" src="assets/audio/failure.wav" preload="auto"></audio>
+    <audio id="som-fundo" src="assets/themes/Taberna/audio/ambient.mp3" loop preload="auto"></audio>
+    <audio id="som-click" src="assets/themes/Taberna/audio/click.wav" preload="auto"></audio>
+    <audio id="som-press" src="assets/themes/Taberna/audio/press.mp3" preload="auto"></audio>
+    <audio id="som-desafio" src="assets/themes/Taberna/audio/som%20teste.wav" preload="auto"></audio>
+    <audio id="som-sucesso" src="assets/themes/Taberna/audio/success%20minimalistic.wav" preload="auto"></audio>
+    <audio id="som-falha" src="assets/themes/Taberna/audio/failure.wav" preload="auto"></audio>
   </div>
   <!-- Script principal do jogo -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -442,7 +471,7 @@
   <script type="module" src="dist/src/data/LocaleManager.js"></script>
 
   <!-- Customization (NEW - v6.0 Fase 6) -->
-  <link rel="stylesheet" href="assets/css/customization.css">
+  <link rel="stylesheet" href="assets/themes/Taberna/css/customization.css">
   <script type="module" src="dist/src/ui/ThemeManager.js"></script>
   <script type="module" src="dist/src/screens/Customization.js"></script>
 

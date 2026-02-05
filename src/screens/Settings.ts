@@ -195,7 +195,7 @@ export class Settings implements Screen {
 
         headerFiles.forEach((file) => {
             const img = document.createElement('img');
-            img.src = `assets/img/ui/tavern/${file}`;
+            img.src = `assets/themes/Taberna/img/ui/tavern/${file}`;
             img.className = 'tavern-poster';
             img.draggable = false;
             img.style.pointerEvents = 'auto';
@@ -333,7 +333,7 @@ export class Settings implements Screen {
 
         flags.forEach((flag) => {
             const img = document.createElement('img');
-            img.src = `assets/img/ui/${flag.file}`;
+            img.src = `assets/themes/Taberna/img/ui/${flag.file}`;
             img.className = 'language-flag';
             img.draggable = false;
             img.style.pointerEvents = 'auto';

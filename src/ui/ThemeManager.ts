@@ -50,18 +50,19 @@ export class ThemeManager {
      */
     private loadDefaultThemes(): void {
         // Tema Tellstones (Padrão - Completo)
+        // Tema Taberna (Base / Padrão)
         this.themes.set('default', {
             id: 'default',
-            name: 'Tellstones',
-            description: 'O tema original clássico do jogo',
-            preview: 'assets/themes/tellstones/preview.jpg',
+            name: 'Taberna',
+            description: 'O tema base da Taberna Medieval',
+            preview: 'assets/themes/Taberna/img/ui/preview.jpg', // Placeholder validation
             assets: {
-                table: 'assets/themes/tellstones/table.png',
-                background: 'assets/themes/tellstones/background.jpg',
-                optionsPanel: 'assets/img/ui/options_panel_bg.png', // Padrão
+                table: 'assets/themes/Taberna/img/tables/table.png', // Validate if this file exists in moved img folder
+                background: 'assets/themes/Taberna/img/backgrounds/background.jpg',
+                optionsPanel: 'assets/themes/Taberna/img/ui/options_panel_bg.png',
                 stones: {
-                    folder: 'assets/themes/tellstones/stones',
-                    set: 'tellstones'
+                    folder: 'assets/themes/Taberna/img/stones', // Adjusted path
+                    set: 'demacia' // Keeping 'demacia' as set name if stones are there
                 }
             },
             locked: false
