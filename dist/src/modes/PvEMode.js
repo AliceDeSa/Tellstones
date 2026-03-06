@@ -15,6 +15,8 @@ import { ChallengeResolver } from "../core/ChallengeResolver.js";
 import LocaleManager from "../data/LocaleManager.js";
 import { EventBus } from "../core/EventBus.js";
 import { EventType } from "../core/types/Events.js";
+import { BotController } from "../ai/BotController.js";
+import { SkillLevel } from "../ai/adaptation/SkillLadder.js";
 export class PvEMode extends GameMode {
     constructor() {
         super();
@@ -92,25 +94,36 @@ export class PvEMode extends GameMode {
         if (localData && localData.salas && localData.salas[this.roomCode] && localData.salas[this.roomCode].botProfile) {
             savedProfile = localData.salas[this.roomCode].botProfile;
         }
+        // Mapeamento de perfis antigos para novos Maestros
+        const profileMap = {
+            'logical': 'vigilante',
+            'trickster': 'fantasma',
+            'aggressive': 'apostador'
+        };
         const profiles = ['logical', 'trickster', 'aggressive'];
+        // Obter nível de dificuldade (padrão: Veterano)
+        const skillLevel = this.getSkillLevel();
         // Prioridade 1: Override de Desenvolvedor
         const devProfile = localStorage.getItem('tellstones_dev_bot_profile');
         if (devProfile && devProfile !== 'random' && profiles.includes(devProfile)) {
             const isDev = localStorage.getItem('tellstones_dev_mode') === 'true';
+            const maestroId = profileMap[devProfile];
             if (isDev)
-                Logger.ai(`Dev Override - Personalidade do Bot: ${devProfile}`);
-            this.botBrain = new window.BotBrain(devProfile);
+                Logger.ai(`Dev Override - Personalidade do Bot: ${devProfile} -> ${maestroId}`);
+            this.botBrain = new BotController(maestroId, skillLevel);
         }
         // Prioridade 2: Estado de Jogo Salvo
         else if (savedProfile && profiles.includes(savedProfile)) {
-            Logger.ai(`Personalidade do Bot Restaurada: ${savedProfile}`);
-            this.botBrain = new window.BotBrain(savedProfile);
+            const maestroId = profileMap[savedProfile];
+            Logger.ai(`Personalidade do Bot Restaurada: ${savedProfile} -> ${maestroId}`);
+            this.botBrain = new BotController(maestroId, skillLevel);
         }
         // Prioridade 3: Novo Aleatório
         else {
             const selectedProfile = profiles[Math.floor(Math.random() * profiles.length)];
-            Logger.ai(`Nova Personalidade do Bot: ${selectedProfile}`);
-            this.botBrain = new window.BotBrain(selectedProfile);
+            const maestroId = profileMap[selectedProfile];
+            Logger.ai(`Nova Personalidade do Bot: ${selectedProfile} -> ${maestroId}`);
+            this.botBrain = new BotController(maestroId, skillLevel);
         }
         // Salvar no DB
         const nameMap = { 'Lógico': 'logical', 'Trapaceiro': 'trickster', 'Agressivo': 'aggressive' };
@@ -158,6 +171,19 @@ export class PvEMode extends GameMode {
         // Resetar TurnManager
         this.turnManager.reset();
         Logger.sys("Reset de estado completo.");
+    }
+    /**
+     * Retorna nível de habilidade do bot (padrão: Veterano)
+     */
+    getSkillLevel() {
+        const savedLevel = localStorage.getItem('tellstones_bot_skill_level');
+        if (savedLevel) {
+            const level = parseInt(savedLevel, 10);
+            if (level >= 1 && level <= 5) {
+                return level;
+            }
+        }
+        return SkillLevel.VETERANO; // Padrão
     }
     cleanup() {
         super.cleanup();
@@ -243,10 +269,10 @@ export class PvEMode extends GameMode {
                     if (this.botBrain && troca.jogador !== 'Bot') {
                         Logger.ai("[OBSERVAR] Callback de Troca Concluída. Trocando Memória:", troca);
                         this.botBrain.observe({
-                            tipo: 'trocar',
-                            origem: troca.from,
-                            destino: troca.to
-                        }, null);
+                            type: 'swap',
+                            from: troca.from,
+                            to: troca.to
+                        });
                         this.logAction(troca.jogador === 'Bot' ? 'Bot' : (this.playerName || "Player"), "SWAPPED", `Slot ${troca.from} <-> Slot ${troca.to}`);
                     }
                 });
@@ -255,7 +281,7 @@ export class PvEMode extends GameMode {
             if (this.lastVez !== undefined && this.lastVez !== estado.vez) {
                 if (this.botBrain) {
                     Logger.ai("[OBSERVAR] Fim de Turno / Novo Turno. Decaindo Memória.");
-                    this.botBrain.observe({ tipo: 'turn_end' }, estado);
+                    this.botBrain.observe({ type: 'turn_end', turn: estado.turnos || 0 });
                 }
                 // Log de Mudança de Turno
                 const currentPlayer = estado.vez === 0 ? this.playerName : "Bot";
@@ -270,13 +296,18 @@ export class PvEMode extends GameMode {
                     const oldP = this.lastMesaState[i];
                     // Placement
                     if (p && !oldP) {
-                        brain.observe({ tipo: 'colocar', origem: i, pedra: p }, estado);
+                        brain.observe({ type: 'placement', slot: i, stone: p.nome });
                         this.logAction(estado.vez === 0 ? (this.playerName || "Jogador") : "Bot", "PLACED", `Stone ${p.nome} at Slot ${i}`);
                     }
                     // Flip
                     if (p && oldP && p.virada !== oldP.virada) {
                         const actionName = p.virada ? "HID" : "REVEALED";
-                        brain.observe({ tipo: 'virar', origem: i, pedra: p }, estado);
+                        if (p.virada) {
+                            brain.observe({ type: 'hide', slot: i });
+                        }
+                        else {
+                            brain.observe({ type: 'reveal', slot: i, stone: p.nome });
+                        }
                         this.logAction(estado.vez === 0 ? (this.playerName || "Jogador") : "Bot", actionName, `Stone at Slot ${i}`);
                     }
                 });
@@ -529,7 +560,7 @@ export class PvEMode extends GameMode {
                 }
                 Logger.debug(LogCategory.AI, "Lógica de Turno do Bot Acionada. Chamando executeBotTurn...");
                 this.turnManager.setBotThinking(true);
-                const thinkTime = this.botBrain.calculateThinkTime(window.estadoJogo, { type: 'unknown' });
+                const thinkTime = this.botBrain.calculateThinkTime(window.estadoJogo, { type: 'place' });
                 Logger.ai(`Bot Pensando por ${thinkTime.toFixed(0)}ms`);
                 setTimeout(() => {
                     try {
@@ -558,7 +589,7 @@ export class PvEMode extends GameMode {
             return;
         estado.mesa.forEach((p, i) => {
             if (p && !p.virada) {
-                this.botBrain.updateMemory(i, p.nome, 1.0);
+                this.botBrain.observe({ type: 'peek', slot: i, stone: p.nome });
             }
         });
     }
@@ -573,7 +604,6 @@ export class PvEMode extends GameMode {
                 // SEGURANÇA: Verificar desafio ativo antes de mover
                 if (estado.desafio) {
                     Logger.warn(LogCategory.AI, "executeBotTurn interceptou desafio ativo. Abortando movimento.");
-                    // Crítico: Resetar thinking para que checkPendingActions possa agendar a resposta
                     this.turnManager.setBotThinking(false);
                     if (this.checkPendingActions(estado))
                         return;
@@ -583,23 +613,11 @@ export class PvEMode extends GameMode {
                     this.turnManager.setBotThinking(false);
                     return;
                 }
-                // Solicitar decisão do bot via TurnManager (isolado)
-                const decision = this.turnManager.requestBotDecision();
-                if (!decision) {
-                    Logger.warn(LogCategory.AI, "Bot não retornou decisão válida. Avançando turno.");
-                    // ✅ REFATORADO: Emitir evento ao invés de chamar função global
-                    EventBus.emit(EventType.TURN_ADVANCE, {});
-                    this.turnManager.setBotThinking(false);
-                    return;
-                }
-                // Executar ação via TurnManager (validação + execução isoladas)
-                yield this.turnManager.executeAction(decision, 'bot');
-                // TurnManager gerencia asyncActionInProgress internamente
-                this.turnManager.setBotThinking(false);
+                // O novo TurnManager rege o ciclo completo com a state-machine do bot
+                yield this.turnManager.runBotTurn();
             }
             catch (err) {
-                Logger.error(LogCategory.AI, "executeBotTurn crasheou:", err);
-                // ✅ REFATORADO: Emitir evento ao invés de chamar função global
+                Logger.error(LogCategory.AI, "executeBotTurn falhou gravemente:", err);
                 EventBus.emit(EventType.TURN_ADVANCE, {});
                 this.turnManager.setBotThinking(false);
             }
@@ -641,7 +659,7 @@ export class PvEMode extends GameMode {
                 const brain = this.botBrain;
                 if (!brain)
                     return;
-                const palpite = brain.predictStone(idxDeduzido);
+                const palpite = brain.predictStone(idxDeduzido, estado);
                 const correta = estado.mesa[idxDeduzido].nome;
                 if (window.Renderer && window.Renderer.mostrarFalaBot) {
                     window.Renderer.mostrarFalaBot(`Eu acho que é... ${palpite}!`);
@@ -750,7 +768,9 @@ export class PvEMode extends GameMode {
                 this.turnManager.setBotThinking(false);
                 return;
             }
-            const memoryValues = Object.values(this.botBrain.memory);
+            // BotController não expõe .memory diretamente
+            // Usar getDebugStats() para informações de memória
+            const memoryInfo = this.botBrain.getDebugStats();
             // Normalize Jogadores
             let playersList = [];
             if (Array.isArray(estado.jogadores)) {
@@ -814,8 +834,18 @@ export class PvEMode extends GameMode {
     proveBotBoast(estado) {
         try {
             const hiddenIndices = estado.mesa.map((p, i) => (p && p.virada) ? i : -1).filter((i) => i !== -1);
+            const usedGuesses = [];
             const answers = hiddenIndices.map((idx) => {
-                const prediction = this.botBrain.predictStone(idx);
+                const ctx = {
+                    state: estado,
+                    turn: estado.turnos || 0,
+                    myIndex: 1,
+                    opponentIndex: 0,
+                    usedGuesses: usedGuesses,
+                    gamePhase: 'midgame'
+                };
+                const prediction = this.botBrain.predictStone(idx, ctx);
+                usedGuesses.push(prediction);
                 return { idx, name: prediction };
             });
             let i = 0;

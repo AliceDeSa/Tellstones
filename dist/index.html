@@ -1,0 +1,539 @@
+<!-- ================= INÍCIO DO DOCUMENTO ================= -->
+<html lang="pt-BR">
+
+<head>
+  <!-- ========== METADADOS E IMPORTS ========== -->
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src *; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data:;">
+  <meta name="viewport" content="width=1024, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <title>TellStones</title>
+  <!-- Social Media Preview (Open Graph) -->
+  <meta property="og:title" content="Tellstones">
+  <meta property="og:description" content="Memorize. Blefe. Desafie. Jogue Tellstones contra o Bot ou online!">
+  <meta property="og:image" content="/assets/logo-DEW9v43R.webp">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/webp" href="/assets/logo-DEW9v43R.webp">
+  <!-- UI Design System -->
+
+  <!-- Temporarily hide Ko-fi -->
+  <style>
+    iframe[src*="ko-fi.com"],
+    div[class*="floatingchat"] {
+      display: none !important;
+    }
+  </style>
+
+  <!-- FIX VISUAL KO-FI (Fallback) -->
+  <style>
+    div[id^="kofi-widget-overlay"],
+    iframe[id^="kofi-widget-overlay"] {
+      background: transparent !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+  </style>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/assets/manifest-D2cfM9Vx.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js?v=5.3.5')
+          .then((reg) => console.log('Service Worker Registrado!', reg))
+          .catch((err) => console.log('Falha no SW:', err));
+      });
+    }
+  </script>
+  <!-- Google Analytics (GA4) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QK5X0YDD54"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-QK5X0YDD54', { 'debug_mode': true });
+  </script>
+  <script type="module" crossorigin src="/assets/index-DqknksfP.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BM6n5qeb.css">
+</head>
+
+<body>
+  <!-- 3D Tavern Layer -->
+  <div id="tavern-root"></div>
+
+  <!-- ================= OVERLAY GIRAR TELA ================= -->
+  <div id="rotate-device-overlay"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#181c24; z-index:999999; align-items:center; justify-content:center; flex-direction:column; text-align:center; padding:20px;">
+    <div style="font-size:4em; color:#ffd700; margin-bottom:20px;">↻</div>
+    <h2 style="color:#fff;">Por favor, gire seu dispositivo</h2>
+    <p style="font-size: 0.9em; margin: 6px 0;">Última Atualização: 19/01/2026</p>
+    <p style="font-size: 0.8em; opacity: 0.8;">v4.5.1 - Action Buttons Fix</p>
+    <p style="color:#baecff;">Tellstones foi feito para ser jogado na horizontal.</p>
+    <button id="btn-fullscreen-rotate"
+      style="margin-top:20px; padding:12px 24px; font-size:1.1em; background:#2d8cff; color:white; border:none; border-radius:8px; cursor:pointer;">
+      🔄 Forçar Horizontal (Tela Cheia)
+    </button>
+  </div>
+
+  <!-- ================= PLACAR CENTRAL ================= -->
+  <div id="placar-turno-central" style="display:none;"></div>
+
+  <!-- ================= BOTÃO DE MUTE GLOBAL ================= -->
+  <button id="btn-mute-global" title="Mutar/Desmutar Música"
+    style="position:fixed; top:10px; right: -7px; z-index:100000; background:transparent; border:none; cursor:pointer; color:rgba(255,255,255,0.7); display:flex; align-items:center; justify-content:center; font-size:24px; transition: color 0.3s;"
+    onmouseover="this.style.color='rgba(255,255,255,1)'"
+    onmouseout="this.style.color='window.isMuted ? \'rgba(255,255,255,0.5)\' : \'rgba(255,255,255,0.7)\''">
+    🔊
+  </button>
+
+
+
+
+
+
+  <!-- Botão de Login/Perfil (Fix Position, toggled via JS) -->
+  <div id="user-profile-container" style="position: fixed; top: 0px; left: 0px; z-index: 9999; pointer-events: none;">
+
+    <!-- STATE 1: Login Button (Visible when NOT logged in) -->
+    <div id="login-state"
+      style="position: relative; display: flex; align-items: center; justify-content: center; pointer-events: auto; cursor: pointer; transition: transform 0.2s ease;"
+      onmouseover="this.querySelector('img').style.filter='drop-shadow(0 0 10px rgba(255, 255, 255, 0.6)) brightness(1.1)'; this.style.transform='scale(1.05)';"
+      onmouseout="this.querySelector('img').style.filter='drop-shadow(0 0 0px rgba(255, 255, 255, 0)) brightness(1)'; this.style.transform='scale(1)';">
+
+      <img id="login-btn-bg" src="/assets/login_user-CPoly_Q6.png" alt="Plate"
+        style="height: 130px; width: auto; display: block; filter: drop-shadow(0 0 0px rgba(255, 255, 255, 0)); transition: all 0.3s ease;">
+
+      <span
+        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #eecfa1; font-family: 'Cinzel Decorative', serif; font-weight: bold; font-size: 1.5em; text-shadow: 0 2px 4px #000; pointer-events: none;">LOGIN</span>
+    </div>
+
+    <!-- STATE 2: User Info (Visible when logged in) -->
+    <div id="user-info"
+      style="display: none; position: relative; align-items: center; justify-content: center; pointer-events: auto;">
+
+      <!-- Same Background Image for Consistency -->
+      <img src="/assets/login_user-CPoly_Q6.png" alt="Plate"
+        style="height: 130px; width: auto; display: block;">
+
+      <!-- Content Overlay -->
+      <div
+        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center; width: 100%; gap: 0px;">
+        <span id="user-display-name"
+          style="font-weight: bold; color: #eecfa1; text-shadow: 0 1px 3px #000; font-size: 1.1em; pointer-events: none;">Convidado</span>
+
+        <button id="logout-btn" title="Sair"
+          style="background: transparent; border: none; cursor: pointer; color: #000000; font-size: 1.2em; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;"
+          onmouseover="this.style.transform='scale(1.2)'; this.style.color='#ff8888';"
+          onmouseout="this.style.transform='scale(1)'; this.style.color='#ff5555';">
+          <!-- Simple SVG Logout Icon -->
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TELA INICIAL (MAIN MENU) ================= -->
+  <div id="start-screen" class="active">
+
+    <!-- Título e slogan -->
+    <h1>TellStones</h1>
+    <h2 id="slogan-main">Memorize. Blefe. Desafie.</h2>
+
+    <!-- Botões principais (3 botões) -->
+    <div id="main-menu-btns" style="display:flex; flex-direction:column; gap:-5px; align-items:center;">
+      <button id="play-btn" data-i18n="menu.play">JOGAR</button>
+      <button id="options-btn" data-i18n="menu.options">OPÇÕES</button>
+      <button id="customization-btn" data-i18n="menu.customization">PERSONALIZAÇÃO</button>
+    </div>
+
+
+
+
+
+
+
+    <!-- ================= MENU ONLINE ================= -->
+    <div id="online-menu-container" style="display:none;">
+      <div id="online-menu" style="display:flex; flex-direction:column; gap:0px; align-items:center;">
+        <button id="back-to-main-btn">&#8617;</button>
+
+        <!-- Tabs -->
+        <div id="online-tabs-container" style="display:flex; gap:10px; margin-bottom: 20px;">
+          <button id="create-room-btn" data-i18n="menu.createRoom">Criar Sala</button>
+          <button id="join-room-btn" data-i18n="menu.joinRoom">Entrar em Sala</button>
+          <button id="list-rooms-btn" data-i18n="online.listRooms">Salas Públicas</button>
+        </div>
+
+        <!-- Content Area -->
+        <div id="online-content-area"
+          style="width: 100%; display: flex; justify-content: center; height: 280px; align-items: flex-start;">
+
+          <!-- Create Room -->
+          <div id="room-options" style="display:none; flex-direction: column; align-items: center;">
+            <h3 style="color:#daa520; font-family:'Cinzel Decorative'; margin-bottom:15px; display:none;"
+              data-i18n="lobby.createRoomTitle">Criar Nova Sala
+            </h3>
+            <div style="display:flex; gap:20px; margin-bottom:10px;">
+              <label>
+                <input type="radio" name="mode" value="1x1" checked> <span data-i18n="lobby.duel">1x1 (Duelo)</span>
+              </label>
+              <label>
+                <input type="radio" name="mode" value="2x2"> <span data-i18n="lobby.doubles">2x2 (Duplas)</span>
+              </label>
+            </div>
+            <input type="text" id="nome-criar" placeholder="Seu apelido" data-i18n-placeholder="online.nickname"
+              maxlength="20" style="margin:10px 0;width:300px">
+            <label style="margin-bottom:10px; color:#ddd;">
+              <input type="checkbox" id="check-public-room"> <span data-i18n="lobby.public">Sala Pública</span>
+            </label>
+            <button id="start-game-btn" data-i18n="online.createLobby">Criar Lobby</button>
+            <div id="codigo-sala-criada" style="margin-top:10px;color:#8ecfff;font-weight:bold;"></div>
+          </div>
+
+          <!-- Join Room -->
+          <div id="join-room" style="display:none; flex-direction: column; align-items: center;">
+            <h3 style="color:#00ffff; font-family:'Cinzel Decorative'; margin-bottom:15px; display:none;">Entrar na Sala
+            </h3>
+            <input type="text" id="nome-entrar" placeholder="Seu apelido" maxlength="20"
+              style="margin-bottom:8px;width:300px">
+            <input type="text" id="room-code" placeholder="Código da sala" maxlength="8"
+              style="margin-bottom:8px;width:300px">
+            <div style="display:flex; gap:20px; margin: 5px 0 15px 0;">
+              <label style="color:#f1f1f1;">
+                <input type="radio" name="tipo-entrada" value="jogador" checked> Jogador
+              </label>
+              <label style="color:#f1f1f1;">
+                <input type="radio" name="tipo-entrada" value="espectador"> Espectador
+              </label>
+            </div>
+            <button id="enter-room-btn" data-i18n="online.enter">Entrar</button>
+          </div>
+
+          <!-- Room List -->
+          <div id="room-list-view" style="display:none; flex-direction: column; align-items: center; width: 100%;">
+            <div id="room-list-header"
+              style="display: flex; justify-content: space-between; width: 90%; margin-bottom: 5px; color: #aaa; font-size: 0.8em; padding: 0 5px;">
+              <span style="flex: 2;">Criador</span>
+              <span style="flex: 1;">Modo</span>
+              <span style="flex: 1;">Jogadores</span>
+              <span style="flex: 1;">Ação</span>
+            </div>
+            <div id="room-list-container"
+              style="width: 90%; height: 200px; overflow-y: auto; background: rgba(0,0,0,0.5); border: 1px solid #444; border-radius: 4px; padding: 5px;">
+              <div style="text-align:center; padding: 20px; color: #888;">Nenhuma sala encontrada</div>
+            </div>
+            <button id="refresh-rooms-btn" style="margin-top: 10px; font-size: 0.8em; padding: 5px 15px;"
+              data-i18n="online.refresh">Atualizar</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div id="changelog-box"></div>
+
+  <!-- ================= GAME MODES (SELEÇÃO DE MODO) ================= -->
+  <div id="game-modes-screen"
+    style="display:none; position:absolute; top:40%; left:50%; transform:translate(-50%,-50%); max-width:400px; padding:30px; background:transparent; text-align:center; z-index:3100;">
+    <!-- Botão Voltar (mesmo estilo do online) -->
+    <button id="back-to-menu-btn" title="Voltar ao Menu">&#8617;</button>
+
+    <!-- Título -->
+    <h1>TellStones</h1>
+    <h2 id="slogan-game-modes">Modos de Jogo</h2>
+
+    <!-- Botões de modos -->
+    <div id="game-modes-btns" style="display:flex; flex-direction:column; gap:-5px; align-items:center;">
+      <button id="tutorial-btn" data-i18n="gameModes.tutorial">Tutorial</button>
+      <button id="bot-pve-btn" data-i18n="gameModes.pve">Jogo PvE</button>
+      <button id="online-menu-btn" data-i18n="gameModes.online">Jogo Online</button>
+      <button id="campaign-btn" disabled style="opacity:0.5; cursor:not-allowed;" title="Em breve"
+        data-i18n="gameModes.campaign">Campanha</button>
+    </div>
+  </div>
+
+  <!-- CUSTOMIZATION SCREEN -->
+  <div id="customization-screen" style="display: none;" class="modal-overlay">
+    <div class="modal-content large">
+      <h2 data-i18n="custom.title">Customização</h2>
+
+      <div class="cust-section">
+        <h3 data-i18n="custom.mats">Tapete de Jogo</h3>
+        <div class="options-grid" id="mat-options">
+          <!-- Gerado via JS -->
+        </div>
+      </div>
+
+      <div class="cust-section">
+        <h3 data-i18n="custom.stones">Conjunto de Pedras</h3>
+        <div class="options-grid" id="stone-options">
+          <!-- Gerado via JS -->
+        </div>
+      </div>
+
+      <button id="btn-close-cust" class="close-btn" data-i18n="lobby.back">Voltar</button>
+    </div>
+  </div>
+
+
+  <!-- ================= LOBBY ================= -->
+  <div id="lobby">
+    <button id="back-from-lobby-btn" title="Voltar"
+      style="position:absolute; top:20px; right:20px; background:transparent; border:none; cursor:pointer; color:#fff; font-size:24px; padding:0;">
+      &#8617;
+    </button>
+    <h2>Lobby da Partida</h2>
+    <div id="lobby-codigo" style="margin-bottom:10px;"></div>
+    <div>
+      <strong>Jogadores:</strong>
+      <ul id="lobby-jogadores"></ul>
+    </div>
+    <div>
+      <strong>Espectadores:</strong>
+      <ul id="lobby-espectadores"></ul>
+    </div>
+    <button id="lobby-iniciar" style="display:none;margin-top:20px;">Iniciar Jogo</button>
+  </div>
+
+  <!-- ================= TELA DE JOGO ================= -->
+  <div id="game">
+    <!-- ======= INFORMAÇÕES DA SALA E ESPECTADORES ======= -->
+    <div id="info-sala">
+      <div id="codigo-sala"><span data-i18n="online.roomCode">Código</span>: <span id="codigo-sala-valor"></span>
+      </div>
+      <div id="espectadores"><span data-i18n="online.spectator">Espectadores</span>: <span
+          id="lista-espectadores"></span></div>
+    </div>
+    <!-- ======= BOTÕES DE AÇÕES LATERAIS RESTORED TO GAME ======= -->
+    <div id="botoes-acoes-laterais">
+      <button id="btn-desafiar" class="btn-image-action">
+        <img id="btn-desafiar-img" src="/assets/btn-desafiar-DdMBaaSz.png" alt="Desafiar">
+      </button>
+      <button id="btn-segabar" class="btn-image-action">
+        <img id="btn-segabar-img" src="/assets/btn-Se_Gabar-d-NdjfpZ.png" alt="Se Gabar">
+      </button>
+    </div>
+    <!-- ======= ÍCONE DE AÇÕES ======= -->
+    <!-- Ícone de ações removido daqui e movido para o body para corrigir z-index -->
+    <!-- ======= CARD DE AÇÕES ======= -->
+    <div id="box-acoes" style="display:none;">
+      <h3>Ações Possíveis</h3>
+      <ul>
+        <li><strong>Colocar:</strong> Adiciona pedra à mesa.</li>
+        <li><strong>Esconder:</strong> Vira uma pedra para baixo.</li>
+        <li><strong>Mover:</strong> Muda posição de uma pedra.</li>
+        <li><strong>Trocar:</strong> Troca duas pedras de lugar.</li>
+        <li><strong>Espiar:</strong> Olha uma pedra virada.</li>
+        <li><strong>Desafiar:</strong> Testa o oponente sobre uma pedra virada.</li>
+        <li><strong>Se Gabar:</strong> Afirma saber todas as posições.<br>
+          <small>O oponente pode responder:<br>
+            <b>1. Acreditar:</b> O jogador que fez a ação ganha 1 ponto.<br>
+            <b>2. Duvidar:</b> O jogador deve provar que sabe a combinação das peças.<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;Se conseguir, vence o jogo imediatamente.<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;Se errar qualquer pedra, o oponente vence.<br>
+            <b>3. Se gabar:</b> O oponente diz que também sabe onde estão todas as peças.<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;Se conseguir, vence o jogo imediatamente.<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;Se errar qualquer pedra, o oponente vence.
+          </small>
+        </li>
+      </ul>
+    </div>
+    <!-- ======= TABULEIRO CENTRAL ======= -->
+    <div id="tabuleiro-center">
+      <div id="linha-vertical-pedras"></div>
+      <div id="circle-pedras">
+        <!-- pedras renderizadas via JS -->
+      </div>
+      <div id="tabuleiro-wrapper" style="width:740px;height:320px;position:relative;display:inline-block;">
+        <img id="tabuleiro" src="/assets/Tabuleiro-BvEhIbcP.jpg" alt="Tabuleiro Tellstones"
+          style="width:740px;height:320px;object-fit:contain;" />
+        <div id="pedras-mesa"></div>
+        <!-- Marcadores de ponto à esquerda (Jogador 1 ou Dupla 1) -->
+        <div class="marcador-ponto marcador-esquerda" data-idx="0"></div>
+        <div class="marcador-ponto marcador-esquerda" data-idx="1"></div>
+        <div class="marcador-ponto marcador-esquerda" data-idx="2"></div>
+        <!-- Marcadores de ponto à direita (Jogador 2 ou Dupla 2) -->
+        <div class="marcador-ponto marcador-direita" data-idx="0"></div>
+        <div class="marcador-ponto marcador-direita" data-idx="1"></div>
+        <div class="marcador-ponto marcador-direita" data-idx="2"></div>
+        <div id="info-sala-local" style="position: absolute; top: 10px; right: 10px; z-index: 100;">
+          <button id="btn-sair-partida" data-i18n="game.quit"
+            style="background:#f44336; color:white; border:none; border-radius:4px; padding:8px 12px; cursor:pointer; font-weight:bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">Sair
+            da Partida</button>
+        </div>
+        <!-- Botão e animação da moeda -->
+        <button id="moeda-btn" title="Lançar moeda"
+          style="background:none;border:none;outline:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;width:auto;height:auto;display:none;">
+          <span id="moeda-animada"
+            style="display:inline-block;width:80px;height:80px;position:relative;perspective:300px;">
+            <img id="moeda-frente" src="/assets/Cara-CIv8CLmp.png"
+              style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
+            <img id="moeda-verso" src="/assets/Coroa-BY7hnDuy.png"
+              style="width:100%;height:100%;border-radius:50%;object-fit:cover;object-position:50% 52%;position:absolute;left:0;top:0;backface-visibility:hidden;transform:rotateY(180deg);transition:transform 0.6s;box-shadow:0 2px 8px #0007;background:#222;" />
+          </span>
+        </button>
+        <audio id="som-moeda" src="/assets/moeda-BoXvz2JT.mp3" preload="auto"></audio>
+        <!-- Botões laterais removidos daqui -->
+      </div>
+      <div id="pedra-central-animada" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- ================= ÍCONE DE AÇÕES (GLOBAL) ================= -->
+  <!-- Movido para fora de #game para garantir z-index superior ao card -->
+  <div id="icone-acoes" title="Ações"
+    style="padding:0;width:60px;height:60px;display:none;align-items:center;justify-content:center;background:none;border:none;">
+    <img src="/assets/A%C3%A7%C3%B5es-BQnpvsQW.png" alt="Ações"
+      style="width:54px;height:54px;object-fit:contain;display:block;" />
+  </div>
+
+  <!-- ================= CARTA DE AÇÕES ================= -->
+  <div id="carta-acoes" style="display:none;">
+    <img src="/assets/card_actions-DKoDw5PS.png" alt="Carta de Ações" id="img-carta-acoes" />
+    <div id="conteudo-acoes">
+      <!-- As ações serão renderizadas aqui via JS -->
+    </div>
+  </div>
+
+  <!-- ================= TOASTS E CRÉDITOS ================= -->
+  <div id="toast-interno"></div>
+  <div id="toast" style="display:none"></div>
+
+  <!-- ================= ESCOLHA CARA OU COROA ================= -->
+  <div id="escolha-cara-coroa"
+    style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); z-index:4000; align-items:center; justify-content:center;">
+    <div
+      style="background:#222; padding:32px 40px; border-radius:16px; box-shadow:0 4px 32px #000a; text-align:center;">
+      <h2 data-i18n="game.coinFlip.choose">Escolha: Cara ou Coroa ?</h2>
+      <button id="btn-cara"
+        style="margin:12px 24px; font-size:1.2em; display:inline-flex; flex-direction:column; align-items:center;">
+        <img src="/assets/Cara-CIv8CLmp.png" alt="Cara"
+          style="width:48px;height:48px;border-radius:50%;margin-bottom:6px;box-shadow:0 2px 8px #0007;" />
+        <span data-i18n="game.coinFlip.heads">Cara</span>
+      </button>
+      <button id="btn-coroa"
+        style="margin:12px 24px; font-size:1.2em; display:inline-flex; flex-direction:column; align-items:center;">
+        <img src="/assets/Coroa-BY7hnDuy.png" alt="Coroa"
+          style="width:48px;height:48px;border-radius:50%;margin-bottom:6px;box-shadow:0 2px 8px #0007;" />
+        <span data-i18n="game.coinFlip.tails">Coroa</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= TELA DE VITÓRIA/DERROTA ================= -->
+  <div id="tela-vitoria"
+    style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:99999; align-items:center; justify-content:center; flex-direction:column;">
+    <div id="tela-vitoria-conteudo"
+      style="background:#232942; color:#fff; padding:48px 60px; border-radius:18px; box-shadow:0 4px 32px #000a; text-align:center; max-width:90vw;">
+      <h2 id="tela-vitoria-titulo" data-i18n="game.victory">Vitória!</h2>
+      <p id="tela-vitoria-msg" data-i18n="game.playerWins">Parabéns, você venceu!</p>
+      <button id="btn-voltar-lobby" data-i18n="online.backToLobby"
+        style="margin-top:32px; font-size:1.1em; padding:12px 32px; border-radius:8px; background:#2d8cff; color:#fff; border:none; cursor:pointer;">Voltar
+        ao Lobby</button>
+    </div>
+  </div>
+
+  <!-- ================= SCRIPTS E ÁUDIO ================= -->
+  <div id="audio-container" style="display:none;">
+    <audio id="som-fundo" src="/assets/ambient-3orRBFZv.mp3" loop preload="auto"></audio>
+    <audio id="som-click" src="data:audio/wav;base64,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DQoJCQk8L0FUVFI+DQoJCQk8QVRUUj4NCgkJCQk8RkxBR1M+MjwvRkxBR1M+DQoJCQkJPE5BTUU+TWVkaWFEdXJhdGlvbjwvTkFNRT4NCgkJCQk8VFlQRT5mbG9hdDwvVFlQRT4NCgkJCQk8VkFMVUU+NjAwLjA8L1ZBTFVFPg0KCQkJPC9BVFRSPg0KCQkJPEFUVFI+DQoJCQkJPEZMQUdTPjI8L0ZMQUdTPg0KCQkJCTxOQU1FPk1lZGlhUHVsbEZhY3RvcjwvTkFNRT4NCgkJCQk8VFlQRT5mbG9hdDwvVFlQRT4NCgkJCQk8VkFMVUU+MS4wPC9WQUxVRT4NCgkJCTwvQVRUUj4NCgkJCTxBVFRSPg0KCQkJCTxGTEFHUz4yPC9GTEFHUz4NCgkJCQk8TkFNRT5NZWRpYVN0YXJ0VGltZTwvTkFNRT4NCgkJCQk8VFlQRT5mbG9hdDwvVFlQRT4NCgkJCQk8VkFMVUU+MC4wPC9WQUxVRT4NCgkJCTwvQVRUUj4NCgkJCTxBVFRSPg0KCQkJCTxGTEFHUz4yPC9GTEFHUz4NCgkJCQk8TkFNRT5NZWRpYVRyYWNrVGl0bGU8L05BTUU+DQoJCQkJPFRZUEU+c3RyaW5nPC9UWVBFPg0KCQkJCTxWQUxVRT5TdGVyZW8gT3V0PC9WQUxVRT4NCgkJCTwvQVRUUj4NCgkJCTxBVFRSPg0KCQkJCTxGTEFHUz4yPC9GTEFHUz4NCgkJCQk8TkFNRT5Qcm9ncmFtTmFtZTwvTkFNRT4NCgkJCQk8VFlQRT5zdHJpbmc8L1RZUEU+DQoJCQkJPFZBTFVFPkN1YmFzZSBMRSBBSSBFbGVtZW50czwvVkFMVUU+DQoJCQk8L0FUVFI+DQoJCQk8QVRUUj4NCgkJCQk8RkxBR1M+MjwvRkxBR1M+DQoJCQkJPE5BTUU+UHJvZ3JhbVZlcnNpb248L05BTUU+DQoJCQkJPFRZUEU+c3RyaW5nPC9UWVBFPg0KCQkJCTxWQUxVRT5WZXJzaW9uIDEwLjAuNjA8L1ZBTFVFPg0KCQkJPC9BVFRSPg0KCQk8L0FUVFJfTElTVD4NCgk8L1NURUlOQkVSRz4NCjwvQldGWE1MPg0KIA==" preload="auto"></audio>
+    <audio id="som-press" src="/assets/press-CUWn2Od3.mp3" preload="auto"></audio>
+    <audio id="som-desafio" src="/assets/som%20teste-cU5BFZ28.wav" preload="auto"></audio>
+    <audio id="som-sucesso" src="/assets/success%20minimalistic-B-_-0xQk.wav" preload="auto"></audio>
+    <audio id="som-falha" src="/assets/failure-bKx-Xq8p.wav" preload="auto"></audio>
+  </div>
+  <!-- Script principal do jogo -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+  <!-- Core System (NEW - v6.0) -->
+
+  <!-- Screens (NEW - v6.0) -->
+
+  <!-- State Manager (NEW - v6.0) -->
+
+  <!-- Tutorial UI (NEW - v6.0 Fase 4.3) -->
+
+  <!-- i18n (NEW - v6.0) -->
+
+  <!-- Customization (NEW - v6.0 Fase 6) -->
+
+  <!-- Authentication & Login (NEW - v6.0 Fase 2.0) -->
+
+  <!-- Utilities -->
+
+  <!-- AI -->
+
+  <!-- Game Modes -->
+
+
+  <!-- Debug / Automation -->
+  <!-- Dev Tools (Restricted) -->
+  <div id="dev-tools-container" style="display:none;">
+  </div>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      // Ativa se tiver ?dev=true na URL ou se já estiver salvo no LocalStorage
+      if (params.has('dev')) {
+        localStorage.setItem('tellstones_dev_mode', 'true');
+      }
+      if (params.has('nodev')) {
+        localStorage.removeItem('tellstones_dev_mode');
+      }
+
+      if (localStorage.getItem('tellstones_dev_mode') === 'true') {
+        const devContainer = document.getElementById('dev-tools-container');
+        if (devContainer) devContainer.style.display = 'block';
+        // Note: Floating button logic moved to DebugLoggerUI.ts
+      }
+    })();
+  </script>
+
+  <!-- ================= KO-FI WIDGET ================= -->
+  <script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>
+  <script>
+    if (window.kofiWidgetOverlay && !document.getElementById('kofi-widget-overlay')) {
+      kofiWidgetOverlay.draw('alicedesa', {
+        'type': 'floating-chat',
+        'floating-chat.donateButton.text': '',
+        'floating-chat.donateButton.background-color': '#794bc4',
+        'floating-chat.donateButton.text-color': '#fff'
+      });
+
+      // Fix visual minimalista (inclui correção para floatingchat-container)
+      const _fixKofi = () => {
+        const els = document.querySelectorAll('[id*="kofi-widget-overlay"], .floatingchat-container, .floating-chat-kofi-popup-iframe');
+        els.forEach(el => {
+          el.style.setProperty('background', 'transparent', 'important');
+          el.style.setProperty('box-shadow', 'none', 'important');
+          // Tentar remover bordas tb
+          el.style.setProperty('border', 'none', 'important');
+        });
+      };
+      setTimeout(_fixKofi, 1000);
+      setTimeout(_fixKofi, 3000);
+    }
+  </script>
+
+  <!-- ================= BOTÕES DE AÇÕES LATERAIS REMOVED FROM BODY ================= -->
+
+  <!-- ================= TOOLTIP GLOBAL ================= -->
+  <div id="tooltip"
+    style="display:none;position:fixed;z-index:99999;padding:8px 14px;background:rgba(24,28,36,0.98);color:#ffd700;border-radius:8px;font-size:1em;box-shadow:0 2px 8px #000a;pointer-events:none;white-space:nowrap;">
+  </div>
+
+</body>
+
+</html>

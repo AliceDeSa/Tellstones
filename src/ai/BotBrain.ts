@@ -24,6 +24,7 @@ interface Pedra {
 
 interface GameState {
     mesa: (Pedra | null)[];
+    reserva?: Pedra[];
     vez: number;
     jogadores: { nome: string; pontos: number }[];
     desafio?: any;
@@ -92,42 +93,77 @@ export class BotBrain {
      * Prediz qual pedra está em um slot (para desafios)
      */
     predictStone(slot: number, state: GameState): string {
-        // Primeiro tenta usar memória
+        // Primeiro tenta usar memória diretamenta para este slot
         const guess = this.memory.getBestGuess(slot);
         if (guess && this.memory.getConfidence(slot) > 0.5) {
             Logger.ai(`[Bot] Palpite por memória: ${guess} (${Math.round(this.memory.getConfidence(slot) * 100)}%)`);
             return guess;
         }
 
-        // Sem memória - eliminar pedras visíveis
-        const visibleStones = this.getVisibleStones(state);
-        const possibleStones = PEDRAS.filter(p => !visibleStones.includes(p));
+        // Sem memória conclusiva para este slot:
+        // 1. O que não pode ser? (Pedras visíveis + pedras de alta confiança + pedras na reserva)
+        const excludedStones = new Set(this.getVisibleStones(state));
+
+        // Adiciona pedras na reserva (se elas não foram jogadas, não podem estar no slot alvo)
+        if (state.reserva && state.reserva.length > 0) {
+            state.reserva.forEach(p => excludedStones.add(p.nome));
+            Logger.ai(`[Bot] ${state.reserva.length} pedras na reserva excluídas dos palpites.`);
+        }
+
+        for (let i = 0; i < 7; i++) {
+            if (i === slot) continue; // Ignora o slot alvo atual
+            const otherGuess = this.memory.getBestGuess(i);
+            const conf = this.memory.getConfidence(i);
+            // Se ele tem boa certeza que uma pedra X está no slot Y, X não está no slot alvo
+            if (otherGuess && conf > 0.6) {
+                excludedStones.add(otherGuess);
+                Logger.ai(`[Bot] Acredita que ${otherGuess} está no slot ${i} -> Excluído das opções`);
+            }
+        }
+
+        const possibleStones = PEDRAS.filter(p => !excludedStones.has(p));
 
         if (possibleStones.length > 0) {
             const choice = possibleStones[Math.floor(Math.random() * possibleStones.length)];
-            Logger.ai(`[Bot] Palpite por eliminação: ${choice}`);
+            Logger.ai(`[Bot] Palpite por eliminação: ${choice} (Sobraram ${possibleStones.length} opções)`);
             return choice;
         }
 
         // Fallback total
         const fallback = PEDRAS[Math.floor(Math.random() * PEDRAS.length)];
-        Logger.ai(`[Bot] Palpite aleatório: ${fallback}`);
+        Logger.ai(`[Bot] Palpite aleatório falha lógica: ${fallback}`);
         return fallback;
     }
 
     /**
-     * Decide resposta a segabar (acreditar ou duvidar)
+     * Decide resposta a segabar (acreditar ou duvidar).
+     * Lógica: se há poucas pedras viradas o jogador consegue lembrá-las facilmente,
+     * então o bot deve se gabar também (counter-boast = empate ou ponto garantido).
+     * Com muitas pedras escondidas e bot sem memória = arriscar é ruim → acreditar.
      */
     decideBoastResponse(state: GameState): 'acreditar' | 'duvidar' {
-        // Conta pedras escondidas na mesa
-        const hiddenCount = state.mesa.filter(p => p && p.virada).length;
+        const hiddenSlots = state.mesa
+            .map((p, i) => ({ p, i }))
+            .filter(({ p }) => p && p.virada)
+            .map(({ i }) => i);
+        const hiddenCount = hiddenSlots.length;
 
-        // Mais pedras escondidas = mais chance de duvidar
-        const doubtChance = hiddenCount > 4 ? 0.7 :
-            hiddenCount > 2 ? 0.5 : 0.3;
+        // REGRA: Com < 3 pedras viradas o jogador lembra trivialmente → counter-boast seguro
+        if (hiddenCount < 3) {
+            Logger.ai(`[Bot] Segabar response: duvidar (< 3 viradas — contra-segabar garantido)`);
+            return 'duvidar';
+        }
+
+        // Com muitas pedras viradas: avaliar memória do bot
+        const avgConfidence = this.memory.getAverageConfidence(hiddenSlots);
+        // Alta confiança do bot → também sabe as pedras → duvidar vale a pena
+        // Baixa confiança + muitas pedras → jogador provavelmente sabe mais → acreditar
+        const doubtChance = hiddenCount >= 6 ? 0.25 + avgConfidence * 0.5
+            : hiddenCount >= 4 ? 0.35 + avgConfidence * 0.4
+                : 0.45 + avgConfidence * 0.35; // 3-4 pedras
 
         const decision = Math.random() < doubtChance ? 'duvidar' : 'acreditar';
-        Logger.ai(`[Bot] Segabar decisão: ${decision} (${hiddenCount} pedras escondidas)`);
+        Logger.ai(`[Bot] Segabar response: ${decision} (${hiddenCount} viradas, confiança média: ${(avgConfidence * 100).toFixed(0)}%)`);
         return decision;
     }
 
@@ -158,8 +194,14 @@ export class BotBrain {
                     }
                 }
                 break;
+            case 'peek':
+                // Oponente espiou uma pedra
+                if (action.origem !== undefined && action.jogador !== 'Bot') {
+                    this.memory.recordPlayerPeek(action.origem);
+                }
+                break;
             case 'turn_end':
-                this.memory.nextTurn();
+                this.memory.nextTurn(state);
                 Logger.ai(`[Bot] Fim de turno. Memória: ${this.memory.getDebugState()}`);
                 break;
         }
@@ -300,6 +342,22 @@ export class BotBrain {
         }
     }
 
+    // ==========================
+    // HELPERS DE ESTADO DO BOARD
+    // ==========================
+
+    /** Índices das pedras viradas para baixo (ocultas) na mesa */
+    private getHiddenSlots(state: GameState): number[] {
+        return state.mesa
+            .map((p, i) => ({ p, i }))
+            .filter(({ p }) => p && p.virada)
+            .map(({ i }) => i);
+    }
+
+    // ==========================
+    // SCORING INDIVIDUAL
+    // ==========================
+
     private scorePlace(slot: number, state: GameState): number {
         // Preferir centro e slots adjacentes ocupados
         let score = 30;
@@ -321,31 +379,79 @@ export class BotBrain {
     }
 
     private scoreSwap(from: number, to: number, state: GameState): number {
-        // Trocar é útil quando jogador sabe onde estão as pedras
-        const hiddenCount = state.mesa.filter(p => p && p.virada).length;
-        return 10 + hiddenCount * 3;
+        const pFrom = state.mesa[from];
+        const pTo = state.mesa[to];
+
+        // REGRA: Trocar duas pedras VISÍVEIS (viradas para CIMA) é inútil —
+        // o jogador simplesmente vê a nova posição. Penalizar fortemente.
+        if (pFrom && !pFrom.virada && pTo && !pTo.virada) {
+            return 2;
+        }
+
+        // Trocar envolve ao menos uma pedra oculta → confunde o jogador
+        const hiddenCount = this.getHiddenSlots(state).length;
+        // Mais pedras ocultas → troca tem mais valor (confusão maior)
+        return 12 + hiddenCount * 4;
     }
 
     private scorePeek(slot: number, state: GameState): number {
-        // Valor de espiar depende da confiança na memória
         const confidence = this.memory.getConfidence(slot);
-        if (confidence > 0.7) return 5; // Já sabe, pouco valor
-        return 35; // Não sabe, alto valor
+
+        // REGRA: Se bot já sabe o que está neste slot, espiar é desperdício.
+        if (confidence > 0.7) return 3;
+
+        // REGRA: Suprimir peek se a média de confiança nas pedras viradas já é alta —
+        // o bot já sabe a maioria, não precisa gastar ação espiando.
+        const hiddenSlots = this.getHiddenSlots(state);
+        const avgConfOnHidden = this.memory.getAverageConfidence(hiddenSlots);
+        if (avgConfOnHidden > 0.65) return 5; // Bot já sabe o suficiente
+
+        // Slot desconhecido + memória geral fraca → espiar tem alto valor
+        return 35;
     }
 
     private scoreChallenge(slot: number, state: GameState): number {
-        // Desafiar é arriscado mas pode ganhar ponto
-        const confidence = this.memory.getConfidence(slot);
-        if (confidence > 0.8) return 50; // Alta confiança = bom desafio
-        if (confidence > 0.5) return 30;
-        return 10; // Baixa confiança = arriscado
+        const hiddenSlots = this.getHiddenSlots(state);
+
+        // REGRA: Com menos de 3 pedras viradas é trivial para o jogador adivinhar.
+        // Não valer a pena desafiar — suprimir completamente.
+        if (hiddenSlots.length < 3) return 0;
+
+        // REGRA NOVA: O bot deve desafiar pedras baseando-se especificamente
+        // no que ele ACHA que o JOGADOR sabe (usando o PlayerMemory Tracker).
+        const botConfidence = this.memory.getConfidence(slot);
+        const playerConfidence = this.memory.getPlayerConfidence(slot);
+
+        // Target ideal: bot conhece muito bem a pedra (para acertar caso perca o desafio)
+        // MAS o jogador tem baixíssima confiança nela (movida há muito tempo / não viu recente).
+
+        if (playerConfidence > 0.8) return 5; // Jogador acabou de olhar pra ela! Muito arriscado desafiar.
+
+        if (playerConfidence < 0.4 && botConfidence > 0.7) {
+            // Cenário perfeito: Bot acha que o jogador não sabe, mas bot tem certeza!
+            return 60;
+        }
+
+        if (playerConfidence < 0.6 && botConfidence > 0.5) return 30; // Cenário "Bom"
+        return 8;  // Ambos não sabem, ou jogador sabe -> arriscado
     }
 
     private scoreBoast(state: GameState): number {
-        // Segabar é arriscado
-        const hiddenCount = state.mesa.filter(p => p && p.virada).length;
-        if (hiddenCount >= 5) return 40; // Muitas escondidas = pode blefar
-        return 15;
+        const hiddenSlots = this.getHiddenSlots(state);
+        const hiddenCount = hiddenSlots.length;
+
+        // REGRA: Com menos de 3 pedras viradas é fácil demais para o jogador
+        // contra-segabar (lembra todas). Proibir segabar.
+        if (hiddenCount < 3) return 0;
+
+        // Avaliar confiança na memória: bot deve segabar apenas quando conhece bem as pedras
+        const avgConf = this.memory.getAverageConfidence(hiddenSlots);
+
+        // Muitas pedras viradas + bot conhece bem → bom blefe estratégico
+        if (hiddenCount >= 5 && avgConf > 0.6) return 45;
+        if (hiddenCount >= 5) return 28; // Muitas, mas bot não lembra bem
+        if (hiddenCount >= 3 && avgConf > 0.7) return 35; // Sabe as poucas que há
+        return 12; // Arriscado
     }
 
     /**

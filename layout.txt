@@ -1,0 +1,28 @@
+const savedLayout: Record<string, { left: string, top: string, width: string }> = {
+            'mapa1.png': { left: '-5.56vw', top: '1.30vh', width: '25.62vw' },
+            'mapa2.png': { left: '82.28vw', top: '2.47vh', width: '17.57vw' },
+            'noticias1.png': { left: '53.59vw', top: '-1.82vh', width: '10.91vw' },
+            'noticias3.png': { left: '81.19vw', top: '51.82vh', width: '15.45vw' },
+            'poster_1.png': { left: '86.90vw', top: '43.62vh', width: '8.78vw' },
+            'poster_2.png': { left: '1.61vw', top: '2.34vh', width: '9.52vw' },
+            'poster_3.png': { left: '82.28vw', top: '0.65vh', width: '9.52vw' },
+            'quest1.png': { left: '64.28vw', top: '18.10vh', width: '9.96vw' },
+            'quest2.png': { left: '64.57vw', top: '28.91vh', width: '9.59vw' },
+            'quest3.png': { left: '26.21vw', top: '24.74vh', width: '9.59vw' },
+            'quest6.png': { left: '25.92vw', top: '58.98vh', width: '6.81vw' },
+            'quest7.png': { left: '50.59vw', top: '60.55vh', width: '7.32vw' },
+            'Rumores1.png': { left: '89.75vw', top: '54.43vh', width: '8.93vw' },
+            'tesouro1.png': { left: '71.82vw', top: '37.50vh', width: '7.25vw' },
+            'tesouro2.png': { left: '72.18vw', top: '61.85vh', width: '6.59vw' },
+            'tesouro3.png': { left: '33.02vw', top: '56.25vh', width: '7.32vw' },
+            'tesouro4.png': { left: '40.48vw', top: '57.81vh', width: '7.32vw' },
+            'tesouro5.png': { left: '51.32vw', top: '57.42vh', width: '7.32vw' },
+            'tesouro6.png': { left: '24.74vw', top: '50.26vh', width: '8.78vw' },
+            'tesouro7.png': { left: '24.23vw', top: '42.32vh', width: '6.00vw' },
+            'Venda3.png': { left: '86.24vw', top: '35.29vh', width: '15.52vw' },
+            'mapa_do_tesouro.png': { left: '2.34vw', top: '33.72vh', width: '10.25vw' },
+            'Venda1.png': { left: '67.50vw', top: '40.76vh', width: '11.71vw' },
+        };
+
+Flag: pt-BR left: 28.26vw top: 20.83vh width: 2.20vw
+Flag: en-US left: 30.89vw top: 20.83vh width: 2.20vw

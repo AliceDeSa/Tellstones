@@ -378,21 +378,33 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         };
     }
-    // Customization Button (MainMenu)
+    // Customization Button (Renamed to Teste 3D for Dev)
     const btnCustomization = document.getElementById("customization-btn");
     if (btnCustomization) {
+        // Change label to Teste 3D
+        btnCustomization.innerText = "Teste 3D";
         btnCustomization.onclick = function () {
             window.tocarSomPress();
-            console.log("[MainMenu] Navegando para Personalização...");
-            if (window.ScreenManager) {
-                window.ScreenManager.navigateTo('customization');
-            }
-            else {
-                // Fallback para navegação legada
-                console.warn("ScreenManager not found, using legacy navigation");
-                if (window.mostrarTela)
-                    window.mostrarTela('customization');
-            }
+            console.log("[MainMenu] Iniciando Modo Teste 3D...");
+            // 1. Hide Main Menu
+            const mainMenuBtns = document.getElementById("main-menu-btns");
+            if (mainMenuBtns)
+                mainMenuBtns.style.display = "none";
+            // 2. Hide Start Screen Logo/Title if needed
+            const startScreen = document.getElementById("start-screen");
+            if (startScreen)
+                startScreen.classList.remove("active");
+            // 3. Show 3D Canvas
+            console.log("[MainMenu] Disparando evento ENTER_3D_TEST_MODE");
+            const event = new CustomEvent('ENTER_3D_TEST_MODE');
+            window.dispatchEvent(event);
+            // Hide screens manually
+            document.querySelectorAll('.screen').forEach((el) => {
+                el.style.display = 'none';
+            });
+            // Also hide the UI Overlay initially if preferred, but TavernCanvas handles its own UI.
+            // 4. Force UI update in TavernCanvas if possible (by dispatching event)
+            // Since we don't have a direct bridge yet, we rely on the fact that hiding DOM UIs reveals the underlying Canvas.
         };
     }
     // ============ GAME MODES BUTTONS ============

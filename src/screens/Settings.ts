@@ -78,6 +78,14 @@ export class Settings implements Screen {
         // Wrapper do Painel (O Quadro que escala)
         const panelWrapper = document.createElement('div');
         panelWrapper.id = 'settings-panel-wrapper';
+        // Essencial para porcentagem: simular o tamanho do ::before no JS/CSS Inline para ser a âncora dos childs
+        panelWrapper.style.position = 'absolute';
+        panelWrapper.style.top = '50%';
+        panelWrapper.style.left = '50%';
+        panelWrapper.style.transform = 'translate(-50%, -50%)';
+        panelWrapper.style.width = 'min(90vw, 1000px)';
+        panelWrapper.style.height = 'min(90vh, 650px)';
+
         this.container.appendChild(panelWrapper);
 
         // Botão Fechar (X) - Agora dentro do wrapper
@@ -148,31 +156,31 @@ export class Settings implements Screen {
     }
 
     private createPosters(wrapper: HTMLElement): void {
-        // Layout Configurado pelo Usuário (Extraído dos Logs)
+        // Layout Configurado pelo Usuário (Extraído dos Logs e Re-calculado para Porcentagem % do Wrapper de 1000x650)
         const savedLayout: Record<string, { left: string, top: string, width: string }> = {
-            'mapa1.png': { left: '-76px', top: '10px', width: '350px' },
-            'mapa2.png': { left: '1124px', top: '19px', width: '240px' },
-            'noticias1.png': { left: '732px', top: '-14px', width: '149px' },
-            'noticias3.png': { left: '1109px', top: '398px', width: '211px' },
-            'poster_1.png': { left: '1187px', top: '335px', width: '120px' },
-            'poster_2.png': { left: '22px', top: '18px', width: '130px' },
-            'poster_3.png': { left: '1124px', top: '5px', width: '130px' },
-            'quest1.png': { left: '878px', top: '139px', width: '136px' },
-            'quest2.png': { left: '882px', top: '222px', width: '131px' },
-            'quest3.png': { left: '358px', top: '190px', width: '131px' },
-            'quest6.png': { left: '354px', top: '453px', width: '93px' },
-            'quest7.png': { left: '691px', top: '465px', width: '100px' },
-            'Rumores1.png': { left: '1226px', top: '418px', width: '122px' },
-            'tesouro1.png': { left: '981px', top: '288px', width: '99px' },
-            'tesouro2.png': { left: '986px', top: '475px', width: '90px' },
-            'tesouro3.png': { left: '451px', top: '432px', width: '100px' },
-            'tesouro4.png': { left: '553px', top: '444px', width: '100px' },
-            'tesouro5.png': { left: '701px', top: '441px', width: '100px' },
-            'tesouro6.png': { left: '338px', top: '386px', width: '120px' },
-            'tesouro7.png': { left: '331px', top: '325px', width: '82px' },
-            'Venda3.png': { left: '1178px', top: '271px', width: '212px' },
-            'mapa_do_tesouro.png': { left: '32px', top: '259px', width: '140px' },
-            'Venda1.png': { left: '922px', top: '313px', width: '160px' }
+            'mapa1.png': { left: '-25.90%', top: '-7.54%', width: '35.00%' },
+            'mapa2.png': { left: '94.10%', top: '-6.15%', width: '24.00%' },
+            'noticias1.png': { left: '54.90%', top: '-11.23%', width: '14.90%' },
+            'noticias3.png': { left: '92.60%', top: '52.15%', width: '21.10%' },
+            'poster_1.png': { left: '100.40%', top: '42.46%', width: '12.00%' },
+            'poster_2.png': { left: '-16.10%', top: '-6.31%', width: '13.00%' },
+            'poster_3.png': { left: '94.10%', top: '-8.31%', width: '13.00%' },
+            'quest1.png': { left: '69.50%', top: '12.31%', width: '13.60%' },
+            'quest2.png': { left: '69.90%', top: '25.08%', width: '13.10%' },
+            'quest3.png': { left: '17.50%', top: '20.15%', width: '13.10%' },
+            'quest6.png': { left: '17.10%', top: '60.62%', width: '9.30%' },
+            'quest7.png': { left: '50.80%', top: '62.46%', width: '10.00%' },
+            'Rumores1.png': { left: '104.30%', top: '55.23%', width: '12.20%' },
+            'tesouro1.png': { left: '79.80%', top: '35.23%', width: '9.90%' },
+            'tesouro2.png': { left: '80.30%', top: '64.00%', width: '9.00%' },
+            'tesouro3.png': { left: '26.80%', top: '57.38%', width: '10.00%' },
+            'tesouro4.png': { left: '37.00%', top: '59.23%', width: '10.00%' },
+            'tesouro5.png': { left: '51.80%', top: '58.77%', width: '10.00%' },
+            'tesouro6.png': { left: '15.50%', top: '50.31%', width: '12.00%' },
+            'tesouro7.png': { left: '14.80%', top: '40.92%', width: '8.20%' },
+            'Venda3.png': { left: '99.50%', top: '32.62%', width: '21.20%' },
+            'mapa_do_tesouro.png': { left: '-15.10%', top: '30.77%', width: '14.00%' },
+            'Venda1.png': { left: '73.90%', top: '39.08%', width: '16.00%' }
         };
 
         // Separar Posters (Background) do resto
@@ -298,7 +306,22 @@ export class Settings implements Screen {
 
                 element.style.cursor = 'grab';
                 element.style.transform = 'scale(1)';
-                console.log('[Settings] Dropped at:', element.style.left, element.style.top);
+
+                // Converter a posição final em pixels para % da LARGURA real do elemento PAI (o wrapper)
+                // Usamos offsetLeft/Top normal que são dados baseados em relação ao wrapper e os clients do wrapper
+                const finalLeftPx = element.offsetLeft;
+                const finalTopPx = element.offsetTop;
+
+                const parentW = element.parentElement?.clientWidth || window.innerWidth;
+                const parentH = element.parentElement?.clientHeight || window.innerHeight;
+
+                const pctLeft = (finalLeftPx / parentW) * 100;
+                const pctTop = (finalTopPx / parentH) * 100;
+
+                element.style.left = `${pctLeft}%`;
+                element.style.top = `${pctTop}%`;
+
+                console.log(`[Settings] Dropped at: ${pctLeft.toFixed(2)}%, ${pctTop.toFixed(2)}%`);
             }
         });
 
@@ -309,24 +332,29 @@ export class Settings implements Screen {
 
             // Determinar direção
             const delta = Math.sign(e.deltaY) * -1; // Cima = Aumentar, Baixo = Diminuir
-            const step = 10; // Pixels por scroll
+            const step = 1; // Aproximadamente passos de 1% por scroll do Wrapper
 
-            // Obter largura atual
-            let currentWidth = parseInt(element.style.width || '100');
-            if (isNaN(currentWidth)) currentWidth = 100;
+            // Obter largura atual, que agora pode vir como '10%' ou '100px'
+            let currentWidthPct = parseFloat(element.style.width);
+            if (isNaN(currentWidthPct)) currentWidthPct = 10;
+            // Se ainda for PX (pode ocorrer arrastando pela primeira vez)
+            if (element.style.width.includes('px')) {
+                const parentW = element.parentElement?.clientWidth || window.innerWidth;
+                currentWidthPct = (parseFloat(element.style.width) / parentW) * 100;
+            }
 
-            // Calcular nova largura (Limites: 50px a 500px)
-            const newWidth = Math.max(50, Math.min(500, currentWidth + (delta * step)));
+            // Calcular nova largura (Limites: 5% a 60%) baseada no Wrapper
+            const newWidthPct = Math.max(5, Math.min(60, currentWidthPct + (delta * step)));
 
-            element.style.width = `${newWidth}px`;
-            console.log(`[Settings] Resized ${element.getAttribute('src')} to ${newWidth}px`);
+            element.style.width = `${newWidthPct}%`;
+            console.log(`[Settings] Resized ${element.getAttribute('src')} to ${newWidthPct.toFixed(2)}%`);
         });
     }
 
     private createLanguageFlags(wrapper: HTMLElement): void {
         const flags = [
-            { locale: 'pt-BR', file: 'flag_br.svg', defaultPos: { left: '386px', top: '160px', width: '30px' } },
-            { locale: 'en-US', file: 'flag_us.svg', defaultPos: { left: '422px', top: '160px', width: '30px' } }
+            { locale: 'pt-BR', file: 'flag_br.svg', defaultPos: { left: '20.30%', top: '15.54%', width: '3.00%' } },
+            { locale: 'en-US', file: 'flag_us.svg', defaultPos: { left: '23.90%', top: '15.54%', width: '3.00%' } }
         ];
 
         const currentLocale = LocaleManager.getCurrentLocale();

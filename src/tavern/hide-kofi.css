@@ -1,0 +1,8 @@
+/* Temporarily hide Ko-fi widget */
+iframe[src*="ko-fi.com"] {
+    display: none !important;
+}
+
+div[class*="floatingchat"] {
+    display: none !important;
+}

@@ -989,14 +989,16 @@ const Renderer = {
         setTimeout(finish, 1600); // Safety
     },
     renderBotMemoryDebug: function (botBrain: any) {
+        if (window.Logger && window.Logger.game) window.Logger.game("[Renderer] renderBotMemoryDebug pipeline started.");
+
         let container = document.getElementById("bot-memory-debug");
-        const params = new URLSearchParams(window.location.search);
-        const isDev = localStorage.getItem('tellstones_dev_mode') === 'true' || params.get('dev') === 'true';
-        if (!isDev) {
-            if (container)
-                container.remove();
+        const isDevMode = localStorage.getItem('tellstones_dev_mode') === 'true' ||
+            window.location.search.includes('dev=true');
+        if (!isDevMode) {
+            if (container) container.remove(); // Ensure it's removed if dev mode is off
             return;
         }
+
         if (!container) {
             container = document.createElement("div");
             container.id = "bot-memory-debug";
@@ -1006,38 +1008,98 @@ const Renderer = {
             container.style.width = "100%";
             container.style.height = "100%";
             container.style.pointerEvents = "none";
-            container.style.zIndex = "9005"; // Debug Layer
-            const wrapper = document.getElementById("tabuleiro-wrapper");
-            if (wrapper)
-                wrapper.appendChild(container);
+            container.style.zIndex = "999999"; // Super high Debug Layer
+            document.body.appendChild(container); // Anexa ao body para não ser clipado
         }
         container.innerHTML = "";
-        if (!botBrain || !botBrain.memory)
+
+        // Safety checks to ensure we can read memory
+        if (!botBrain) return;
+
+        // AI v2.0 Support
+        const isV2 = typeof botBrain.getDebugUIData === 'function';
+
+        // AI v1.0 (BotMemory - legacy fallback)
+        const memoryModule = botBrain.memory;
+
+        if (!isV2 && !memoryModule) {
+            console.warn("[DevMode] Nenhum módulo de memória detectado.");
             return;
+        }
+
         const wrapper = document.getElementById("tabuleiro-wrapper");
-        if (!wrapper)
+        if (!wrapper) {
+            console.warn("[DevMode] tabuleiro-wrapper não encontrado.");
             return;
+        }
         const CFG = window.GameConfig ? window.GameConfig.LAYOUT : { STONE_SIZE: 68.39 };
         const positions = this.getSlotPositions(wrapper, 7, CFG.STONE_SIZE || 68.39, 40);
+
         positions.forEach((pos, idx) => {
-            const mem = botBrain.memory[idx];
-            if (mem && container) {
+            let botMem: any = null;
+            let plyMem: any = null;
+
+            if (isV2) {
+                const uiData = botBrain.getDebugUIData(idx);
+                botMem = uiData.bot;
+                plyMem = uiData.ply;
+            } else if (memoryModule) {
+                botMem = memoryModule.getRawMemoryState ? memoryModule.getRawMemoryState(idx) : null;
+                plyMem = memoryModule.getRawPlayerMemoryState ? memoryModule.getRawPlayerMemoryState(idx) : null;
+            }
+
+            if (botMem || plyMem) {
+                // Como anexamos ao body, precisamos das coordenadas absolutas do wrapper na tela
+                const rect = wrapper.getBoundingClientRect();
+                const absoluteLeft = rect.left + pos.left;
+                const absoluteTop = rect.top + pos.top;
+
                 const badge = document.createElement("div");
                 badge.style.position = "absolute";
-                badge.style.left = pos.left + "px";
-                badge.style.top = (pos.top - 60) + "px";
+                badge.style.left = absoluteLeft + "px";
+                badge.style.top = (absoluteTop - 50) + "px"; // Mais perto da pedra
                 badge.style.transform = "translateX(-50%)";
-                badge.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-                badge.style.color = "#00ff00";
+                badge.style.backgroundColor = "rgba(0, 0, 0, 0.4)"; // Bem mais transparente
                 badge.style.padding = "4px 8px";
-                badge.style.borderRadius = "4px";
+                badge.style.borderRadius = "12px"; // Mais arredondado
                 badge.style.fontSize = "10px";
-                badge.style.fontFamily = "monospace";
+                badge.style.fontFamily = "sans-serif";
                 badge.style.textAlign = "center";
-                badge.style.border = "1px solid #00ff00";
                 badge.style.pointerEvents = "none";
-                const confPercent = Math.round(mem.confidence * 100);
-                badge.innerHTML = `<div>${mem.stoneName}</div><div style="font-weight:bold">${confPercent}%</div>`;
+                badge.style.display = "flex";
+                badge.style.flexDirection = "column";
+                badge.style.gap = "2px";
+                badge.style.whiteSpace = "nowrap";
+                badge.style.backdropFilter = "blur(2px)"; // Efeito clean
+
+                let innerHTML = "";
+
+                // Helper para bolinha colorida
+                const getDot = (conf: number) => {
+                    const color = conf > 70 ? "#00ff00" : (conf > 40 ? "#ffff00" : "#ff4444");
+                    return `<span style="display:inline-block; width:6px; height:6px; background:${color}; border-radius:50%; margin-right:4px;"></span>`;
+                };
+
+                // --- Linha Bot ---
+                if (botMem) {
+                    const botConf = Math.round(botMem.confianca * 100);
+                    innerHTML += `<div style="display:flex; flex-direction:column; align-items:center; color:#fff;">
+                        <span style="font-weight:bold; font-size:11px;">[${botMem.nome}]</span>
+                        <div style="display:flex; align-items:center; margin-top:2px;">
+                            ${getDot(botConf)} 🤖 ${botConf}%
+                        </div>
+                    </div>`;
+                }
+
+                // --- Linha Jogador ---
+                if (plyMem) {
+                    const plyConf = Math.round(plyMem.confianca * 100);
+                    innerHTML += `<div style="display:flex; align-items:center; color:#ccc; margin-top:2px;">
+                        ${getDot(plyConf)} 🧑 ${plyConf}%
+                    </div>`;
+                }
+
+                badge.innerHTML = innerHTML;
                 container.appendChild(badge);
             }
         });

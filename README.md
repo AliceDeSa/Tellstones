@@ -178,9 +178,6 @@ assets/                 # Recursos Estáticos
 └── audio/              # Efeitos Sonoros e Música
 ```
 
----
-
-## 📅 Histórico de Atualizações (Changelog)
 
 ## 📅 Histórico de Atualizações (Changelog)
 

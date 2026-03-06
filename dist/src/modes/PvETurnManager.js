@@ -8,6 +8,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { Logger, LogCategory } from "../utils/Logger.js";
+import { EventBus } from "../core/EventBus.js";
+import { EventType } from "../core/types/Events.js";
+import { BotActionRunner, BotActionState } from "../ai/BotActionRunner.js";
 /**
  * Gerenciador de Turnos para o modo PvE.
  * Responsável por isolar toda a lógica de execução e validação de turnos,
@@ -16,13 +19,14 @@ import { Logger, LogCategory } from "../utils/Logger.js";
 export class PvETurnManager {
     constructor() {
         this.botBrain = null;
+        this.actionRunner = new BotActionRunner();
         this.asyncActionInProgress = false;
         this.botThinking = false;
         this.thinkingWatchdog = null;
-        Logger.sys("PvETurnManager inicializado");
+        Logger.sys("PvETurnManager inicializado com BotActionRunner");
     }
     /**
-     * Configura a referência ao BotBrain.
+     * Configura a referência ao BotAgent autenticado.
      */
     setBotBrain(brain) {
         this.botBrain = brain;
@@ -60,7 +64,7 @@ export class PvETurnManager {
             const validation = this.validateAction(action, estado);
             if (!validation.isValid) {
                 Logger.warn(LogCategory.GAME, `Ação inválida: ${validation.reason}`);
-                return;
+                throw new Error(`Ação inválida: ${validation.reason}`);
             }
             Logger.game(`Executando ação: ${action.type} por ${actor}`);
             try {
@@ -132,27 +136,62 @@ export class PvETurnManager {
             estado.desafio.status === 'responder_pecas';
     }
     /**
-     * Solicita uma decisão do bot (isolado - bot apenas decide, não executa).
+     * Ciclo arquitetural completo do turno do Bot
      */
-    requestBotDecision() {
-        if (!this.botBrain) {
-            Logger.warn(LogCategory.AI, "BotBrain não configurado");
-            return null;
-        }
-        const estado = window.estadoJogo;
-        try {
-            const decision = this.botBrain.decideMove(estado);
-            if (!decision) {
-                Logger.warn(LogCategory.AI, "Bot não retornou decisão");
-                return null;
+    runBotTurn() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.botBrain) {
+                Logger.warn(LogCategory.AI, "BotAgent não configurado");
+                return;
             }
-            Logger.ai(`Bot decidiu: ${decision.type}`, decision);
-            return decision;
-        }
-        catch (err) {
-            Logger.error(LogCategory.AI, "Erro ao solicitar decisão do bot:", err);
-            return null;
-        }
+            // GUARD 1: Pipeline
+            if (!this.actionRunner.is(BotActionState.IDLE)) {
+                Logger.warn(LogCategory.AI, `[PvETurnManager] Bot tentou agir mas runner está ocupado em ${this.actionRunner.getState()}`);
+                return;
+            }
+            const estado = window.estadoJogo;
+            this.actionRunner.transition(BotActionState.DECIDING);
+            this.setBotThinking(true);
+            const ctx = {
+                state: estado,
+                turn: estado.turnos || 0,
+                myIndex: 1,
+                opponentIndex: 0,
+                usedGuesses: [],
+                gamePhase: estado.mesa.filter((p) => p).length <= 3 ? 'opening' : 'midgame'
+            };
+            try {
+                const decision = this.botBrain.decideMove(ctx);
+                if (!decision) {
+                    Logger.warn(LogCategory.AI, "Bot não retornou decisão. Abortando Turno via EventBus.");
+                    this.actionRunner.transition(BotActionState.IDLE);
+                    this.setBotThinking(false);
+                    EventBus.emit(EventType.TURN_ADVANCE, {});
+                    return;
+                }
+                Logger.ai(`Bot decidiu formalmente: ${decision.type}`, decision);
+                this.actionRunner.transition(BotActionState.VALIDATING);
+                const validation = this.validateAction(decision, estado);
+                if (!validation.isValid) {
+                    Logger.warn(LogCategory.AI, `Ação ${decision.type} invalida barrada pelo TurnManager: ${validation.reason}. Cancelando.`);
+                    this.actionRunner.transition(BotActionState.IDLE);
+                    this.setBotThinking(false);
+                    EventBus.emit(EventType.TURN_ADVANCE, {});
+                    return;
+                }
+                this.actionRunner.transition(BotActionState.EXECUTING);
+                yield this.executeAction(decision, 'bot');
+                this.actionRunner.transition(BotActionState.DONE);
+                // executeAction pass on flow to GameController, which triggers TURN_ADVANCE
+                this.actionRunner.transition(BotActionState.IDLE);
+            }
+            catch (err) {
+                Logger.error(LogCategory.AI, "Erro crítico no workflow do BotActionRunner:", err);
+                this.actionRunner.forceReset();
+                this.setBotThinking(false);
+                EventBus.emit(EventType.TURN_ADVANCE, {});
+            }
+        });
     }
     /**
      * NOVO: Trata respostas reativas (desafios/segabares) sem consumir turno.
@@ -180,11 +219,17 @@ export class PvETurnManager {
         return __awaiter(this, void 0, void 0, function* () {
             if (!state.desafio || state.desafio.tipo !== 'desafio')
                 return;
+            if (!this.actionRunner.is(BotActionState.IDLE)) {
+                Logger.warn(LogCategory.AI, `[PvETurnManager] Conflito Reativo: Bot já está operando em estado ${this.actionRunner.getState()}`);
+                return;
+            }
+            this.actionRunner.transition(BotActionState.RESPONDING);
             const targetIdx = state.desafio.alvo;
             if (!state.mesa[targetIdx]) {
                 Logger.warn(LogCategory.AI, "Desafio em slot vazio - limpando");
                 state.desafio = null;
                 window.GameController.persistirEstado();
+                this.actionRunner.transition(BotActionState.IDLE);
                 return;
             }
             Logger.ai("Bot respondendo a desafio do jogador (AÇÃO REATIVA)...");
@@ -198,7 +243,15 @@ export class PvETurnManager {
                     Logger.error(LogCategory.AI, "BotBrain ausente ao responder desafio");
                     return;
                 }
-                const palpite = this.botBrain.predictStone(targetIdx);
+                const ctx = {
+                    state: state,
+                    turn: state.turnos || 0,
+                    myIndex: 1,
+                    opponentIndex: 0,
+                    usedGuesses: [],
+                    gamePhase: state.mesa.filter((p) => p).length <= 3 ? 'opening' : 'midgame'
+                };
+                const palpite = this.botBrain.predictStone(targetIdx, ctx);
                 const correta = state.mesa[targetIdx].nome;
                 if (window.Renderer && window.Renderer.mostrarFalaBot) {
                     window.Renderer.mostrarFalaBot(`Eu acho que é... ${palpite}!`);
@@ -272,6 +325,9 @@ export class PvETurnManager {
                 Logger.error(LogCategory.AI, "Erro ao responder desafio:", err);
                 state.desafio = null;
                 window.GameController.persistirEstado();
+            }
+            finally {
+                this.actionRunner.transition(BotActionState.IDLE);
             }
         });
     }
@@ -347,6 +403,9 @@ export class PvETurnManager {
                 Logger.error(LogCategory.AI, "Erro ao responder segabar:", err);
                 state.desafio = null;
                 window.GameController.persistirEstado();
+            }
+            finally {
+                this.actionRunner.transition(BotActionState.IDLE);
             }
         });
     }
@@ -446,7 +505,7 @@ export class PvETurnManager {
                         estado.mesa[slotVazio].virada = false;
                         estado.reserva[pedraIdx] = null;
                         if (this.botBrain && actor === 'bot') {
-                            this.botBrain.observe({ tipo: 'colocar', origem: slotVazio, pedra: pedra }, estado);
+                            this.botBrain.observe({ type: 'placement', slot: slotVazio, stone: pedra.nome });
                         }
                         window.GameController.persistirEstado();
                         window.avancarTurno();
@@ -460,7 +519,7 @@ export class PvETurnManager {
                 estado.mesa[slotVazio].virada = false;
                 estado.reserva[pedraIdx] = null;
                 if (this.botBrain && actor === 'bot') {
-                    this.botBrain.observe({ tipo: 'colocar', origem: slotVazio, pedra: pedra }, estado);
+                    this.botBrain.observe({ type: 'placement', slot: slotVazio, stone: pedra.nome });
                 }
                 window.GameController.persistirEstado();
                 window.avancarTurno();
@@ -473,7 +532,7 @@ export class PvETurnManager {
                 return;
             estado.mesa[action.target].virada = true;
             if (this.botBrain && actor === 'bot') {
-                this.botBrain.observe({ tipo: 'virar', origem: action.target, pedra: estado.mesa[action.target] }, estado);
+                this.botBrain.observe({ type: 'hide', slot: action.target });
             }
             window.GameController.persistirEstado();
             window.avancarTurno();
@@ -485,7 +544,7 @@ export class PvETurnManager {
                 return;
             const { from, to } = action.targets;
             if (this.botBrain && actor === 'bot') {
-                this.botBrain.observe({ tipo: 'trocar', origem: from, destino: to }, estado);
+                this.botBrain.observe({ type: 'swap', from, to });
             }
             Logger.ai(`Animação de Troca Acionada: ${from} <-> ${to}`);
             estado.trocaAnimacao = { from, to, timestamp: Date.now(), jogador: actor === 'bot' ? 'Bot' : 'Player' };
@@ -559,7 +618,7 @@ export class PvETurnManager {
                 return;
             const pedra = estado.mesa[action.target];
             if (this.botBrain && actor === 'bot') {
-                this.botBrain.updateMemory(action.target, pedra.nome, 1.0);
+                this.botBrain.observe({ type: 'peek', slot: action.target, stone: pedra.nome });
                 if (window.Renderer && window.Renderer.mostrarFalaBot) {
                     window.Renderer.mostrarFalaBot("Hm... deixe-me ver.");
                 }

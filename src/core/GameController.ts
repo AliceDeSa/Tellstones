@@ -28,7 +28,9 @@ interface GameControllerInterface {
     stateListener?: any;
 }
 
-const GameController: GameControllerInterface = {
+const GameController: GameControllerInterface & { _processedSwaps: Set<number> } = {
+
+    _processedSwaps: new Set<number>(),
 
     // --- MOVED METHODS (Fix TS Parsing Issue) ---
 
@@ -42,6 +44,29 @@ const GameController: GameControllerInterface = {
             Logger.warn(LogCategory.GAME, "[GameController] Missing troca or estado data. Aborting finish.");
             return;
         }
+
+        // --- REGRAS DE IDEMPOTÊNCIA ---
+        // Prevenir execuções duplicadas caso o Renderer ative o callback secundário
+        if (troca && troca.timestamp) {
+            if (this._processedSwaps.has(troca.timestamp)) {
+                Logger.game(`[GameController] Swap ${troca.timestamp} already finalized. Ignoring duplicate callback.`);
+                return;
+            }
+            this._processedSwaps.add(troca.timestamp);
+
+            // Clean up cache periodically
+            if (this._processedSwaps.size > 20) {
+                const arr = Array.from(this._processedSwaps);
+                this._processedSwaps.delete(arr[0]);
+            }
+        } else if (!estado.trocaAnimacao) {
+            // Fallback to state check if no timestamp
+            Logger.game("[GameController] Swap state already finalized. Ignoring.");
+            return;
+        }
+
+        // Remove localmente antes de invocar a rede
+        estado.trocaAnimacao = null;
 
         // 1. Remove Animation Flag (Clean State)
         const updates: any = {};
@@ -614,6 +639,9 @@ const GameController: GameControllerInterface = {
     verificarFimDeJogo: function () {
         const estado = (window as any).estadoJogo;
         if (!estado || !estado.jogadores) return;
+
+        // Já existe um vencedor, não faça a rotina de vitória novamente
+        if (estado.vencedor) return;
 
         // SKIP for Tutorial (Managed by Script)
         if ((window as any).salaAtual === "MODO_TUTORIAL") return;

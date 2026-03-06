@@ -225,13 +225,19 @@ export class ChallengeResolver {
                     window.notificationManager.showGlobal(`${responder === 0 ? 'Jogador' : 'Bot'} errou! ${initiator === 0 ? 'Jogador' : 'Bot'} ganhou 1 ponto!`);
                 }
             }
+            // Aplicar pontos ao estado do jogo
+            result.points.forEach(p => {
+                if (estado.jogadores && estado.jogadores[p.playerIndex]) {
+                    estado.jogadores[p.playerIndex].pontos = (estado.jogadores[p.playerIndex].pontos || 0) + p.amount;
+                }
+            });
             // Revelar pedra
             if (pedraReal) {
                 pedraReal.virada = false;
-                // Persistir mudança
-                if ((_a = window.GameController) === null || _a === void 0 ? void 0 : _a.persistirEstado) {
-                    window.GameController.persistirEstado();
-                }
+            }
+            // Persistir mudança (incluindo pontos e revelação)
+            if ((_a = window.GameController) === null || _a === void 0 ? void 0 : _a.persistirEstado) {
+                window.GameController.persistirEstado();
             }
             // Limpar estado do desafio
             yield this.cleanup();
@@ -402,6 +408,12 @@ export class ChallengeResolver {
                     window.notificationManager.showGlobal(`${initiator === 0 ? 'Jogador' : 'Bot'} provou e ganhou 3 pontos!`);
                 }
             }
+            // Aplicar pontos ao estado do jogo
+            result.points.forEach(p => {
+                if (estado.jogadores && estado.jogadores[p.playerIndex]) {
+                    estado.jogadores[p.playerIndex].pontos = (estado.jogadores[p.playerIndex].pontos || 0) + p.amount;
+                }
+            });
             // Revelar pedras
             slotsToReveal.forEach(slot => {
                 if (estado.mesa[slot]) {
@@ -418,31 +430,26 @@ export class ChallengeResolver {
     // ========================================
     requestBotChallengeResponse() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c;
+            var _a;
             Logger.ai("[ChallengeResolver] Solicitando resposta do bot ao desafio...");
             // Aguardar um pouco para parecer natural
             yield this.delay(1500);
-            if (!this.activeChallenge)
+            if (!this.activeChallenge || !this.botBrain)
                 return;
             const estado = window.estadoJogo;
             const target = this.activeChallenge.target;
-            // Bot decide qual pedra adivinhar
-            let guess = "Espada"; // Default
-            if ((_b = (_a = this.botBrain) === null || _a === void 0 ? void 0 : _a.memory) === null || _b === void 0 ? void 0 : _b.getSlotMemory) {
-                const memory = this.botBrain.memory.getSlotMemory(target);
-                if (memory === null || memory === void 0 ? void 0 : memory.knownName) {
-                    guess = memory.knownName;
-                    Logger.ai(`[ChallengeResolver] Bot usando memória: ${guess}`);
-                }
-                else {
-                    // Palpite aleatório
-                    const pedras = ['Espada', 'Escudo', 'Coroa', 'Martelo', 'Bandeira', 'Balança', 'Cavalo'];
-                    guess = pedras[Math.floor(Math.random() * pedras.length)];
-                    Logger.ai(`[ChallengeResolver] Bot palpite aleatório: ${guess}`);
-                }
-            }
+            const ctx = {
+                state: estado,
+                turn: estado.turnos || 0,
+                myIndex: 1,
+                opponentIndex: 0,
+                usedGuesses: [],
+                gamePhase: estado.mesa.filter((p) => p).length <= 3 ? 'opening' : 'midgame'
+            };
+            const guess = this.botBrain.predictStone(target, ctx);
+            Logger.ai(`[ChallengeResolver] Bot using predictStone: ${guess}`);
             // Mostrar fala do bot
-            if ((_c = window.Renderer) === null || _c === void 0 ? void 0 : _c.mostrarFalaBot) {
+            if ((_a = window.Renderer) === null || _a === void 0 ? void 0 : _a.mostrarFalaBot) {
                 const stoneName = LocaleManager.t('game.stones.' + guess);
                 const speech = LocaleManager.t('bot.guess').replace('{stone}', stoneName);
                 window.Renderer.mostrarFalaBot(speech);
@@ -457,11 +464,19 @@ export class ChallengeResolver {
             var _a;
             Logger.ai("[ChallengeResolver] Solicitando resposta do bot ao segabar...");
             yield this.delay(2000);
-            if (!this.activeChallenge)
+            if (!this.activeChallenge || !this.botBrain)
                 return;
-            // Bot decide: acreditar ou duvidar
-            // Por enquanto, sempre acredita (pode ser melhorado com IA)
-            const decision = Math.random() > 0.3 ? ResponseType.BELIEVE : ResponseType.DOUBT;
+            const estado = window.estadoJogo;
+            const ctx = {
+                state: estado,
+                turn: estado.turnos || 0,
+                myIndex: 1,
+                opponentIndex: 0,
+                usedGuesses: [],
+                gamePhase: estado.mesa.filter((p) => p).length <= 3 ? 'opening' : 'midgame'
+            };
+            const stringDecision = this.botBrain.decideBoastResponse(ctx);
+            const decision = stringDecision === 'acreditar' ? ResponseType.BELIEVE : ResponseType.DOUBT;
             Logger.ai(`[ChallengeResolver] Bot decidiu: ${decision}`);
             if ((_a = window.Renderer) === null || _a === void 0 ? void 0 : _a.mostrarFalaBot) {
                 if (decision === ResponseType.BELIEVE) {
@@ -482,13 +497,21 @@ export class ChallengeResolver {
             const pedrasViradas = estado.mesa
                 .map((p, i) => ({ pedra: p, slot: i }))
                 .filter((item) => item.pedra && item.pedra.virada);
+            const usedGuesses = [];
             for (const item of pedrasViradas) {
                 yield this.delay(1000);
-                let guess = item.pedra.nome; // Bot "trapaceia" sabendo a resposta
-                // Com 20% de chance, errar propositalmente
-                if (Math.random() < 0.2) {
-                    const pedras = ['Espada', 'Escudo', 'Coroa', 'Martelo', 'Bandeira', 'Balança', 'Cavalo'];
-                    guess = pedras.filter(p => p !== item.pedra.nome)[Math.floor(Math.random() * 6)];
+                let guess = "Espada";
+                if (this.botBrain) {
+                    const ctx = {
+                        state: estado,
+                        turn: estado.turnos || 0,
+                        myIndex: 1,
+                        opponentIndex: 0,
+                        usedGuesses: usedGuesses,
+                        gamePhase: estado.mesa.filter((p) => p).length <= 3 ? 'opening' : 'midgame'
+                    };
+                    guess = this.botBrain.predictStone(item.slot, ctx);
+                    usedGuesses.push(guess);
                 }
                 Logger.ai(`[ChallengeResolver] Bot prova slot ${item.slot}: ${guess}`);
                 const result = yield this.submitProof(item.slot, guess);

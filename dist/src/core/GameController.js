@@ -542,6 +542,9 @@ const GameController = {
         const estado = window.estadoJogo;
         if (!estado || !estado.jogadores)
             return;
+        // Já existe um vencedor, não faça a rotina de vitória novamente
+        if (estado.vencedor)
+            return;
         // SKIP for Tutorial (Managed by Script)
         if (window.salaAtual === "MODO_TUTORIAL")
             return;
